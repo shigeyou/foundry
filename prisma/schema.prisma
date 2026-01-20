@@ -1,0 +1,50 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+  output          = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// コア情報: サービス・機能
+model CoreService {
+  id          String   @id @default(cuid())
+  name        String
+  category    String?
+  description String?
+  url         String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// コア情報: 資産・強み
+model CoreAsset {
+  id          String   @id @default(cuid())
+  name        String
+  type        String   // 技術, 人材, 顧客, 実績, etc.
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// 制約条件
+model Constraint {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
+
+// 探索履歴
+model Exploration {
+  id           String   @id @default(cuid())
+  question     String
+  context      String?
+  constraints  String   // JSON array of constraint IDs
+  result       String   // JSON result from AI
+  createdAt    DateTime @default(now())
+}
