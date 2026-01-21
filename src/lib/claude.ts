@@ -1,11 +1,18 @@
 import { AzureOpenAI } from "openai";
 
-const client = new AzureOpenAI({
-  apiKey: process.env.AZURE_OPENAI_API_KEY,
-  endpoint: process.env.AZURE_OPENAI_ENDPOINT,
-  apiVersion: "2024-08-01-preview",
-  deployment: process.env.AZURE_OPENAI_DEPLOYMENT,
-});
+let client: AzureOpenAI | null = null;
+
+function getClient(): AzureOpenAI {
+  if (!client) {
+    client = new AzureOpenAI({
+      apiKey: process.env.AZURE_OPENAI_API_KEY,
+      endpoint: process.env.AZURE_OPENAI_ENDPOINT,
+      apiVersion: "2024-08-01-preview",
+      deployment: process.env.AZURE_OPENAI_DEPLOYMENT,
+    });
+  }
+  return client;
+}
 
 export interface WinningStrategy {
   name: string;
@@ -82,7 +89,7 @@ ${ragContext || "取得できませんでした"}
 上記の情報を踏まえ、勝ち筋を提案してください。`;
 
   console.log("Starting Azure OpenAI request...");
-  const response = await client.chat.completions.create({
+  const response = await getClient().chat.completions.create({
     model: process.env.AZURE_OPENAI_DEPLOYMENT || "gpt-4",
     messages: [
       { role: "system", content: systemPrompt },

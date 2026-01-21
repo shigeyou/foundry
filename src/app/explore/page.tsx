@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { exportToPdf } from "@/lib/export-pdf";
+import { exportToMarkdown } from "@/lib/export-pdf";
 
 interface WinningStrategy {
   name: string;
@@ -53,6 +53,7 @@ export default function ExplorePage() {
   const [result, setResult] = useState<ExplorationResult | null>(null);
   const [error, setError] = useState("");
   const [isExporting, setIsExporting] = useState(false);
+  const [context, setContext] = useState("");
 
   const handleExplore = async () => {
     if (!question.trim()) return;
@@ -67,7 +68,7 @@ export default function ExplorePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           question,
-          context: "",
+          context,
           constraintIds: constraints.filter((c) => c.checked).map((c) => c.id),
         }),
       });
@@ -110,15 +111,15 @@ export default function ExplorePage() {
     setQuestion(combinedQuestions);
   };
 
-  const handleExport = async () => {
+  const handleExport = () => {
     if (!result) return;
     setIsExporting(true);
     try {
       const timestamp = new Date().toISOString().slice(0, 10);
-      await exportToPdf("export-content", "kachisuji-report-" + timestamp);
+      exportToMarkdown(question, result, "kachisuji-report-" + timestamp);
     } catch (err) {
       console.error("Export failed:", err);
-      setError("PDFの出力に失敗しました");
+      setError("エクスポートに失敗しました");
     } finally {
       setIsExporting(false);
     }
@@ -203,6 +204,20 @@ export default function ExplorePage() {
 
             <Card>
               <CardHeader>
+                <CardTitle>追加文脈（任意）</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Textarea
+                  value={context}
+                  onChange={(e) => setContext(e.target.value)}
+                  placeholder="探索の参考にしたい追加情報があれば入力してください"
+                  className="min-h-[80px]"
+                />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
                 <CardTitle>制約条件</CardTitle>
               </CardHeader>
               <CardContent>
@@ -251,7 +266,7 @@ export default function ExplorePage() {
                     variant="outline"
                     size="sm"
                   >
-                    {isExporting ? "出力中..." : "PDF出力"}
+                    {isExporting ? "出力中..." : "MD出力"}
                   </Button>
                 </div>
 
