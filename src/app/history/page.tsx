@@ -177,12 +177,23 @@ export default function HistoryPage() {
 
             {isAnalyzing && (
               <Card className="bg-purple-50 border-purple-200">
-                <CardContent className="py-8 text-center">
-                  <div className="animate-pulse">
-                    <p className="text-purple-700 font-semibold">全履歴を横断分析中...</p>
-                    <p className="text-purple-600 text-sm mt-2">
-                      「勝ち筋の勝ち筋」を抽出しています
-                    </p>
+                <CardContent className="py-6">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-purple-700 font-semibold">全履歴を横断分析中...</span>
+                      <span className="text-purple-600">約1〜2分</span>
+                    </div>
+                    <div className="w-full bg-purple-200 rounded-full h-3 overflow-hidden">
+                      <div className="bg-purple-600 h-3 rounded-full animate-progress-purple"></div>
+                    </div>
+                    <div className="text-center space-y-1">
+                      <p className="text-purple-700 font-medium">
+                        「勝ち筋の勝ち筋」を抽出しています
+                      </p>
+                      <p className="text-xs text-purple-600">
+                        パターン分析・クラスタリング・空白領域の特定を実行中
+                      </p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>

@@ -57,3 +57,61 @@ body {
   color: hsl(var(--foreground));
   font-family: var(--font-sans);
 }
+
+/* Progress bar animation */
+@keyframes progress {
+  0% {
+    width: 0%;
+  }
+  10% {
+    width: 15%;
+  }
+  30% {
+    width: 40%;
+  }
+  50% {
+    width: 60%;
+  }
+  70% {
+    width: 75%;
+  }
+  90% {
+    width: 90%;
+  }
+  100% {
+    width: 95%;
+  }
+}
+
+.animate-progress {
+  animation: progress 120s ease-out forwards;
+}
+
+/* Purple progress for meta-analysis */
+@keyframes progress-purple {
+  0% {
+    width: 0%;
+  }
+  10% {
+    width: 20%;
+  }
+  30% {
+    width: 45%;
+  }
+  50% {
+    width: 65%;
+  }
+  70% {
+    width: 80%;
+  }
+  90% {
+    width: 92%;
+  }
+  100% {
+    width: 98%;
+  }
+}
+
+.animate-progress-purple {
+  animation: progress-purple 90s ease-out forwards;
+}

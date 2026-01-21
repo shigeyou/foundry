@@ -24,7 +24,7 @@ interface ExplorationResult {
 
 const defaultConstraints = [
   { id: "existing", label: "既存事業・リソースを活用", checked: true },
-  { id: "noLargeInvestment", label: "大型投資を抑制", checked: true },
+  { id: "noLargeInvestment", label: "大型投資に限定", checked: true },
   { id: "parent", label: "親会社との連携を重視", checked: false },
   { id: "synergy", label: "3社シナジーを優先", checked: false },
 ];
@@ -245,6 +245,25 @@ export default function ExplorePage() {
             >
               {isLoading ? "探索中..." : "勝ち筋を探索"}
             </Button>
+
+            {isLoading && (
+              <Card className="bg-blue-50 border-blue-200">
+                <CardContent className="py-6">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-blue-700 font-medium">AIが勝ち筋を探索中...</span>
+                      <span className="text-blue-600">約2分</span>
+                    </div>
+                    <div className="w-full bg-blue-200 rounded-full h-2 overflow-hidden">
+                      <div className="bg-blue-600 h-2 rounded-full animate-progress"></div>
+                    </div>
+                    <p className="text-xs text-blue-600">
+                      コア情報・制約条件・外部情報を分析しています
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {error && (
               <div className="bg-red-50 text-red-700 p-4 rounded-lg">
