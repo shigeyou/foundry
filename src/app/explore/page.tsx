@@ -5,8 +5,6 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
 import { exportToMarkdown } from "@/lib/export-pdf";
 
 interface WinningStrategy {
@@ -210,7 +208,7 @@ export default function ExplorePage() {
                 <Textarea
                   value={context}
                   onChange={(e) => setContext(e.target.value)}
-                  placeholder="探索の参考にしたい追加情報があれば入力してください"
+                  placeholder="今回の問いをたてた理由や背景情報など、探索にあたって、より深い洞察を得るための情報があれば入力してください。"
                   className="min-h-[80px]"
                 />
               </CardContent>
@@ -221,16 +219,19 @@ export default function ExplorePage() {
                 <CardTitle>制約条件</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
+                <div className="flex flex-wrap gap-2">
                   {constraints.map((constraint) => (
-                    <div key={constraint.id} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={constraint.id}
-                        checked={constraint.checked}
-                        onCheckedChange={() => toggleConstraint(constraint.id)}
-                      />
-                      <Label htmlFor={constraint.id}>{constraint.label}</Label>
-                    </div>
+                    <button
+                      key={constraint.id}
+                      onClick={() => toggleConstraint(constraint.id)}
+                      className={`px-3 py-1.5 text-xs rounded-full transition-colors border ${
+                        constraint.checked
+                          ? "bg-blue-500 text-white border-blue-500 hover:bg-blue-600"
+                          : "bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200 hover:border-slate-300"
+                      }`}
+                    >
+                      {constraint.label}
+                    </button>
                   ))}
                 </div>
               </CardContent>

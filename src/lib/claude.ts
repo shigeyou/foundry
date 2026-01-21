@@ -37,7 +37,7 @@ export async function generateWinningStrategies(
   constraints: string,
   ragContext: string
 ): Promise<ExplorationResult> {
-  const systemPrompt = `あなたは「勝ち筋ファインダー」のAIアシスタントです。
+  const systemPrompt = `あなたは「勝ち筋ファインダーVer.0.5」のAIアシスタントです。
 海運グループ企業の戦略立案を支援します。
 
 ## あなたの役割

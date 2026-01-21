@@ -11,7 +11,7 @@ const BASE_URL = 'http://localhost:3001';
 test.describe('基本ナビゲーション', () => {
   test('1. ホームページが正常に表示される', async ({ page }) => {
     await page.goto(BASE_URL);
-    await expect(page.locator('h1')).toContainText('勝ち筋ファインダー');
+    await expect(page.locator('h1')).toContainText('勝ち筋ファインダーVer.0.5');
     await expect(page.getByRole('link', { name: '探索を始める' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'コア情報を登録' })).toBeVisible();
   });
@@ -382,21 +382,21 @@ test.describe('UIインタラクション', () => {
     await page.goto(BASE_URL);
 
     // モバイル幅でもコンテンツが表示されることを確認
-    await expect(page.locator('h1')).toContainText('勝ち筋ファインダー');
+    await expect(page.locator('h1')).toContainText('勝ち筋ファインダーVer.0.5');
   });
 
   test('31. レスポンシブレイアウトのテスト（タブレット幅）', async ({ page }) => {
     await page.setViewportSize({ width: 768, height: 1024 });
     await page.goto(BASE_URL);
 
-    await expect(page.locator('h1')).toContainText('勝ち筋ファインダー');
+    await expect(page.locator('h1')).toContainText('勝ち筋ファインダーVer.0.5');
   });
 
   test('32. レスポンシブレイアウトのテスト（デスクトップ幅）', async ({ page }) => {
     await page.setViewportSize({ width: 1920, height: 1080 });
     await page.goto(BASE_URL);
 
-    await expect(page.locator('h1')).toContainText('勝ち筋ファインダー');
+    await expect(page.locator('h1')).toContainText('勝ち筋ファインダーVer.0.5');
   });
 });
 

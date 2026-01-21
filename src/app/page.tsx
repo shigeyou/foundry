@@ -8,7 +8,7 @@ export default function Home() {
       <div className="container mx-auto px-4 py-16">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-slate-900 mb-4">
-            勝ち筋ファインダー
+            勝ち筋ファインダーVer.0.5
           </h1>
           <p className="text-xl text-slate-600 max-w-2xl mx-auto">
             現場の力をAIでアンプする戦略発見ツール
