@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { exportToMarkdown } from "@/lib/export-pdf";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 interface WinningStrategy {
   name: string;
@@ -233,22 +234,23 @@ export default function ExplorePage() {
   };
 
   return (
-    <main className="h-screen bg-slate-50 flex flex-col overflow-hidden">
+    <main className="h-screen bg-slate-50 dark:bg-slate-900 flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="flex-shrink-0 bg-slate-50 px-4 py-3 border-b border-slate-200">
+      <div className="flex-shrink-0 bg-slate-50 dark:bg-slate-900 px-4 py-3 border-b border-slate-200 dark:border-slate-700">
         <div className="container mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Link href="/" className="text-slate-600 hover:text-slate-900 text-sm">
+            <Link href="/" className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 text-sm">
               ← ホーム
             </Link>
-            <h1 className="text-2xl font-bold text-slate-900">勝ち筋を探索</h1>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">勝ち筋を探索</h1>
           </div>
+          <ThemeToggle />
         </div>
       </div>
 
       {/* Main Content */}
       <div className="flex-1 overflow-hidden">
-        <div className="container mx-auto h-full px-4 py-4">
+        <div className="h-full px-4 py-4">
           <div className="grid lg:grid-cols-2 gap-4 h-full">
             {/* Input Section */}
             <div
@@ -409,12 +411,12 @@ export default function ExplorePage() {
 
                   <div id="export-content" className="space-y-3">
                     {result.thinkingProcess && (
-                      <Card className="bg-slate-100">
+                      <Card className="bg-slate-100 dark:bg-slate-800">
                         <CardHeader className="py-2 px-4">
-                          <CardTitle className="text-xs">思考プロセス</CardTitle>
+                          <CardTitle className="text-sm dark:text-slate-200">思考プロセス</CardTitle>
                         </CardHeader>
                         <CardContent className="px-4 pb-3">
-                          <p className="text-xs text-slate-600 whitespace-pre-wrap">
+                          <p className="text-sm text-slate-600 dark:text-slate-300 whitespace-pre-wrap">
                             {result.thinkingProcess}
                           </p>
                         </CardContent>
@@ -425,7 +427,7 @@ export default function ExplorePage() {
                       <Card key={index}>
                         <CardHeader className="py-2 px-4">
                           <div className="flex items-start justify-between">
-                            <CardTitle className="text-sm">
+                            <CardTitle className="text-base dark:text-slate-100">
                               {index + 1}. {strategy.name}
                             </CardTitle>
                             <span
@@ -447,24 +449,24 @@ export default function ExplorePage() {
                             ))}
                           </div>
                         </CardHeader>
-                        <CardContent className="px-4 pb-3 space-y-2">
+                        <CardContent className="px-4 pb-3 space-y-3">
                           <div>
-                            <p className="text-xs font-semibold text-slate-500">
+                            <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">
                               なぜ勝てる
                             </p>
-                            <p className="text-xs">{strategy.reason}</p>
+                            <p className="text-sm dark:text-slate-200">{strategy.reason}</p>
                           </div>
                           <div>
-                            <p className="text-xs font-semibold text-slate-500">
+                            <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">
                               入手方法
                             </p>
-                            <p className="text-xs">{strategy.howToObtain}</p>
+                            <p className="text-sm dark:text-slate-200">{strategy.howToObtain}</p>
                           </div>
                           <div>
-                            <p className="text-xs font-semibold text-slate-500">
+                            <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">
                               指標例
                             </p>
-                            <p className="text-xs">{strategy.metrics}</p>
+                            <p className="text-sm dark:text-slate-200">{strategy.metrics}</p>
                           </div>
                         </CardContent>
                       </Card>
