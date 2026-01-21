@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,6 +44,8 @@ export default function CorePage() {
     description: "",
     url: "",
   });
+  const [importMessage, setImportMessage] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchServices();
@@ -109,6 +111,71 @@ export default function CorePage() {
     setIsDialogOpen(true);
   };
 
+  const handleExportCSV = async () => {
+    try {
+      const res = await fetch("/api/export?type=services&format=csv");
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "services.csv";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Export error:", error);
+    }
+  };
+
+  const handleExportJSON = async () => {
+    try {
+      const res = await fetch("/api/export?type=services&format=json");
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "services.json";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Export error:", error);
+    }
+  };
+
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("type", "services");
+
+    try {
+      const res = await fetch("/api/import", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.success) {
+        setImportMessage(data.message);
+        fetchServices();
+      } else {
+        setImportMessage("エラー: " + data.error);
+      }
+    } catch (error) {
+      console.error("Import error:", error);
+      setImportMessage("インポートに失敗しました");
+    }
+
+    // ファイル入力をリセット
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
   return (
     <main className="min-h-screen bg-slate-50">
       <div className="container mx-auto px-4 py-8">
@@ -119,8 +186,70 @@ export default function CorePage() {
             </Link>
             <h1 className="text-3xl font-bold text-slate-900 mt-2">コア情報</h1>
           </div>
-          <Button onClick={openAddDialog}>+ 追加</Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleExportCSV} data-testid="export-csv">
+              CSVエクスポート
+            </Button>
+            <Button variant="outline" onClick={handleExportJSON} data-testid="export-json">
+              JSONエクスポート
+            </Button>
+            <label>
+              <Button variant="outline" asChild>
+                <span data-testid="import-btn">CSVインポート</span>
+              </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".csv"
+                className="hidden"
+                onChange={handleImport}
+                data-testid="import-input"
+              />
+            </label>
+            <Button onClick={openAddDialog}>+ 追加</Button>
+          </div>
         </div>
+
+        {importMessage && (
+          <div className="mb-4 p-3 bg-blue-50 text-blue-700 rounded-lg" data-testid="import-message">
+            {importMessage}
+            <button
+              className="ml-2 text-blue-900 font-bold"
+              onClick={() => setImportMessage("")}
+            >
+              ×
+            </button>
+          </div>
+        )}
+
+        {/* RAG Sources Info */}
+        <Card className="mb-6 bg-blue-50 border-blue-200">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm text-blue-800">
+              自動参照される外部情報（RAG）
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <p className="text-xs text-blue-600 mb-2">
+              探索時に以下の情報を自動取得してAIに渡します
+            </p>
+            <ul className="space-y-1">
+              <li className="text-xs text-blue-700 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 bg-blue-400 rounded-full flex-shrink-0"></span>
+                <span>商船三井マリテックス（自社）</span>
+              </li>
+              <li className="text-xs text-blue-700 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 bg-blue-400 rounded-full flex-shrink-0"></span>
+                <span>商船三井（親会社）</span>
+              </li>
+              <li className="text-xs text-blue-700 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 bg-blue-400 rounded-full flex-shrink-0"></span>
+                <span>MOLグループDXの取組み</span>
+                <span className="text-blue-500">(PDF)</span>
+              </li>
+            </ul>
+          </CardContent>
+        </Card>
 
         <div className="grid gap-4">
           {services.length === 0 ? (
@@ -131,7 +260,7 @@ export default function CorePage() {
             </Card>
           ) : (
             services.map((service) => (
-              <Card key={service.id}>
+              <Card key={service.id} data-testid="service-card">
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between">
                     <div>

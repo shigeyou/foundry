@@ -81,6 +81,7 @@ ${ragContext || "取得できませんでした"}
 
 上記の情報を踏まえ、勝ち筋を提案してください。`;
 
+  console.log("Starting Azure OpenAI request...");
   const response = await client.chat.completions.create({
     model: process.env.AZURE_OPENAI_DEPLOYMENT || "gpt-4",
     messages: [
@@ -88,12 +89,15 @@ ${ragContext || "取得できませんでした"}
       { role: "user", content: userPrompt },
     ],
     temperature: 0.7,
-    max_tokens: 4000,
+    max_completion_tokens: 16000,
     response_format: { type: "json_object" },
   });
 
+  console.log("Response finish_reason:", response.choices[0]?.finish_reason);
+  console.log("Response tokens:", JSON.stringify(response.usage));
   const content = response.choices[0]?.message?.content;
   if (!content) {
+    console.error("No content in response. finish_reason:", response.choices[0]?.finish_reason);
     throw new Error("No response from AI");
   }
 

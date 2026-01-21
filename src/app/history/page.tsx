@@ -42,6 +42,40 @@ export default function HistoryPage() {
     }
   };
 
+  const handleExportCSV = async () => {
+    try {
+      const res = await fetch("/api/export?type=history&format=csv");
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "exploration_history.csv";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Export error:", error);
+    }
+  };
+
+  const handleExportJSON = async () => {
+    try {
+      const res = await fetch("/api/export?type=history&format=json");
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "exploration_history.json";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Export error:", error);
+    }
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString("ja-JP", {
       year: "numeric",
@@ -63,11 +97,21 @@ export default function HistoryPage() {
   return (
     <main className="min-h-screen bg-slate-50">
       <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <Link href="/" className="text-slate-600 hover:text-slate-900 text-sm">
-            ← ホームに戻る
-          </Link>
-          <h1 className="text-3xl font-bold text-slate-900 mt-2">探索履歴</h1>
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <Link href="/" className="text-slate-600 hover:text-slate-900 text-sm">
+              ← ホームに戻る
+            </Link>
+            <h1 className="text-3xl font-bold text-slate-900 mt-2">探索履歴</h1>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleExportCSV} data-testid="export-csv">
+              CSVエクスポート
+            </Button>
+            <Button variant="outline" onClick={handleExportJSON} data-testid="export-json">
+              JSONエクスポート
+            </Button>
+          </div>
         </div>
 
         <div className="space-y-4">
@@ -83,7 +127,7 @@ export default function HistoryPage() {
               const isExpanded = expandedId === item.id;
 
               return (
-                <Card key={item.id}>
+                <Card key={item.id} data-testid="history-card">
                   <CardHeader className="pb-2">
                     <div className="flex items-start justify-between">
                       <div>
