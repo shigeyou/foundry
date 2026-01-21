@@ -1,4 +1,5 @@
 import * as cheerio from "cheerio";
+import { prisma } from "./db";
 
 export const DEFAULT_RAG_SOURCES = {
   company: {
@@ -92,16 +93,27 @@ async function fetchWithCache(
 }
 
 export async function generateRAGContext(): Promise<string> {
-  const results = await Promise.all([
-    fetchWithCache("company", DEFAULT_RAG_SOURCES.company.url, false),
-    fetchWithCache("parent", DEFAULT_RAG_SOURCES.parent.url, false),
-    fetchWithCache("parentDX", DEFAULT_RAG_SOURCES.parentDX.url, true),
+  // Fetch web content and DB documents in parallel
+  const [webResults, ragDocuments] = await Promise.all([
+    Promise.all([
+      fetchWithCache("company", DEFAULT_RAG_SOURCES.company.url, false),
+      fetchWithCache("parent", DEFAULT_RAG_SOURCES.parent.url, false),
+      fetchWithCache("parentDX", DEFAULT_RAG_SOURCES.parentDX.url, true),
+    ]),
+    prisma.rAGDocument.findMany({
+      select: {
+        filename: true,
+        fileType: true,
+        content: true,
+      },
+    }),
   ]);
 
-  const [companyContent, parentContent, dxContent] = results;
+  const [companyContent, parentContent, dxContent] = webResults;
 
   let context = "";
 
+  // Add web content
   if (companyContent) {
     context += `\n\n### ${DEFAULT_RAG_SOURCES.company.name}のウェブサイト情報:\n${companyContent}`;
   }
@@ -112,6 +124,15 @@ export async function generateRAGContext(): Promise<string> {
 
   if (dxContent) {
     context += `\n\n### ${DEFAULT_RAG_SOURCES.parentDX.name}（PDF）:\n${dxContent}`;
+  }
+
+  // Add RAG documents from database
+  if (ragDocuments.length > 0) {
+    context += "\n\n## 登録済みドキュメント:\n";
+    for (const doc of ragDocuments) {
+      const contentPreview = doc.content.slice(0, 8000); // Limit each doc to 8k chars
+      context += `\n### ${doc.filename} (${doc.fileType.toUpperCase()}):\n${contentPreview}\n`;
+    }
   }
 
   return context;

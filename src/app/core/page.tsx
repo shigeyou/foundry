@@ -14,6 +14,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 interface CoreService {
   id: string;
@@ -21,6 +22,14 @@ interface CoreService {
   category: string | null;
   description: string | null;
   url: string | null;
+}
+
+interface RAGDocument {
+  id: string;
+  filename: string;
+  fileType: string;
+  metadata: string | null;
+  createdAt: string;
 }
 
 const categories = [
@@ -47,9 +56,76 @@ export default function CorePage() {
   const [importMessage, setImportMessage] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // RAG Document states
+  const [ragDocuments, setRagDocuments] = useState<RAGDocument[]>([]);
+  const [ragMessage, setRagMessage] = useState("");
+  const [ragUploading, setRagUploading] = useState(false);
+  const ragFileInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     fetchServices();
+    fetchRAGDocuments();
   }, []);
+
+  const fetchRAGDocuments = async () => {
+    try {
+      const res = await fetch("/api/rag");
+      const data = await res.json();
+      setRagDocuments(data.documents || []);
+    } catch (error) {
+      console.error("Error fetching RAG documents:", error);
+    }
+  };
+
+  const handleRAGUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setRagUploading(true);
+    setRagMessage("");
+
+    const uploadFormData = new FormData();
+    uploadFormData.append("file", file);
+
+    try {
+      const res = await fetch("/api/rag", {
+        method: "POST",
+        body: uploadFormData,
+      });
+      const data = await res.json();
+      if (data.success) {
+        setRagMessage(data.message);
+        fetchRAGDocuments();
+      } else {
+        setRagMessage("エラー: " + data.error);
+      }
+    } catch (error) {
+      console.error("RAG upload error:", error);
+      setRagMessage("アップロードに失敗しました");
+    } finally {
+      setRagUploading(false);
+      if (ragFileInputRef.current) {
+        ragFileInputRef.current.value = "";
+      }
+    }
+  };
+
+  const handleRAGDelete = async (id: string, filename: string) => {
+    if (!confirm(`「${filename}」を削除しますか？`)) return;
+
+    try {
+      await fetch("/api/rag", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      fetchRAGDocuments();
+      setRagMessage(`${filename} を削除しました`);
+    } catch (error) {
+      console.error("RAG delete error:", error);
+      setRagMessage("削除に失敗しました");
+    }
+  };
 
   const fetchServices = async () => {
     try {
@@ -177,14 +253,17 @@ export default function CorePage() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-50">
+    <main className="min-h-screen bg-slate-50 dark:bg-slate-900">
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <Link href="/" className="text-slate-600 hover:text-slate-900 text-sm">
+            <Link href="/" className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100 text-sm">
               ← ホームに戻る
             </Link>
-            <h1 className="text-3xl font-bold text-slate-900 mt-2">コア情報</h1>
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 mt-2">コア情報</h1>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={handleExportCSV} data-testid="export-csv">
@@ -222,51 +301,112 @@ export default function CorePage() {
           </div>
         )}
 
-        {/* RAG Sources Info */}
-        <Card className="mb-6 bg-blue-50 border-blue-200">
+        {/* RAG Documents Section */}
+        <Card className="mb-6 bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-blue-800">
-              自動参照される外部情報（RAG）
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm text-blue-800 dark:text-blue-200">
+                RAGドキュメント（探索時に参照）
+              </CardTitle>
+              <label>
+                <Button variant="outline" size="sm" disabled={ragUploading} asChild>
+                  <span className="cursor-pointer">
+                    {ragUploading ? "アップロード中..." : "+ ドキュメント追加"}
+                  </span>
+                </Button>
+                <input
+                  ref={ragFileInputRef}
+                  type="file"
+                  accept=".pdf,.txt,.md,.json,.docx,.csv,.pptx"
+                  className="hidden"
+                  onChange={handleRAGUpload}
+                />
+              </label>
+            </div>
           </CardHeader>
           <CardContent className="pt-0">
-            <p className="text-xs text-blue-600 mb-2">
-              探索時に以下の情報を自動取得してAIに渡します
+            <p className="text-xs text-blue-600 dark:text-blue-400 mb-3">
+              対応形式: PDF, TXT, MD, JSON, DOCX, CSV, PPTX
             </p>
-            <ul className="space-y-1">
-              <li className="text-xs text-blue-700 flex items-center gap-2">
-                <span className="w-1.5 h-1.5 bg-blue-400 rounded-full flex-shrink-0"></span>
-                <span>商船三井マリテックス（自社）</span>
-              </li>
-              <li className="text-xs text-blue-700 flex items-center gap-2">
-                <span className="w-1.5 h-1.5 bg-blue-400 rounded-full flex-shrink-0"></span>
-                <span>商船三井（親会社）</span>
-              </li>
-              <li className="text-xs text-blue-700 flex items-center gap-2">
-                <span className="w-1.5 h-1.5 bg-blue-400 rounded-full flex-shrink-0"></span>
-                <span>MOLグループDXの取組み</span>
-                <span className="text-blue-500">(PDF)</span>
-              </li>
-            </ul>
+
+            {ragMessage && (
+              <div className="mb-3 p-2 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded text-xs">
+                {ragMessage}
+                <button
+                  className="ml-2 text-blue-900 dark:text-blue-100 font-bold"
+                  onClick={() => setRagMessage("")}
+                >
+                  ×
+                </button>
+              </div>
+            )}
+
+            {ragDocuments.length === 0 ? (
+              <p className="text-xs text-blue-500 dark:text-blue-400">
+                ドキュメントがまだ登録されていません
+              </p>
+            ) : (
+              <ul className="space-y-2">
+                {ragDocuments.map((doc) => (
+                  <li key={doc.id} className="flex items-center justify-between text-xs text-blue-700 dark:text-blue-300 bg-white dark:bg-slate-800 p-2 rounded">
+                    <div className="flex items-center gap-2">
+                      <span className="px-1.5 py-0.5 bg-blue-200 dark:bg-blue-800 rounded text-blue-800 dark:text-blue-200 uppercase font-mono">
+                        {doc.fileType}
+                      </span>
+                      <span className="truncate max-w-[200px]" title={doc.filename}>
+                        {doc.filename}
+                      </span>
+                    </div>
+                    <button
+                      className="text-red-500 hover:text-red-700 dark:hover:text-red-400"
+                      onClick={() => handleRAGDelete(doc.id, doc.filename)}
+                    >
+                      削除
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <div className="mt-3 pt-3 border-t border-blue-200 dark:border-blue-800">
+              <p className="text-xs text-blue-600 dark:text-blue-400 mb-1">
+                自動参照される外部情報:
+              </p>
+              <ul className="space-y-1">
+                <li className="text-xs text-blue-700 dark:text-blue-300 flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 bg-blue-400 rounded-full flex-shrink-0"></span>
+                  <span>商船三井マリテックス（自社）</span>
+                </li>
+                <li className="text-xs text-blue-700 dark:text-blue-300 flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 bg-blue-400 rounded-full flex-shrink-0"></span>
+                  <span>商船三井（親会社）</span>
+                </li>
+                <li className="text-xs text-blue-700 dark:text-blue-300 flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 bg-blue-400 rounded-full flex-shrink-0"></span>
+                  <span>MOLグループDXの取組み</span>
+                  <span className="text-blue-500 dark:text-blue-400">(PDF)</span>
+                </li>
+              </ul>
+            </div>
           </CardContent>
         </Card>
 
         <div className="grid gap-4">
           {services.length === 0 ? (
-            <Card>
-              <CardContent className="py-8 text-center text-slate-500">
+            <Card className="dark:bg-slate-800 dark:border-slate-700">
+              <CardContent className="py-8 text-center text-slate-500 dark:text-slate-400">
                 サービス・機能がまだ登録されていません
               </CardContent>
             </Card>
           ) : (
             services.map((service) => (
-              <Card key={service.id} data-testid="service-card">
+              <Card key={service.id} data-testid="service-card" className="dark:bg-slate-800 dark:border-slate-700">
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between">
                     <div>
-                      <CardTitle className="text-lg">{service.name}</CardTitle>
+                      <CardTitle className="text-lg dark:text-slate-100">{service.name}</CardTitle>
                       {service.category && (
-                        <span className="text-xs bg-slate-200 px-2 py-1 rounded mt-1 inline-block">
+                        <span className="text-xs bg-slate-200 dark:bg-slate-700 dark:text-slate-300 px-2 py-1 rounded mt-1 inline-block">
                           {service.category}
                         </span>
                       )}
@@ -292,14 +432,14 @@ export default function CorePage() {
                 {(service.description || service.url) && (
                   <CardContent>
                     {service.description && (
-                      <p className="text-sm text-slate-600">{service.description}</p>
+                      <p className="text-sm text-slate-600 dark:text-slate-400">{service.description}</p>
                     )}
                     {service.url && (
                       <a
                         href={service.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-sm text-blue-600 hover:underline"
+                        className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
                       >
                         {service.url}
                       </a>
