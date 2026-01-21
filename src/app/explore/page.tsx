@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -54,6 +54,10 @@ export default function ExplorePage() {
   const [isExporting, setIsExporting] = useState(false);
   const [context, setContext] = useState("");
   const [contentHeight, setContentHeight] = useState("calc(100vh - 120px)");
+  const [speechRate, setSpeechRate] = useState(100);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isSpeechLoading, setIsSpeechLoading] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     const updateHeight = () => {
@@ -132,6 +136,73 @@ export default function ExplorePage() {
       setError("エクスポートに失敗しました");
     } finally {
       setIsExporting(false);
+    }
+  };
+
+  const generateSpeechText = () => {
+    if (!result) return "";
+    let text = `探索結果、${result.strategies?.length || 0}件の勝ち筋が見つかりました。\n\n`;
+    result.strategies?.forEach((strategy, index) => {
+      text += `${index + 1}番目、${strategy.name}。\n`;
+      text += `なぜ勝てるか。${strategy.reason}\n`;
+      text += `入手方法。${strategy.howToObtain}\n\n`;
+    });
+    return text;
+  };
+
+  const handleSpeak = async () => {
+    if (!result) return;
+
+    if (isSpeaking) {
+      // 停止
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
+      setIsSpeaking(false);
+      return;
+    }
+
+    setIsSpeechLoading(true);
+    try {
+      const text = generateSpeechText();
+      const res = await fetch("/api/speech", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, rate: speechRate }),
+      });
+
+      if (!res.ok) {
+        throw new Error("音声合成に失敗しました");
+      }
+
+      const audioBlob = await res.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+
+      const audio = new Audio(audioUrl);
+      audioRef.current = audio;
+
+      audio.onended = () => {
+        setIsSpeaking(false);
+        URL.revokeObjectURL(audioUrl);
+      };
+
+      audio.onerror = () => {
+        setIsSpeaking(false);
+        setError("音声再生エラー");
+      };
+
+      await audio.play();
+      setIsSpeaking(true);
+    } catch (err) {
+      console.error("Speech error:", err);
+      setError(err instanceof Error ? err.message : "音声エラー");
+    } finally {
+      setIsSpeechLoading(false);
     }
   };
 
@@ -302,14 +373,38 @@ export default function ExplorePage() {
                     <h2 className="text-lg font-bold text-slate-900">
                       探索結果（{result.strategies?.length || 0}件）
                     </h2>
-                    <Button
-                      onClick={handleExport}
-                      disabled={isExporting}
-                      variant="outline"
-                      size="sm"
-                    >
-                      {isExporting ? "出力中..." : "MD出力"}
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      {/* Speech Controls */}
+                      <div className="flex items-center gap-1 text-xs text-slate-600">
+                        <span>速度</span>
+                        <input
+                          type="range"
+                          min="50"
+                          max="200"
+                          value={speechRate}
+                          onChange={(e) => setSpeechRate(Number(e.target.value))}
+                          className="w-16 h-1"
+                        />
+                        <span className="w-8">{speechRate}%</span>
+                      </div>
+                      <Button
+                        onClick={handleSpeak}
+                        disabled={isSpeechLoading}
+                        variant="outline"
+                        size="sm"
+                        className={isSpeaking ? "bg-red-100 border-red-300" : ""}
+                      >
+                        {isSpeechLoading ? "準備中..." : isSpeaking ? "停止" : "読上げ"}
+                      </Button>
+                      <Button
+                        onClick={handleExport}
+                        disabled={isExporting}
+                        variant="outline"
+                        size="sm"
+                      >
+                        {isExporting ? "出力中..." : "MD出力"}
+                      </Button>
+                    </div>
                   </div>
 
                   <div id="export-content" className="space-y-3">
