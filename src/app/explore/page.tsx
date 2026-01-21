@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -53,6 +53,17 @@ export default function ExplorePage() {
   const [error, setError] = useState("");
   const [isExporting, setIsExporting] = useState(false);
   const [context, setContext] = useState("");
+  const [contentHeight, setContentHeight] = useState("calc(100vh - 120px)");
+
+  useEffect(() => {
+    const updateHeight = () => {
+      // ヘッダー分を引いた高さを計算
+      setContentHeight(`calc(100vh - 120px)`);
+    };
+    updateHeight();
+    window.addEventListener("resize", updateHeight);
+    return () => window.removeEventListener("resize", updateHeight);
+  }, []);
 
   const handleExplore = async () => {
     if (!question.trim()) return;
@@ -151,217 +162,228 @@ export default function ExplorePage() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-50">
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <Link href="/" className="text-slate-600 hover:text-slate-900 text-sm">
-            ← ホームに戻る
-          </Link>
-          <h1 className="text-3xl font-bold text-slate-900 mt-2">勝ち筋を探索</h1>
+    <main className="h-screen bg-slate-50 flex flex-col overflow-hidden">
+      {/* Header */}
+      <div className="flex-shrink-0 bg-slate-50 px-4 py-3 border-b border-slate-200">
+        <div className="container mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Link href="/" className="text-slate-600 hover:text-slate-900 text-sm">
+              ← ホーム
+            </Link>
+            <h1 className="text-2xl font-bold text-slate-900">勝ち筋を探索</h1>
+          </div>
         </div>
+      </div>
 
-        <div className="grid lg:grid-cols-2 gap-8">
-          {/* Input Section */}
-          <div className="space-y-6">
-            {/* Sample Questions */}
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm text-slate-600">サンプルの問い（複数選択可）</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2">
-                  {sampleQuestions.map((sample, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleSampleClick(index)}
-                      className={`px-3 py-1.5 text-xs rounded-full transition-colors border ${
-                        selectedSamples.has(index)
-                          ? "bg-blue-500 text-white border-blue-500 hover:bg-blue-600"
-                          : "bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200 hover:border-slate-300"
-                      }`}
-                    >
-                      {sample.title}
-                    </button>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>問い</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Textarea
-                  value={question}
-                  onChange={(e) => setQuestion(e.target.value)}
-                  placeholder="例：〇〇領域で、3年以内に収益化できる勝ち筋を見つけたい"
-                  className="min-h-[120px]"
-                />
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>追加文脈（任意）</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Textarea
-                  value={context}
-                  onChange={(e) => setContext(e.target.value)}
-                  placeholder="今回の問いをたてた理由や背景情報など、探索にあたって、より深い洞察を得るための情報があれば入力してください。"
-                  className="min-h-[80px]"
-                />
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>制約条件</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2">
-                  {constraints.map((constraint) => (
-                    <button
-                      key={constraint.id}
-                      onClick={() => toggleConstraint(constraint.id)}
-                      className={`px-3 py-1.5 text-xs rounded-full transition-colors border ${
-                        constraint.checked
-                          ? "bg-blue-500 text-white border-blue-500 hover:bg-blue-600"
-                          : "bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200 hover:border-slate-300"
-                      }`}
-                    >
-                      {constraint.label}
-                    </button>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Button
-              onClick={handleExplore}
-              disabled={!question.trim() || isLoading}
-              className="w-full"
-              size="lg"
+      {/* Main Content */}
+      <div className="flex-1 overflow-hidden">
+        <div className="container mx-auto h-full px-4 py-4">
+          <div className="grid lg:grid-cols-2 gap-4 h-full">
+            {/* Input Section */}
+            <div
+              className="overflow-y-auto pr-2 space-y-3"
+              style={{ maxHeight: contentHeight }}
             >
-              {isLoading ? "探索中..." : "勝ち筋を探索"}
-            </Button>
-
-            {isLoading && (
-              <Card className="bg-blue-50 border-blue-200">
-                <CardContent className="py-6">
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-blue-700 font-medium">AIが勝ち筋を探索中...</span>
-                      <span className="text-blue-600">約2分</span>
-                    </div>
-                    <div className="w-full bg-blue-200 rounded-full h-2 overflow-hidden">
-                      <div className="bg-blue-600 h-2 rounded-full animate-progress"></div>
-                    </div>
-                    <p className="text-xs text-blue-600">
-                      コア情報・制約条件・外部情報を分析しています
-                    </p>
+              {/* Sample Questions */}
+              <Card className="flex-shrink-0">
+                <CardHeader className="py-2 px-4">
+                  <CardTitle className="text-xs text-slate-600">サンプルの問い（複数選択可）</CardTitle>
+                </CardHeader>
+                <CardContent className="px-4 pb-3">
+                  <div className="flex flex-wrap gap-1.5">
+                    {sampleQuestions.map((sample, index) => (
+                      <button
+                        key={index}
+                        onClick={() => handleSampleClick(index)}
+                        className={`px-2.5 py-1 text-xs rounded-full transition-colors border ${
+                          selectedSamples.has(index)
+                            ? "bg-blue-500 text-white border-blue-500 hover:bg-blue-600"
+                            : "bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200 hover:border-slate-300"
+                        }`}
+                      >
+                        {sample.title}
+                      </button>
+                    ))}
                   </div>
                 </CardContent>
               </Card>
-            )}
 
-            {error && (
-              <div className="bg-red-50 text-red-700 p-4 rounded-lg">
-                {error}
-              </div>
-            )}
-          </div>
-
-          {/* Results Section */}
-          <div>
-            {result ? (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-bold text-slate-900">
-                    探索結果（{result.strategies?.length || 0}件の勝ち筋）
-                  </h2>
-                  <Button
-                    onClick={handleExport}
-                    disabled={isExporting}
-                    variant="outline"
-                    size="sm"
-                  >
-                    {isExporting ? "出力中..." : "MD出力"}
-                  </Button>
-                </div>
-
-                <div id="export-content" className="space-y-4 bg-white p-4 rounded-lg">
-                  {result.thinkingProcess && (
-                    <Card className="bg-slate-100">
-                      <CardHeader>
-                        <CardTitle className="text-sm">思考プロセス</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="text-sm text-slate-600 whitespace-pre-wrap">
-                          {result.thinkingProcess}
-                        </p>
-                      </CardContent>
-                    </Card>
-                  )}
-
-                  {result.strategies?.map((strategy, index) => (
-                    <Card key={index}>
-                      <CardHeader className="pb-2">
-                        <div className="flex items-start justify-between">
-                          <CardTitle className="text-lg">
-                            {index + 1}. {strategy.name}
-                          </CardTitle>
-                          <span
-                            className={`px-2 py-1 text-xs rounded ${confidenceColor(
-                              strategy.confidence
-                            )}`}
-                          >
-                            {confidenceLabel(strategy.confidence)}
-                          </span>
-                        </div>
-                        <div className="flex flex-wrap gap-1 mt-2">
-                          {strategy.tags?.map((tag, i) => (
-                            <span
-                              key={i}
-                              className="px-2 py-0.5 bg-slate-200 text-slate-600 text-xs rounded"
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        <div>
-                          <p className="text-xs font-semibold text-slate-500 mb-1">
-                            なぜ勝てる
-                          </p>
-                          <p className="text-sm">{strategy.reason}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs font-semibold text-slate-500 mb-1">
-                            入手方法
-                          </p>
-                          <p className="text-sm">{strategy.howToObtain}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs font-semibold text-slate-500 mb-1">
-                            指標例
-                          </p>
-                          <p className="text-sm">{strategy.metrics}</p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <Card className="h-full flex items-center justify-center">
-                <CardContent className="text-center text-slate-500 py-16">
-                  <p>問いを入力して「勝ち筋を探索」を押してください</p>
+              <Card>
+                <CardHeader className="py-2 px-4">
+                  <CardTitle className="text-sm">問い</CardTitle>
+                </CardHeader>
+                <CardContent className="px-4 pb-3">
+                  <Textarea
+                    value={question}
+                    onChange={(e) => setQuestion(e.target.value)}
+                    placeholder="例：〇〇領域で、3年以内に収益化できる勝ち筋を見つけたい"
+                    className="min-h-[80px] text-sm"
+                  />
                 </CardContent>
               </Card>
-            )}
+
+              <Card>
+                <CardHeader className="py-2 px-4">
+                  <CardTitle className="text-sm">追加文脈（任意）</CardTitle>
+                </CardHeader>
+                <CardContent className="px-4 pb-3">
+                  <Textarea
+                    value={context}
+                    onChange={(e) => setContext(e.target.value)}
+                    placeholder="問いの背景情報など"
+                    className="min-h-[60px] text-sm"
+                  />
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="py-2 px-4">
+                  <CardTitle className="text-sm">制約条件</CardTitle>
+                </CardHeader>
+                <CardContent className="px-4 pb-3">
+                  <div className="flex flex-wrap gap-1.5">
+                    {constraints.map((constraint) => (
+                      <button
+                        key={constraint.id}
+                        onClick={() => toggleConstraint(constraint.id)}
+                        className={`px-2.5 py-1 text-xs rounded-full transition-colors border ${
+                          constraint.checked
+                            ? "bg-blue-500 text-white border-blue-500 hover:bg-blue-600"
+                            : "bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200 hover:border-slate-300"
+                        }`}
+                      >
+                        {constraint.label}
+                      </button>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Button
+                onClick={handleExplore}
+                disabled={!question.trim() || isLoading}
+                className="w-full"
+                size="default"
+              >
+                {isLoading ? "探索中..." : "勝ち筋を探索"}
+              </Button>
+
+              {isLoading && (
+                <Card className="bg-blue-50 border-blue-200">
+                  <CardContent className="py-4">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-blue-700 font-medium">AIが勝ち筋を探索中...</span>
+                        <span className="text-blue-600 text-xs">約2分</span>
+                      </div>
+                      <div className="w-full bg-blue-200 rounded-full h-2 overflow-hidden">
+                        <div className="bg-blue-600 h-2 rounded-full animate-progress"></div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {error && (
+                <div className="bg-red-50 text-red-700 p-3 rounded-lg text-sm">
+                  {error}
+                </div>
+              )}
+            </div>
+
+            {/* Results Section */}
+            <div
+              className="overflow-y-auto pl-2"
+              style={{ maxHeight: contentHeight }}
+            >
+              {result ? (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between sticky top-0 bg-slate-50 py-2 z-10">
+                    <h2 className="text-lg font-bold text-slate-900">
+                      探索結果（{result.strategies?.length || 0}件）
+                    </h2>
+                    <Button
+                      onClick={handleExport}
+                      disabled={isExporting}
+                      variant="outline"
+                      size="sm"
+                    >
+                      {isExporting ? "出力中..." : "MD出力"}
+                    </Button>
+                  </div>
+
+                  <div id="export-content" className="space-y-3">
+                    {result.thinkingProcess && (
+                      <Card className="bg-slate-100">
+                        <CardHeader className="py-2 px-4">
+                          <CardTitle className="text-xs">思考プロセス</CardTitle>
+                        </CardHeader>
+                        <CardContent className="px-4 pb-3">
+                          <p className="text-xs text-slate-600 whitespace-pre-wrap">
+                            {result.thinkingProcess}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {result.strategies?.map((strategy, index) => (
+                      <Card key={index}>
+                        <CardHeader className="py-2 px-4">
+                          <div className="flex items-start justify-between">
+                            <CardTitle className="text-sm">
+                              {index + 1}. {strategy.name}
+                            </CardTitle>
+                            <span
+                              className={`px-2 py-0.5 text-xs rounded ${confidenceColor(
+                                strategy.confidence
+                              )}`}
+                            >
+                              {confidenceLabel(strategy.confidence)}
+                            </span>
+                          </div>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {strategy.tags?.map((tag, i) => (
+                              <span
+                                key={i}
+                                className="px-1.5 py-0.5 bg-slate-200 text-slate-600 text-xs rounded"
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        </CardHeader>
+                        <CardContent className="px-4 pb-3 space-y-2">
+                          <div>
+                            <p className="text-xs font-semibold text-slate-500">
+                              なぜ勝てる
+                            </p>
+                            <p className="text-xs">{strategy.reason}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs font-semibold text-slate-500">
+                              入手方法
+                            </p>
+                            <p className="text-xs">{strategy.howToObtain}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs font-semibold text-slate-500">
+                              指標例
+                            </p>
+                            <p className="text-xs">{strategy.metrics}</p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <Card className="h-full flex items-center justify-center min-h-[300px]">
+                  <CardContent className="text-center text-slate-500 py-8">
+                    <p className="text-sm">問いを入力して「勝ち筋を探索」を押してください</p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           </div>
         </div>
       </div>
