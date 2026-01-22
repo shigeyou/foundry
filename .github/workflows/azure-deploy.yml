@@ -58,7 +58,7 @@ jobs:
           cp -r src/generated .next/standalone/src/
           # Copy database file (prisma creates in prisma/ directory relative to schema)
           mkdir -p .next/standalone/data
-          cp prisma/deploy.db .next/standalone/data/dev.db
+          cp prisma/dev.db .next/standalone/data/dev.db
           # Create package.json for Azure App Service
           echo '{"name":"kachisuji-finder","version":"1.0.0","scripts":{"start":"node server.js"}}' > .next/standalone/package.json
 
