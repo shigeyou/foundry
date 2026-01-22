@@ -49,6 +49,8 @@ jobs:
           cp prisma/schema.prisma .next/standalone/prisma/
           # Copy generated prisma client
           cp -r src/generated .next/standalone/src/
+          # Create package.json for Azure App Service
+          echo '{"name":"kachisuji-finder","version":"1.0.0","scripts":{"start":"node server.js"}}' > .next/standalone/package.json
 
       - name: Create deployment package
         run: |
@@ -60,6 +62,13 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+      - name: Set startup command before deploy
+        run: |
+          az webapp config set \
+            --resource-group rg-ocreader-japaneast \
+            --name ${{ env.AZURE_WEBAPP_NAME }} \
+            --startup-file "node server.js"
+
       - name: Deploy to Azure Web App
         run: |
           az webapp deploy \
@@ -69,10 +78,3 @@ jobs:
             --type zip \
             --clean true \
             --restart true
-
-      - name: Set startup command
-        run: |
-          az webapp config set \
-            --resource-group rg-ocreader-japaneast \
-            --name ${{ env.AZURE_WEBAPP_NAME }} \
-            --startup-file "node server.js"
