@@ -55,10 +55,13 @@ jobs:
 
       - name: Deploy to Azure Web App
         run: |
-          az webapp deployment source config-zip \
+          az webapp deploy \
             --resource-group rg-ocreader-japaneast \
             --name ${{ env.AZURE_WEBAPP_NAME }} \
-            --src deploy.zip
+            --src-path deploy.zip \
+            --type zip \
+            --clean true \
+            --restart true
 
       - name: Set startup command
         run: |
