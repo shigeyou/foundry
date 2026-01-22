@@ -162,14 +162,3 @@ model DefaultSwot {
   updatedAt     DateTime @updatedAt
   updatedBy     String?  // 更新者（開発者名）
 }
-
-// RAGドキュメント
-model RAGDocument {
-  id          String   @id @default(cuid())
-  filename    String
-  fileType    String   // pdf, txt, md, json, docx, csv, pptx
-  content     String   // 抽出されたテキスト内容
-  metadata    String?  // JSON metadata (pages, author, etc.)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
