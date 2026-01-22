@@ -31,6 +31,12 @@ jobs:
       - name: Generate Prisma Client
         run: npx prisma generate
 
+      - name: Create empty database with schema
+        run: |
+          npx prisma db push --skip-generate
+        env:
+          DATABASE_URL: file:./deploy.db
+
       - name: Build
         run: npm run build
         env:
@@ -49,6 +55,9 @@ jobs:
           cp prisma/schema.prisma .next/standalone/prisma/
           # Copy generated prisma client
           cp -r src/generated .next/standalone/src/
+          # Copy database file
+          mkdir -p .next/standalone/data
+          cp prisma/deploy.db .next/standalone/data/dev.db
           # Create package.json for Azure App Service
           echo '{"name":"kachisuji-finder","version":"1.0.0","scripts":{"start":"node server.js"}}' > .next/standalone/package.json
 
@@ -62,12 +71,16 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Set startup command before deploy
+      - name: Set startup command and environment variables
         run: |
           az webapp config set \
             --resource-group rg-ocreader-japaneast \
             --name ${{ env.AZURE_WEBAPP_NAME }} \
             --startup-file "node server.js"
+          az webapp config appsettings set \
+            --resource-group rg-ocreader-japaneast \
+            --name ${{ env.AZURE_WEBAPP_NAME }} \
+            --settings DATABASE_URL="file://home/site/wwwroot/data/dev.db"
 
       - name: Deploy to Azure Web App
         run: |
