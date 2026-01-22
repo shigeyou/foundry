@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -50,7 +50,7 @@ interface MetaResult {
   thinkingProcess: string;
 }
 
-export default function InsightsPage() {
+function InsightsPageContent() {
   const searchParams = useSearchParams();
   const initialTab = (searchParams.get("tab") as TabType) || "history";
   const highlightId = searchParams.get("id");
@@ -687,5 +687,13 @@ export default function InsightsPage() {
         )}
       </div>
     </main>
+  );
+}
+
+export default function InsightsPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">読み込み中...</div>}>
+      <InsightsPageContent />
+    </Suspense>
   );
 }
