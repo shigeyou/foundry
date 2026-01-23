@@ -26,12 +26,12 @@ interface ScoreWeights {
 }
 
 const defaultWeights: ScoreWeights = {
-  revenuePotential: 30,
-  timeToRevenue: 20,
-  competitiveAdvantage: 20,
-  executionFeasibility: 15,
-  hqContribution: 10,
-  mergerSynergy: 5,
+  revenuePotential: 1.0,
+  timeToRevenue: 1.0,
+  competitiveAdvantage: 1.0,
+  executionFeasibility: 1.0,
+  hqContribution: 1.0,
+  mergerSynergy: 1.0,
 };
 
 const scoreLabels: Record<keyof ScoreWeights, string> = {
