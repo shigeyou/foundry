@@ -13,10 +13,9 @@ const tabItems: TabItem[] = [
   { id: "swot", label: "SWOT" },
   { id: "score", label: "スコア設定" },
   { id: "explore", label: "勝ち筋探索" },
-  { id: "history", label: "探索履歴" },
-  { id: "ranking", label: "ランキング" },
   { id: "strategies", label: "シン・勝ち筋の探求" },
-  { id: "insights", label: "インサイト" },
+  { id: "ranking", label: "ランキング" },
+  { id: "history", label: "探索履歴" },
 ];
 
 export function Navigation() {
@@ -29,9 +28,14 @@ export function Navigation() {
           {/* ロゴ */}
           <button
             onClick={() => setActiveTab("explore")}
-            className="text-lg font-bold text-slate-900 dark:text-slate-100 hover:opacity-80"
+            className="text-left hover:opacity-80"
           >
-            勝ち筋ファインダー
+            <p className="text-[0.9rem] text-slate-500 dark:text-slate-400">
+              企業の勝ち筋をAIで探索する
+            </p>
+            <p className="text-[1.35rem] font-bold text-slate-900 dark:text-slate-100">
+              勝ち筋ファインダー <span className="text-[1.225rem] font-normal text-slate-500 dark:text-slate-400">Ver.0.5</span>
+            </p>
           </button>
 
           {/* タブナビゲーション */}
@@ -39,15 +43,14 @@ export function Navigation() {
             {tabItems.map((item) => {
               const isActive = activeTab === item.id;
               const isExploring = item.id === "explore" && explorationStatus === "running";
-              const isStrategiesRunning = item.id === "strategies" && (evolveStatus === "running" || autoExploreStatus === "running");
-              const isInsightsRunning = item.id === "insights" && metaAnalysisStatus === "running";
-              const showIndicator = isExploring || isStrategiesRunning || isInsightsRunning;
+              const isStrategiesRunning = item.id === "strategies" && (evolveStatus === "running" || autoExploreStatus === "running" || metaAnalysisStatus === "running");
+              const showIndicator = isExploring || isStrategiesRunning;
 
               return (
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
-                  className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors relative ${
+                  className={`px-3 py-1.5 text-[1.05rem] font-medium rounded-lg transition-colors relative ${
                     isActive
                       ? "bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300"
                       : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-100"
@@ -57,10 +60,10 @@ export function Navigation() {
                   {showIndicator && (
                     <span className="absolute -top-1 -right-1 flex h-3 w-3">
                       <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${
-                        isInsightsRunning ? "bg-purple-400" : isStrategiesRunning ? "bg-emerald-400" : "bg-blue-400"
+                        isStrategiesRunning ? "bg-emerald-400" : "bg-blue-400"
                       } opacity-75`}></span>
                       <span className={`relative inline-flex rounded-full h-3 w-3 ${
-                        isInsightsRunning ? "bg-purple-500" : isStrategiesRunning ? "bg-emerald-500" : "bg-blue-500"
+                        isStrategiesRunning ? "bg-emerald-500" : "bg-blue-500"
                       }`}></span>
                     </span>
                   )}

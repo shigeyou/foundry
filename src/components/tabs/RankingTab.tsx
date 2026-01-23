@@ -31,6 +31,16 @@ export function RankingTab() {
   const [allDecisions, setAllDecisions] = useState<Record<string, Decision>>({});
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
 
+  // スコアラベルの日本語マッピング
+  const scoreLabels: Record<string, string> = {
+    revenuePotential: "収益ポテンシャル",
+    timeToRevenue: "収益化までの距離",
+    competitiveAdvantage: "勝ち筋の強さ",
+    executionFeasibility: "実行可能性",
+    hqContribution: "本社貢献",
+    mergerSynergy: "合併シナジー",
+  };
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -94,6 +104,27 @@ export function RankingTab() {
     return date.toLocaleDateString("ja-JP", { month: "2-digit", day: "2-digit" });
   };
 
+  const handleClearDecisions = async () => {
+    if (!confirm("ランキング画面の採否をすべてクリアしますか？")) return;
+
+    try {
+      const res = await fetch("/api/decisions?clearRanking=true", {
+        method: "DELETE",
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setAllDecisions({});
+        alert(`${data.deleted}件の採否をクリアしました`);
+      } else {
+        alert("クリアに失敗しました");
+      }
+    } catch (error) {
+      console.error("Failed to clear decisions:", error);
+      alert("クリアに失敗しました");
+    }
+  };
+
   const judgmentBadge = (judgment?: string) => {
     if (judgment === "優先投資") {
       return (
@@ -115,9 +146,21 @@ export function RankingTab() {
     <div className="container mx-auto px-4 py-6">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">ランキング</h1>
-        <span className="text-sm text-slate-500 dark:text-slate-400">
-          {rankingStrategies.length}件の戦略
-        </span>
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-slate-500 dark:text-slate-400">
+            {rankingStrategies.length}件の勝ち筋
+          </span>
+          {Object.keys(allDecisions).length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleClearDecisions}
+              className="text-red-600 border-red-300 hover:bg-red-50 dark:text-red-400 dark:border-red-700 dark:hover:bg-red-900/20"
+            >
+              採否をクリア
+            </Button>
+          )}
+        </div>
       </div>
 
       {loading ? (
@@ -136,7 +179,7 @@ export function RankingTab() {
                   #
                 </th>
                 <th className="text-left py-3 px-3 text-xs font-medium text-slate-500 dark:text-slate-400">
-                  戦略名
+                  勝ち筋名
                 </th>
                 <th className="text-center py-3 px-3 text-xs font-medium text-slate-500 dark:text-slate-400">
                   スコア
@@ -224,7 +267,7 @@ export function RankingTab() {
                                     key={key}
                                     className="px-2 py-0.5 text-xs bg-slate-200 dark:bg-slate-600 text-slate-600 dark:text-slate-300 rounded"
                                   >
-                                    {key}: {value}
+                                    {scoreLabels[key] || key}: {value}
                                   </span>
                                 ))}
                               </div>

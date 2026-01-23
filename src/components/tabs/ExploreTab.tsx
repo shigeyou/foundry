@@ -20,6 +20,16 @@ export function ExploreTab() {
   const [selectedPresets, setSelectedPresets] = useState<Set<number>>(new Set());
   const [expandedStrategy, setExpandedStrategy] = useState<number | null>(null);
 
+  // スコアラベルの日本語マッピング
+  const scoreLabels: Record<string, string> = {
+    revenuePotential: "収益ポテンシャル",
+    timeToRevenue: "収益化までの距離",
+    competitiveAdvantage: "勝ち筋の強さ",
+    executionFeasibility: "実行可能性",
+    hqContribution: "本社貢献",
+    mergerSynergy: "合併シナジー",
+  };
+
   const togglePreset = (index: number) => {
     const newSelected = new Set(selectedPresets);
     if (newSelected.has(index)) {
@@ -64,7 +74,7 @@ export function ExploreTab() {
           <div>
             <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">勝ち筋探索</h1>
             <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-              問いを立てて、AIが勝ち筋（戦略）を探索します。
+              問いを立てて、AIが勝ち筋を探索します。
             </p>
           </div>
 
@@ -237,7 +247,7 @@ export function ExploreTab() {
                                   key={key}
                                   className="px-2 py-0.5 bg-slate-200 dark:bg-slate-600 rounded text-xs text-slate-600 dark:text-slate-300"
                                 >
-                                  {key}: {value}
+                                  {scoreLabels[key] || key}: {value}
                                 </span>
                               ))}
                             </div>
@@ -249,7 +259,7 @@ export function ExploreTab() {
                 </div>
               ) : (
                 <p className="text-sm text-slate-500 dark:text-slate-400">
-                  戦略が見つかりませんでした
+                  勝ち筋が見つかりませんでした
                 </p>
               )}
             </div>

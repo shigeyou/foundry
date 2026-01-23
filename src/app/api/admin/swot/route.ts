@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
       const coreServices = await prisma.coreService.findMany();
       const servicesText = coreServices.length > 0
         ? coreServices.map(s => `- ${s.name}${s.category ? ` (${s.category})` : ""}${s.description ? `: ${s.description}` : ""}`).join("\n")
-        : "（このシステムには未登録）";
+        : "";
 
       // RAGドキュメントも参照
       const ragDocuments = await prisma.rAGDocument.findMany({
@@ -62,15 +62,16 @@ export async function POST(request: NextRequest) {
 
       const prompt = `あなたは企業戦略コンサルタントです。以下の情報を基にSWOT分析を行ってください。
 
-## 重要な注意事項
-- 「自社の事業・サービス」が「未登録」または空欄の場合でも、それは「このシステムに登録されていないだけ」であり、「会社にサービスが存在しない」という意味ではありません。
-- 未登録だからといって「サービスがない」「実績がない」と判断しないでください。
-- RAGドキュメント（会社資料）に記載されている事業・サービス・実績を優先的に参照してください。
+## 最重要ルール（必ず遵守）
+1. 「登録サービスなし」「サービスが未登録」「登録がない」等の表現を絶対に使用しないでください。
+2. 本システムへの登録状況は分析対象外です。登録の有無について一切言及しないでください。
+3. RAGドキュメント（会社資料）に記載されている事業・サービス・実績こそが正式な情報源です。
+4. 下記「追加登録サービス」欄が空欄でも、それは「RAGドキュメントと重複を避けるため意図的に空欄」であり、サービスが存在しないわけではありません。
 
-## 自社の事業・サービス（システム登録分）
+${servicesText ? `## 追加登録サービス（RAGドキュメントへの補足）
 ${servicesText}
 
-${ragContext ? `## 会社資料（RAGドキュメント）
+` : ""}${ragContext ? `## 会社資料（RAGドキュメント）※最も重要な情報源
 ${ragContext}
 
 ` : ""}${additionalInfo ? `## 補足情報・追加資料
@@ -86,9 +87,11 @@ ${additionalInfo}
   "summary": "SWOT分析のサマリー（2-3文）"
 }
 
-各項目は5〜8個程度、具体的かつ実用的な内容にしてください。
-RAGドキュメントに記載されている会社情報・事業内容・強みを最大限活用してください。
-海運グループ企業の視点で、市場環境や競合状況も考慮してください。`;
+## 分析ガイドライン
+- 各項目は5〜8個程度、具体的かつ実用的な内容にしてください。
+- RAGドキュメントに記載されている会社情報・事業内容・強みを最大限活用してください。
+- 海運グループ企業の視点で、市場環境や競合状況も考慮してください。
+- サマリーには「登録」「未登録」「システム」等のメタ情報を含めず、純粋に事業戦略の観点で記述してください。`;
 
       console.log("Generating SWOT analysis with AI...");
       const aiResponse = await generateWithClaude(prompt, {

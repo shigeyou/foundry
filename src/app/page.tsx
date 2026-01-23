@@ -9,7 +9,6 @@ import { ExploreTab } from "@/components/tabs/ExploreTab";
 import { HistoryTab } from "@/components/tabs/HistoryTab";
 import { RankingTab } from "@/components/tabs/RankingTab";
 import { StrategiesTab } from "@/components/tabs/StrategiesTab";
-import { InsightsTab } from "@/components/tabs/InsightsTab";
 
 const tabComponents: Record<TabType, React.FC> = {
   swot: SwotTab,
@@ -19,7 +18,6 @@ const tabComponents: Record<TabType, React.FC> = {
   history: HistoryTab,
   ranking: RankingTab,
   strategies: StrategiesTab,
-  insights: InsightsTab,
 };
 
 function MainContent() {

@@ -12,7 +12,7 @@ const scoreDescriptions: Record<keyof ScoreWeights, {
 }> = {
   revenuePotential: {
     subtitle: "儲かる大きさ",
-    question: "この戦略が成功した場合、どれだけの収益が見込めるか？",
+    question: "この勝ち筋が成功した場合、どれだけの収益が見込めるか？",
     levels: [
       { score: 5, description: "市場が大きく、単価と量の両方が立つ。勝てば会社の柱になる" },
       { score: 3, description: "特定領域で十分な利益が出る。部門の柱にはなる" },
@@ -231,7 +231,7 @@ export function ScoreSettingsTab() {
             </h3>
             <div className="space-y-2 text-xs text-blue-900 dark:text-blue-100">
               <p className="text-blue-700 dark:text-blue-300">
-                AIが各戦略を6軸で <strong>1〜5点</strong> で評価し、重み（比率）を掛けて合計します。
+                AIが各勝ち筋を6軸で <strong>1〜5点</strong> で評価し、重み（比率）を掛けて合計します。
               </p>
               <div className="bg-white/50 dark:bg-slate-800/50 rounded p-2 font-mono text-xs">
                 <p>総合スコア = Σ（各軸スコア × 正規化比率）</p>

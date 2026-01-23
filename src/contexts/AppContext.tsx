@@ -54,7 +54,7 @@ export interface ExplorationResult {
   thinking?: string;
 }
 
-export type TabType = "swot" | "rag" | "score" | "explore" | "history" | "ranking" | "strategies" | "insights";
+export type TabType = "swot" | "rag" | "score" | "explore" | "history" | "ranking" | "strategies";
 
 export type ExplorationStatus = "idle" | "running" | "completed" | "failed";
 
@@ -153,6 +153,7 @@ export const presetQuestions = [
   { label: "海洋調査", question: "海洋調査・研究支援サービスで新規顧客を開拓するには？" },
   { label: "グローバル", question: "海外市場での事業展開を加速するには？" },
   { label: "船舶検査", question: "船舶検査・管理サービスの収益性を向上させるには？" },
+  { label: "ドローン", question: "ドローン技術を活用した新サービス・業務効率化を実現するには？" },
 ];
 
 // ===== Context 型 =====
@@ -225,7 +226,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 // ===== Provider =====
 export function AppProvider({ children }: { children: ReactNode }) {
   // タブ
-  const [activeTab, setActiveTab] = useState<TabType>("explore");
+  const [activeTab, setActiveTab] = useState<TabType>("rag");
 
   // SWOT
   const [swot, setSwot] = useState<SwotData | null>(null);
@@ -279,32 +280,34 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const metaAnalysisStartTimeRef = useRef<number>(0);
   const metaAnalysisMaxProgressRef = useRef<number>(0);
 
-  // イージング関数: 中盤ゆっくり→終盤加速→最後スムーズに完了
-  // ユーザー要望: 序盤早すぎ・終盤停滞を解消、尻上がりに完了
+  // イージング関数: 前半ゆっくり→後半加速（尻上がり）
+  // ユーザー要望: 前半を現在の50%の速度に抑え、93%付近での停滞感を解消
   const calculateEasedProgress = useCallback((startTime: number, expectedDuration: number): number => {
     const elapsed = Date.now() - startTime;
     const t = elapsed / expectedDuration; // 時間比率（1を超える可能性あり）
 
     let progress: number;
 
-    if (t <= 0.3) {
-      // 序盤 (0-30%時間): 0-20%進捗 (普通のペース)
-      progress = (t / 0.3) * 20;
-    } else if (t <= 0.6) {
-      // 中盤 (30-60%時間): 20-45%進捗 (ゆっくり)
-      const midT = (t - 0.3) / 0.3;
-      progress = 20 + midT * 25;
+    if (t <= 0.5) {
+      // 前半 (0-50%時間): 0-10%進捗 (非常にゆっくり - 現在の約50%の速度)
+      progress = (t / 0.5) * 10;
+    } else if (t <= 0.8) {
+      // 中盤 (50-80%時間): 10-35%進捗 (やや加速)
+      const midT = (t - 0.5) / 0.3;
+      progress = 10 + midT * 25;
     } else if (t <= 1.0) {
-      // 終盤 (60-100%時間): 45-92%進捗 (加速)
-      const endT = (t - 0.6) / 0.4;
-      // 二次関数で加速感: t^2ベースで尻上がり
-      progress = 45 + Math.pow(endT, 0.7) * 47;
+      // 後半 (80-100%時間): 35-70%進捗 (加速)
+      const lateT = (t - 0.8) / 0.2;
+      progress = 35 + lateT * 35;
+    } else if (t <= 1.5) {
+      // 時間超過前半 (100-150%時間): 70-90%進捗 (まだ動いている感じ)
+      const overT = (t - 1.0) / 0.5;
+      progress = 70 + overT * 20;
     } else {
-      // 時間超過: 92%から99%まで少しずつ進む (停滞感を避ける)
-      const overT = t - 1.0;
-      // 超過時間の最初の0.5(50%追加)で7%進む
-      const extraProgress = Math.min(overT * 14, 7);
-      progress = 92 + extraProgress;
+      // 時間超過後半 (150%以降): 90-99%進捗 (ゆっくりだが停滞感なし)
+      const overT2 = t - 1.5;
+      const extraProgress = Math.min(overT2 * 10, 9);
+      progress = 90 + extraProgress;
     }
 
     return Math.min(progress, 99);
@@ -752,7 +755,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setMetaAnalysisStatus("failed");
         setMetaAnalysisProgress(0);
       } else {
-        setMetaAnalysisResult(data);
+        // APIレスポンスをフロントエンドの期待する形式に変換
+        const transformedResult: MetaAnalysisResult = {
+          summary: {
+            totalExplorations: data.totalExplorations || 0,
+            totalStrategies: data.totalStrategies || 0,
+            metaStrategiesCount: data.topStrategies?.length || 0,
+            clusterCount: data.clusters?.length || 0,
+          },
+          topStrategies: (data.topStrategies || []).map((s: { name: string; frequency?: number }) => ({
+            name: s.name,
+            count: s.frequency || 1,
+          })),
+          clusters: (data.clusters || []).map((c: { name: string; strategies: string[] }) => ({
+            name: c.name,
+            strategies: c.strategies || [],
+          })),
+          frequentTags: data.frequentTags || [],
+          blindSpots: data.blindSpots || [],
+          thinkingProcess: data.thinkingProcess || "",
+        };
+        setMetaAnalysisResult(transformedResult);
         setMetaAnalysisStatus("completed");
         setMetaAnalysisProgress(100);
       }

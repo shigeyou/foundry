@@ -21,6 +21,7 @@ export function RagTab() {
   // RAG
   const [ragMessage, setRagMessage] = useState("");
   const [ragUploading, setRagUploading] = useState(false);
+  const [ragExplanationOpen, setRagExplanationOpen] = useState(false);
   const ragFileInputRef = useRef<HTMLInputElement>(null);
   const [selectedRagDoc, setSelectedRagDoc] = useState<{
     filename: string;
@@ -168,9 +169,63 @@ export function RagTab() {
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">RAG情報</h1>
           <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-            登録した情報は探索時にAIが自動で参照し、より的確な戦略を生成します。
+            登録した情報は探索時にAIが自動で参照し、より的確な勝ち筋を生成します。
           </p>
         </div>
+      </div>
+
+      {/* RAGの説明（折り畳み式） */}
+      <div className="mb-6 bg-sky-50 dark:bg-sky-900/20 rounded-lg border border-sky-200 dark:border-sky-800">
+        <button
+          onClick={() => setRagExplanationOpen(!ragExplanationOpen)}
+          className="w-full p-4 flex items-center justify-between text-left hover:bg-sky-100 dark:hover:bg-sky-900/30 transition-colors rounded-lg"
+        >
+          <p className="text-sm font-medium text-sky-800 dark:text-sky-200">
+            RAG（Retrieval-Augmented Generation）とは？
+          </p>
+          <span className="text-sky-600 dark:text-sky-400">
+            {ragExplanationOpen ? "▼" : "▶"}
+          </span>
+        </button>
+
+        {ragExplanationOpen && (
+          <div className="px-4 pb-4 space-y-3 text-xs text-sky-700 dark:text-sky-300">
+            <div>
+              <p className="font-medium text-sky-800 dark:text-sky-200 mb-1">
+                実施目的（なぜ行うのか）
+              </p>
+              <p>
+                AIは汎用的な知識を持っていますが、<span className="font-medium">あなたの会社固有の情報</span>は知りません。
+                RAGは、会社案内・事業計画・技術資料などを登録することで、AIがそれらを参照しながら
+                <span className="font-medium">「あなたの会社に特化した勝ち筋」</span>を生成できるようにする仕組みです。
+              </p>
+            </div>
+
+            <div>
+              <p className="font-medium text-sky-800 dark:text-sky-200 mb-1">
+                得られるメリット（何が有効なのか）
+              </p>
+              <ul className="list-disc list-inside space-y-0.5">
+                <li><span className="font-medium">勝ち筋の具体性向上</span>：自社の強み・サービス・技術を踏まえた実現可能な勝ち筋が提案される</li>
+                <li><span className="font-medium">ハルシネーション防止</span>：AIの「知ったかぶり」を減らし、事実に基づいた提案を促進</li>
+                <li><span className="font-medium">探索精度の向上</span>：業界用語・社内用語を理解した上で勝ち筋を考えてくれる</li>
+              </ul>
+            </div>
+
+            <div>
+              <p className="font-medium text-sky-800 dark:text-sky-200 mb-1">
+                考え方の整理（どのようなロジックか）
+              </p>
+              <p>
+                探索実行時、AIは登録されたドキュメントを自動的に検索・参照します。
+                (1) 会社案内やパンフレット → 自社の強み・サービスを把握、
+                (2) 事業計画や戦略資料 → 目指す方向性を理解、
+                (3) 技術資料や業界レポート → 実現可能性を判断。
+                登録情報が充実するほど、AIの提案精度が向上します。
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* 追加/編集フォーム */}
@@ -251,7 +306,7 @@ export function RagTab() {
               </span>
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              貴社が提供している事業やサービスを登録すると、AIがそれを前提に戦略を提案します。
+              貴社が提供している事業やサービスを登録すると、AIがそれを前提に勝ち筋を提案します。
             </p>
           </div>
           <Button onClick={handleAddService} size="sm">+ 事業・サービスを追加</Button>

@@ -295,7 +295,7 @@ export function HistoryTab() {
                         {statusBadge(exploration.status)}
                         {strategies.length > 0 && (
                           <span className="text-emerald-600 dark:text-emerald-400">
-                            {strategies.length}件の戦略
+                            {strategies.length}件の勝ち筋
                           </span>
                         )}
                       </div>
@@ -376,7 +376,7 @@ export function HistoryTab() {
                     {strategies.length > 0 && (
                       <div className="mt-4">
                         <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
-                          探索された戦略
+                          探索された勝ち筋
                         </h4>
                         <div className="space-y-3">
                           {strategies.map((strategy, index) => {
