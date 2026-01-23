@@ -60,6 +60,54 @@ npm run dev
 - `/core` - コア情報管理
 - `/history` - 探索履歴
 
+## デプロイ（Azure）
+
+### デプロイ後の必須作業：RAGドキュメント同期
+
+**重要**: Azure版はSQLiteデータベースが永続化されないため、デプロイ後はRAGドキュメントが0件になる。
+デプロイ後は必ずローカルのRAGドキュメントをAzure版に同期すること。
+
+```bash
+# 1. ローカルからRAGドキュメントをエクスポート（コンテンツ含む）
+node -e "
+const ids = [/* ローカルのドキュメントIDリスト */];
+async function main() {
+  const docs = [];
+  for (const id of ids) {
+    const res = await fetch('http://localhost:3000/api/rag?id=' + id);
+    const data = await res.json();
+    if (data.document) {
+      docs.push({
+        filename: data.document.filename,
+        fileType: data.document.fileType,
+        content: data.document.content,
+        metadata: data.document.metadata
+      });
+    }
+  }
+  console.log(JSON.stringify({ documents: docs }));
+}
+main();
+" 2>/dev/null > /tmp/rag-export.json
+
+# 2. Azure版にインポート（文字化け対策: charset=utf-8を明示）
+curl -X POST "https://kachisuji-finder.azurewebsites.net/api/rag" \
+  -H "Content-Type: application/json; charset=utf-8" \
+  --data-binary @/tmp/rag-export.json
+```
+
+### 文字化け対策
+- インポート時は必ず `charset=utf-8` を指定する
+- `--data-binary` を使用してバイナリデータとして送信する
+- ファイル名に日本語が含まれる場合は特に注意
+
+### デプロイ手順チェックリスト
+1. [ ] `git push origin master` でコードをプッシュ
+2. [ ] GitHub Actionsのデプロイ完了を確認
+3. [ ] **RAGドキュメントをAzure版に同期**（上記手順）
+4. [ ] Azure版でRAGドキュメント件数を確認
+5. [ ] 動作確認（SWOT、勝ち筋探索など）
+
 ## 技術スタック
 - Next.js 16 (Turbopack)
 - TypeScript
