@@ -1,6 +1,39 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { AzureOpenAI } from "openai";
+
+// GET: メタ分析履歴を取得
+export async function GET(request: NextRequest) {
+  try {
+    const searchParams = request.nextUrl.searchParams;
+    const limit = parseInt(searchParams.get("limit") || "10");
+
+    const history = await prisma.metaAnalysisRun.findMany({
+      orderBy: { createdAt: "desc" },
+      take: limit,
+    });
+
+    const parsed = history.map((run) => ({
+      id: run.id,
+      totalExplorations: run.totalExplorations,
+      totalStrategies: run.totalStrategies,
+      topStrategies: JSON.parse(run.topStrategies),
+      frequentTags: JSON.parse(run.frequentTags),
+      clusters: JSON.parse(run.clusters),
+      blindSpots: JSON.parse(run.blindSpots),
+      thinkingProcess: run.thinkingProcess,
+      createdAt: run.createdAt,
+    }));
+
+    return NextResponse.json(parsed);
+  } catch (error) {
+    console.error("Error fetching meta-analysis history:", error);
+    return NextResponse.json(
+      { error: "履歴の取得に失敗しました" },
+      { status: 500 }
+    );
+  }
+}
 
 interface WinningStrategy {
   name: string;
@@ -183,7 +216,22 @@ ${strategiesSummary}
       thinkingProcess: aiResult.thinkingProcess || "",
     };
 
-    return NextResponse.json(result);
+    // 履歴をデータベースに保存
+    const savedRun = await prisma.metaAnalysisRun.create({
+      data: {
+        totalExplorations: result.totalExplorations,
+        totalStrategies: result.totalStrategies,
+        topStrategies: JSON.stringify(result.topStrategies),
+        frequentTags: JSON.stringify(result.frequentTags),
+        clusters: JSON.stringify(result.clusters),
+        blindSpots: JSON.stringify(result.blindSpots),
+        thinkingProcess: result.thinkingProcess,
+      },
+    });
+
+    console.log("Meta-analysis saved with id:", savedRun.id);
+
+    return NextResponse.json({ ...result, id: savedRun.id, createdAt: savedRun.createdAt });
   } catch (error) {
     console.error("Error in meta-analysis:", error);
     return NextResponse.json(

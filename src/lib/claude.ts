@@ -105,6 +105,9 @@ export async function generateWinningStrategies(
 3. 抽象的ではなく具体的に
 4. 3社統合のシナジーを意識する
 
+## 技術基盤
+商船三井マリテックスでは、マイクロソフトのAzure環境を商船三井と共有しており、機密性が高いプライバシーやセキュリティが高い環境で各種の自社アプリケーションの開発が可能である。すでに生成AIを活用した各種アプリケーションの自社開発を進めている。これを武器として、今後のDXに活かしたい。
+
 ## 評価基準（各1〜5点）
 各勝ち筋を以下の6軸で評価してください：
 
@@ -168,7 +171,7 @@ F. 合併シナジー（mergerSynergy）：1社では出ない価値が出るか
   // 学習パターンセクションを構築
   const learningSection = (successPatterns.length > 0 || failurePatterns.length > 0)
     ? `
-## 過去の学習（人の採否から抽出されたパターン）
+## 過去の学習（ユーザーの採否から抽出されたパターン）
 ${successPatterns.length > 0 ? `
 ### 成功パターン（これらの特徴を持つ戦略は採用されやすい）
 ${successPatterns.join("\n")}

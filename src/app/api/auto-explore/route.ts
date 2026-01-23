@@ -45,10 +45,10 @@ ${assets || "なし"}
 - 具体的で収益に直結しそうな問いにする
 - 既存資産の新しい活用法を探る問いを含める
 - 3社シナジーを活かせる問いを含める
-- JSON配列形式で出力
+- JSON形式で出力
 
-出力形式:
-["問い1", "問い2", "問い3", "問い4", "問い5"]`;
+出力形式（必ずこの形式で）:
+{"questions": ["問い1", "問い2", "問い3", "問い4", "問い5"]}`;
 
   const response = await client.chat.completions.create({
     model: process.env.AZURE_OPENAI_DEPLOYMENT || "gpt-4",
@@ -197,7 +197,7 @@ export async function POST(request: NextRequest) {
         for (const strategy of explorationResult.strategies || []) {
           if (strategy.scores) {
             const score = calculateScore(strategy.scores);
-            if (score >= 3.5) {
+            if (score >= 4.0) {
               result.highScoresFound++;
             }
             if (score > result.topScore) {
@@ -281,10 +281,16 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET: Check last auto-exploration results
+// GET: Check last auto-exploration results and history
 export async function GET() {
   try {
-    // Find recent auto-explorations
+    // Get AutoExploreRun history
+    const runHistory = await prisma.autoExploreRun.findMany({
+      orderBy: { startedAt: "desc" },
+      take: 10,
+    });
+
+    // Find recent auto-explorations (exploration records)
     const recentAutoExplorations = await prisma.exploration.findMany({
       where: {
         context: { contains: "[自動探索]" },
@@ -294,14 +300,32 @@ export async function GET() {
     });
 
     return NextResponse.json({
-      count: recentAutoExplorations.length,
-      recent: recentAutoExplorations.map((e) => ({
+      runHistory: runHistory.map((run) => ({
+        id: run.id,
+        status: run.status,
+        triggerType: run.triggerType,
+        questionsGenerated: run.questionsGenerated,
+        explorationsCompleted: run.explorationsCompleted,
+        highScoresFound: run.highScoresFound,
+        topScore: run.topScore,
+        topStrategyName: run.topStrategyName,
+        baselineScore: run.baselineScore,
+        achievedScore: run.achievedScore,
+        improvement: run.improvement,
+        startedAt: run.startedAt,
+        completedAt: run.completedAt,
+        duration: run.duration,
+        errors: run.errors ? JSON.parse(run.errors) : [],
+      })),
+      explorationCount: recentAutoExplorations.length,
+      recentExplorations: recentAutoExplorations.map((e) => ({
         id: e.id,
         question: e.question,
         createdAt: e.createdAt,
       })),
     });
   } catch (error) {
+    console.error("Auto-explore history error:", error);
     return NextResponse.json({ error: "Failed to fetch auto-exploration history" }, { status: 500 });
   }
 }

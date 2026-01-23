@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { AzureOpenAI } from "openai";
 
+// API route の最大実行時間を延長（秒）
+// 進化生成は時間がかかるため長めに設定
+export const maxDuration = 300;
+
 // 進化生成の型
 type EvolveMode = "mutation" | "crossover" | "refutation" | "all";
 
@@ -53,14 +57,6 @@ async function getAdoptedStrategies(limit: number = 10): Promise<
     }));
   }
 
-  // 関連する探索結果を取得
-  const explorationIds = [...new Set(decisions.map((d) => d.explorationId))];
-  const explorations = await prisma.exploration.findMany({
-    where: { id: { in: explorationIds } },
-  });
-
-  const explorationMap = new Map(explorations.map((e) => [e.id, e]));
-
   const strategies: {
     name: string;
     reason: string;
@@ -69,29 +65,65 @@ async function getAdoptedStrategies(limit: number = 10): Promise<
     scores?: string;
   }[] = [];
 
-  for (const decision of decisions) {
-    const exploration = explorationMap.get(decision.explorationId);
-    if (!exploration?.result) continue;
+  // ランキングからの採用と探索からの採用を分離
+  const rankingDecisions = decisions.filter((d) => d.explorationId.startsWith("ranking-"));
+  const explorationDecisions = decisions.filter((d) => !d.explorationId.startsWith("ranking-"));
 
-    try {
-      const result = JSON.parse(exploration.result);
-      const strategy = result.strategies?.find(
-        (s: { name: string }) => s.name === decision.strategyName
-      );
+  // ランキングから採用された戦略をTopStrategyから取得
+  if (rankingDecisions.length > 0) {
+    const strategyNames = rankingDecisions.map((d) => d.strategyName);
+    const topStrategies = await prisma.topStrategy.findMany({
+      where: { name: { in: strategyNames } },
+    });
 
-      if (strategy && !strategies.some((s) => s.name === strategy.name)) {
+    for (const topStrategy of topStrategies) {
+      if (!strategies.some((s) => s.name === topStrategy.name)) {
         strategies.push({
-          name: strategy.name,
-          reason: strategy.reason || "",
-          howToObtain: strategy.howToObtain,
-          question: exploration.question,
-          scores: strategy.scores ? JSON.stringify(strategy.scores) : undefined,
+          name: topStrategy.name,
+          reason: topStrategy.reason,
+          howToObtain: topStrategy.howToObtain || undefined,
+          question: topStrategy.question,
+          scores: topStrategy.scores,
         });
 
         if (strategies.length >= limit) break;
       }
-    } catch {
-      // JSON parse error - skip
+    }
+  }
+
+  // 探索から採用された戦略をExplorationから取得
+  if (strategies.length < limit && explorationDecisions.length > 0) {
+    const explorationIds = [...new Set(explorationDecisions.map((d) => d.explorationId))];
+    const explorations = await prisma.exploration.findMany({
+      where: { id: { in: explorationIds } },
+    });
+
+    const explorationMap = new Map(explorations.map((e) => [e.id, e]));
+
+    for (const decision of explorationDecisions) {
+      const exploration = explorationMap.get(decision.explorationId);
+      if (!exploration?.result) continue;
+
+      try {
+        const result = JSON.parse(exploration.result);
+        const strategy = result.strategies?.find(
+          (s: { name: string }) => s.name === decision.strategyName
+        );
+
+        if (strategy && !strategies.some((s) => s.name === strategy.name)) {
+          strategies.push({
+            name: strategy.name,
+            reason: strategy.reason || "",
+            howToObtain: strategy.howToObtain,
+            question: exploration.question,
+            scores: strategy.scores ? JSON.stringify(strategy.scores) : undefined,
+          });
+
+          if (strategies.length >= limit) break;
+        }
+      } catch {
+        // JSON parse error - skip
+      }
     }
   }
 
@@ -203,18 +235,45 @@ ${modeInstructions[mode]}
 - 実行可能性を重視し、絵に描いた餅にならないように
 - 各戦略の元になった戦略を明記すること`;
 
+  console.log("[Evolve] Starting Azure OpenAI request...");
+  console.log("[Evolve] Strategies count:", strategies.length);
+
   const response = await client.chat.completions.create({
     model: process.env.AZURE_OPENAI_DEPLOYMENT || "gpt-4",
     messages: [{ role: "user", content: prompt }],
     temperature: 0.8, // 創造性を高める
-    max_completion_tokens: 4000,
+    max_completion_tokens: 8000, // 十分なトークン数を確保
     response_format: { type: "json_object" },
   });
 
-  const content = response.choices[0]?.message?.content;
-  if (!content) {
-    throw new Error("No response from AI");
+  console.log("[Evolve] Response received");
+  const choice = response.choices[0];
+  console.log("[Evolve] Finish reason:", choice?.finish_reason);
+  console.log("[Evolve] Usage:", JSON.stringify(response.usage));
+
+  // Azure OpenAI のコンテンツフィルタリングチェック
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const contentFilterResults = (choice as any)?.content_filter_results;
+  if (contentFilterResults) {
+    console.log("[Evolve] Content filter results:", JSON.stringify(contentFilterResults));
   }
+
+  const content = choice?.message?.content;
+  if (!content) {
+    console.error("[Evolve] No content in response.");
+    console.error("[Evolve] Choice:", JSON.stringify(choice, null, 2));
+
+    // フィニッシュ理由を確認
+    if (choice?.finish_reason === "content_filter") {
+      throw new Error("AIの応答がコンテンツフィルタによりブロックされました");
+    }
+    if (choice?.finish_reason === "length") {
+      throw new Error("AIの応答が長すぎてトークン制限に達しました");
+    }
+    throw new Error("AIからの応答がありませんでした");
+  }
+
+  console.log("[Evolve] Content length:", content.length);
 
   try {
     return JSON.parse(content) as EvolveResult;

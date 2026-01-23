@@ -159,9 +159,29 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// RAGドキュメント一覧を取得
-export async function GET() {
+// RAGドキュメント一覧を取得（idパラメータがあれば詳細を取得）
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+
+    // 特定のドキュメントの詳細を取得
+    if (id) {
+      const document = await prisma.rAGDocument.findUnique({
+        where: { id },
+      });
+
+      if (!document) {
+        return NextResponse.json(
+          { error: "ドキュメントが見つかりません" },
+          { status: 404 }
+        );
+      }
+
+      return NextResponse.json({ document });
+    }
+
+    // 一覧を取得
     const documents = await prisma.rAGDocument.findMany({
       orderBy: { createdAt: "desc" },
       select: {
@@ -178,6 +198,33 @@ export async function GET() {
     console.error("RAG list error:", error);
     return NextResponse.json(
       { error: "ドキュメント一覧の取得に失敗しました" },
+      { status: 500 }
+    );
+  }
+}
+
+// RAGドキュメントを更新（ファイル名など）
+export async function PUT(request: NextRequest) {
+  try {
+    const { id, filename } = await request.json();
+
+    if (!id) {
+      return NextResponse.json(
+        { error: "ドキュメントIDが必要です" },
+        { status: 400 }
+      );
+    }
+
+    const updated = await prisma.rAGDocument.update({
+      where: { id },
+      data: { filename },
+    });
+
+    return NextResponse.json({ success: true, document: updated });
+  } catch (error) {
+    console.error("RAG update error:", error);
+    return NextResponse.json(
+      { error: "ドキュメントの更新に失敗しました" },
       { status: 500 }
     );
   }

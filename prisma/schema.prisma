@@ -1,7 +1,7 @@
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["driverAdapters"]
   output          = "../src/generated/prisma"
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
@@ -9,7 +9,6 @@ datasource db {
   url      = "file:./dev.db"
 }
 
-// コア情報: サービス・機能
 model CoreService {
   id          String   @id @default(cuid())
   name        String
@@ -20,17 +19,15 @@ model CoreService {
   updatedAt   DateTime @updatedAt
 }
 
-// コア情報: 資産・強み
 model CoreAsset {
   id          String   @id @default(cuid())
   name        String
-  type        String   // 技術, 人材, 顧客, 実績, etc.
+  type        String
   description String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
 
-// 制約条件
 model Constraint {
   id          String   @id @default(cuid())
   name        String
@@ -39,54 +36,50 @@ model Constraint {
   createdAt   DateTime @default(now())
 }
 
-// 探索履歴
 model Exploration {
-  id           String   @id @default(cuid())
-  question     String
-  context      String?
-  constraints  String   // JSON array of constraint IDs
-  status       String   @default("completed") // pending, processing, completed, failed
-  result       String?  // JSON result from AI (null while processing)
-  error        String?  // Error message if failed
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-}
-
-// RAGドキュメント
-model RAGDocument {
   id          String   @id @default(cuid())
-  filename    String
-  fileType    String   // pdf, txt, md, json, docx, csv, pptx
-  content     String   // 抽出されたテキスト内容
-  metadata    String?  // JSON metadata (pages, author, etc.)
+  question    String
+  context     String?
+  constraints String
+  status      String   @default("completed")
+  result      String?
+  error       String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
 
-// ベースラインスコア追跡
+model RAGDocument {
+  id        String   @id @default(cuid())
+  filename  String
+  fileType  String
+  content   String
+  metadata  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model ScoreBaseline {
   id              String   @id @default(cuid())
   date            DateTime @default(now())
-  runId           String?  // AutoExploreRun.id
-  topScore        Float    // 最高スコア
-  avgScore        Float    // 平均スコア
-  totalStrategies Int      // 累計勝ち筋数
-  highScoreCount  Int      // 3.5以上のスコア数
-  improvement     Float?   // 前回比改善率(%)
+  runId           String?
+  topScore        Float
+  avgScore        Float
+  totalStrategies Int
+  highScoreCount  Int
+  improvement     Float?
   createdAt       DateTime @default(now())
 }
 
-// 高スコア戦略アーカイブ
 model TopStrategy {
   id                String   @id @default(cuid())
-  explorationId     String   // 元のExploration.id
+  explorationId     String
   name              String
   reason            String
   howToObtain       String?
   totalScore        Float
-  scores            String   // JSON: 6軸スコア
-  question          String   // 元の問い
-  judgment          String   // 優先投資 | 条件付き
+  scores            String
+  question          String
+  judgment          String
   learningExtracted Boolean  @default(false)
   createdAt         DateTime @default(now())
 
@@ -94,55 +87,52 @@ model TopStrategy {
   @@index([learningExtracted])
 }
 
-// 自動探索実行ログ
 model AutoExploreRun {
   id                    String    @id @default(cuid())
-  status                String    @default("running") // running, completed, failed
-  triggerType           String    @default("manual")  // manual, scheduled
+  status                String    @default("running")
+  triggerType           String    @default("manual")
   questionsGenerated    Int       @default(0)
   explorationsCompleted Int       @default(0)
   highScoresFound       Int       @default(0)
   topScore              Float?
   topStrategyName       String?
-  baselineScore         Float?    // 実行前のベースライン
-  achievedScore         Float?    // 実行後の最高スコア
-  improvement           Float?    // 改善率(%)
+  baselineScore         Float?
+  achievedScore         Float?
+  improvement           Float?
   startedAt             DateTime  @default(now())
   completedAt           DateTime?
-  duration              Int?      // 秒
-  errors                String?   // JSON配列
+  duration              Int?
+  errors                String?
 }
 
-// 学習メモリ - 成功/失敗パターンを蓄積
 model LearningMemory {
-  id              String   @id @default(cuid())
-  type            String   // success_pattern | failure_pattern | insight | blind_spot
-  category        String?  // カテゴリ(シナジー系, DX系, etc.)
-  pattern         String   // パターンの説明
-  examples        String   // JSON配列: 関連する戦略名/問い
-  evidence        String?  // 根拠(なぜ成功/失敗パターンか)
-  confidence      Float    @default(0.5)  // 0-1: 確信度
-  validationCount Int      @default(0)    // 検証された回数
-  successRate     Float?   // 成功率(検証後)
-  usedCount       Int      @default(0)    // 問い生成に使用された回数
+  id              String    @id @default(cuid())
+  type            String
+  category        String?
+  pattern         String
+  examples        String
+  evidence        String?
+  confidence      Float     @default(0.5)
+  validationCount Int       @default(0)
+  successRate     Float?
+  usedCount       Int       @default(0)
   lastUsedAt      DateTime?
-  isActive        Boolean  @default(true)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   @@index([type])
   @@index([isActive])
   @@index([confidence])
 }
 
-// 人の採否ログ - Human-in-the-loop学習の教師データ
 model StrategyDecision {
   id              String   @id @default(cuid())
-  explorationId   String   // 元のExploration.id
-  strategyName    String   // 戦略名
-  decision        String   // "adopt" | "reject" | "pending"
-  reason          String?  // 採否の理由（短く）
-  feasibilityNote String?  // 実現可能性についてのメモ
+  explorationId   String
+  strategyName    String
+  decision        String
+  reason          String?
+  feasibilityNote String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -151,14 +141,25 @@ model StrategyDecision {
   @@index([createdAt])
 }
 
-// デフォルトSWOT - 開発者が管理する1レコードのみ
 model DefaultSwot {
-  id            String   @id @default("default")  // 常に1レコード
-  strengths     String   // 強み（JSON配列）
-  weaknesses    String   // 弱み（JSON配列）
-  opportunities String   // 機会（JSON配列）
-  threats       String   // 脅威（JSON配列）
-  summary       String?  // 1ページサマリー
+  id            String   @id @default("default")
+  strengths     String
+  weaknesses    String
+  opportunities String
+  threats       String
+  summary       String?
   updatedAt     DateTime @updatedAt
-  updatedBy     String?  // 更新者（開発者名）
+  updatedBy     String?
+}
+
+model MetaAnalysisRun {
+  id                String   @id @default(cuid())
+  totalExplorations Int
+  totalStrategies   Int
+  topStrategies     String   // JSON array
+  frequentTags      String   // JSON array
+  clusters          String   // JSON array
+  blindSpots        String   // JSON array
+  thinkingProcess   String
+  createdAt         DateTime @default(now())
 }
