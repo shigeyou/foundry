@@ -78,7 +78,7 @@ export function ExploreTab() {
                 onChange={(e) => setQuestion(e.target.value)}
                 placeholder="例: 生成AIで新規事業を立ち上げるには？"
                 className="w-full p-3 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 resize-none"
-                rows={3}
+                rows={5}
                 disabled={explorationStatus === "running"}
               />
             </div>

@@ -240,9 +240,54 @@ export function InsightsTab() {
                 </div>
               </div>
 
+              {/* パターン抽出の説明 */}
+              <div className="p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-200 dark:border-indigo-800">
+                <p className="text-sm font-medium text-indigo-800 dark:text-indigo-200 mb-3">
+                  パターン抽出とは？
+                </p>
+
+                <div className="space-y-3 text-xs text-indigo-700 dark:text-indigo-300">
+                  <div>
+                    <p className="font-medium text-indigo-800 dark:text-indigo-200 mb-1">
+                      実施目的（なぜ行うのか）
+                    </p>
+                    <p>
+                      あなたが「採用」「却下」した戦略には、意思決定の傾向が隠れています。
+                      パターン抽出は、その傾向をAIが言語化し、
+                      <span className="font-medium">「成功パターン」「失敗パターン」</span>として明示します。
+                      暗黙知を形式知に変える作業です。
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="font-medium text-indigo-800 dark:text-indigo-200 mb-1">
+                      得られるメリット（何が有効なのか）
+                    </p>
+                    <ul className="list-disc list-inside space-y-0.5">
+                      <li><span className="font-medium">探索精度の向上</span>：抽出されたパターンは次回以降の探索時にAIへ自動的に渡され、あなた好みの戦略が提案されやすくなる</li>
+                      <li><span className="font-medium">意思決定基準の可視化</span>：自分がどんな戦略を好み、何を避けているかを客観視できる</li>
+                      <li><span className="font-medium">組織知の蓄積</span>：個人の判断基準をチームで共有可能な形で残せる</li>
+                    </ul>
+                  </div>
+
+                  <div>
+                    <p className="font-medium text-indigo-800 dark:text-indigo-200 mb-1">
+                      考え方の整理（どのようなロジックか）
+                    </p>
+                    <p>
+                      採否ログ（採用/却下した戦略とその理由）を入力とし、AIが以下を分析します：
+                      (1) 採用された戦略の共通点を「成功パターン」として抽出、
+                      (2) 却下された戦略の共通点を「失敗パターン」として抽出、
+                      (3) 各パターンに確信度（どれだけ確からしいか）を付与。
+                      採否の数が増えるほど、パターンの精度が上がります。
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
                 <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
-                  パターン抽出
+                  パターン抽出を実行
                 </h2>
                 <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">
                   蓄積された採否ログをAIが分析し、成功・失敗の傾向をパターンとして抽出します。
@@ -251,7 +296,7 @@ export function InsightsTab() {
                   <Button
                     onClick={handleExtractPatterns}
                     disabled={isExtracting}
-                    className="bg-purple-600 hover:bg-purple-700"
+                    className="bg-indigo-600 hover:bg-indigo-700"
                   >
                     {isExtracting ? "抽出中..." : "パターンを抽出"}
                   </Button>
@@ -383,9 +428,53 @@ export function InsightsTab() {
           {/* メタ分析サブタブ */}
           {activeSubTab === "meta" && (
             <div className="space-y-6">
+              {/* メタ分析の説明 */}
+              <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+                <p className="text-sm font-medium text-purple-800 dark:text-purple-200 mb-3">
+                  メタ分析とは？
+                </p>
+
+                <div className="space-y-3 text-xs text-purple-700 dark:text-purple-300">
+                  <div>
+                    <p className="font-medium text-purple-800 dark:text-purple-200 mb-1">
+                      実施目的（なぜ行うのか）
+                    </p>
+                    <p>
+                      個別の探索では「その問いに対する勝ち筋」しか見えません。メタ分析は、複数の探索結果を俯瞰し、
+                      <span className="font-medium">「勝ち筋の勝ち筋」</span>（何度も出現する本質的な戦略パターン）を発見します。
+                      木を見て森を見ず、にならないための分析です。
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="font-medium text-purple-800 dark:text-purple-200 mb-1">
+                      得られるメリット（何が有効なのか）
+                    </p>
+                    <ul className="list-disc list-inside space-y-0.5">
+                      <li><span className="font-medium">頻出戦略の発見</span>：異なる問いから同じ方向性の戦略が出てくれば、それは本質的な強みの可能性が高い</li>
+                      <li><span className="font-medium">盲点の発見</span>：探索されていない領域を指摘し、次に探るべき問いのヒントを得られる</li>
+                      <li><span className="font-medium">クラスタリング</span>：類似戦略をグループ化し、戦略の全体像を把握できる</li>
+                    </ul>
+                  </div>
+
+                  <div>
+                    <p className="font-medium text-purple-800 dark:text-purple-200 mb-1">
+                      考え方の整理（どのようなロジックか）
+                    </p>
+                    <p>
+                      探索履歴の全戦略を入力とし、AIが以下を分析します：
+                      (1) 戦略名・理由・タグの類似性から頻出パターンを抽出、
+                      (2) 意味的に近い戦略をクラスタに分類、
+                      (3) 探索されていない空白領域を推定。
+                      探索回数が増えるほど、分析の精度が上がります。
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
                 <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
-                  メタ分析
+                  メタ分析を実行
                 </h2>
                 <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
                   全ての探索結果を横断的に分析し、繰り返し出現する戦略パターンや盲点を発見します。

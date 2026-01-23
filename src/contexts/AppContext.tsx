@@ -250,6 +250,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
   const explorationStartTimeRef = useRef<number>(0);
   const explorationProgressRef = useRef<NodeJS.Timeout | null>(null);
+  const explorationMaxProgressRef = useRef<number>(0);
 
   // 進化生成
   const [evolveStatus, setEvolveStatus] = useState<ExplorationStatus>("idle");
@@ -258,6 +259,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [evolveError, setEvolveError] = useState<string | null>(null);
   const evolveProgressRef = useRef<NodeJS.Timeout | null>(null);
   const evolveStartTimeRef = useRef<number>(0);
+  const evolveMaxProgressRef = useRef<number>(0);
 
   // AI自動探索
   const [autoExploreStatus, setAutoExploreStatus] = useState<ExplorationStatus>("idle");
@@ -266,6 +268,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [autoExploreError, setAutoExploreError] = useState<string | null>(null);
   const autoExploreProgressRef = useRef<NodeJS.Timeout | null>(null);
   const autoExploreStartTimeRef = useRef<number>(0);
+  const autoExploreMaxProgressRef = useRef<number>(0);
 
   // メタ分析
   const [metaAnalysisStatus, setMetaAnalysisStatus] = useState<ExplorationStatus>("idle");
@@ -274,6 +277,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [metaAnalysisError, setMetaAnalysisError] = useState<string | null>(null);
   const metaAnalysisProgressRef = useRef<NodeJS.Timeout | null>(null);
   const metaAnalysisStartTimeRef = useRef<number>(0);
+  const metaAnalysisMaxProgressRef = useRef<number>(0);
 
   // イージング関数: 中盤ゆっくり→終盤加速→最後スムーズに完了
   // ユーザー要望: 序盤早すぎ・終盤停滞を解消、尻上がりに完了
@@ -442,9 +446,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
           setExplorationStatus("failed");
           setExplorationProgress(0);
         } else {
-          // まだ処理中 - イージングで進捗更新
+          // まだ処理中 - イージングで進捗更新（後退防止）
           const newProgress = calculateEasedProgress(explorationStartTimeRef.current, 450000); // 450秒想定（20%速度）
-          setExplorationProgress(newProgress);
+          explorationMaxProgressRef.current = Math.max(explorationMaxProgressRef.current, newProgress);
+          setExplorationProgress(explorationMaxProgressRef.current);
         }
       } catch (error) {
         console.error("Polling error:", error);
@@ -471,6 +476,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     setExplorationStatus("running");
     setExplorationProgress(0);
+    explorationMaxProgressRef.current = 0;
     setExplorationResult(null);
     setExplorationError(null);
 
@@ -491,10 +497,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (data.id) {
         setExplorationId(data.id);
 
-        // プログレスアニメーション開始（500msごとにスムーズに更新）
+        // プログレスアニメーション開始（500msごとにスムーズに更新、後退防止）
         explorationProgressRef.current = setInterval(() => {
           const newProgress = calculateEasedProgress(explorationStartTimeRef.current, 90000);
-          setExplorationProgress(newProgress);
+          explorationMaxProgressRef.current = Math.max(explorationMaxProgressRef.current, newProgress);
+          setExplorationProgress(explorationMaxProgressRef.current);
         }, 500);
 
         // ポーリング開始（ステータス確認）
@@ -560,13 +567,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     setEvolveStatus("running");
     setEvolveProgress(0);
+    evolveMaxProgressRef.current = 0;
     setEvolveResult(null);
     setEvolveError(null);
 
-    // プログレスバーアニメーション開始（イージング適用）
+    // プログレスバーアニメーション開始（イージング適用、後退防止）
     evolveProgressRef.current = setInterval(() => {
       const newProgress = calculateEasedProgress(evolveStartTimeRef.current, 300000); // 300秒想定（20%速度）
-      setEvolveProgress(newProgress);
+      evolveMaxProgressRef.current = Math.max(evolveMaxProgressRef.current, newProgress);
+      setEvolveProgress(evolveMaxProgressRef.current);
     }, 500);
 
     try {
@@ -633,14 +642,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     setAutoExploreStatus("running");
     setAutoExploreProgress(0);
+    autoExploreMaxProgressRef.current = 0;
     setAutoExploreResult(null);
     setAutoExploreError(null);
 
-    // プログレスバーアニメーション開始（イージング適用）
+    // プログレスバーアニメーション開始（イージング適用、後退防止）
     // AI自動探索は5つの問いを探索するため、長めの時間を想定（600秒 = 10分、20%速度）
     autoExploreProgressRef.current = setInterval(() => {
       const newProgress = calculateEasedProgress(autoExploreStartTimeRef.current, 600000);
-      setAutoExploreProgress(newProgress);
+      autoExploreMaxProgressRef.current = Math.max(autoExploreMaxProgressRef.current, newProgress);
+      setAutoExploreProgress(autoExploreMaxProgressRef.current);
     }, 500);
 
     try {
@@ -713,14 +724,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     setMetaAnalysisStatus("running");
     setMetaAnalysisProgress(0);
+    metaAnalysisMaxProgressRef.current = 0;
     setMetaAnalysisResult(null);
     setMetaAnalysisError(null);
 
-    // プログレスバーアニメーション開始（イージング適用）
+    // プログレスバーアニメーション開始（イージング適用、後退防止）
     // メタ分析は300秒（5分、20%速度）を想定
     metaAnalysisProgressRef.current = setInterval(() => {
       const newProgress = calculateEasedProgress(metaAnalysisStartTimeRef.current, 300000);
-      setMetaAnalysisProgress(newProgress);
+      metaAnalysisMaxProgressRef.current = Math.max(metaAnalysisMaxProgressRef.current, newProgress);
+      setMetaAnalysisProgress(metaAnalysisMaxProgressRef.current);
     }, 500);
 
     try {

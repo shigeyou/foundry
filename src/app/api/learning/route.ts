@@ -104,42 +104,70 @@ export async function POST(request: NextRequest) {
 
     // 関連する探索結果を取得
     const explorationIds = [...new Set(decisions.map((d) => d.explorationId))];
+    const realExplorationIds = explorationIds.filter((id) => !id.startsWith("ranking-"));
     const explorations = await prisma.exploration.findMany({
-      where: { id: { in: explorationIds } },
+      where: { id: { in: realExplorationIds } },
     });
 
     const explorationMap = new Map(explorations.map((e) => [e.id, e]));
+
+    // ランキングからの決定用にTopStrategyテーブルも取得
+    const rankingStrategyNames = decisions
+      .filter((d) => d.explorationId.startsWith("ranking-"))
+      .map((d) => d.strategyName);
+    const topStrategies = await prisma.topStrategy.findMany({
+      where: { name: { in: rankingStrategyNames } },
+    });
+    const topStrategyMap = new Map(topStrategies.map((s) => [s.name, s]));
 
     // 採用/却下された戦略を分類
     const adoptedStrategies: { name: string; reason: string; question: string; decisionReason?: string }[] = [];
     const rejectedStrategies: { name: string; reason: string; question: string; decisionReason?: string }[] = [];
 
     for (const decision of decisions) {
-      const exploration = explorationMap.get(decision.explorationId);
-      if (!exploration?.result) continue;
+      let item: { name: string; reason: string; question: string; decisionReason?: string } | null = null;
 
-      try {
-        const result = JSON.parse(exploration.result);
-        const strategy = result.strategies?.find(
-          (s: { name: string }) => s.name === decision.strategyName
-        );
-
-        if (strategy) {
-          const item = {
-            name: strategy.name,
-            reason: strategy.reason || "",
-            question: exploration.question,
+      // ランキングからの決定の場合
+      if (decision.explorationId.startsWith("ranking-")) {
+        const topStrategy = topStrategyMap.get(decision.strategyName);
+        if (topStrategy) {
+          item = {
+            name: topStrategy.name,
+            reason: topStrategy.reason || "",
+            question: topStrategy.question || "",
             decisionReason: decision.reason || undefined,
           };
-
-          if (decision.decision === "adopt") {
-            adoptedStrategies.push(item);
-          } else {
-            rejectedStrategies.push(item);
-          }
         }
-      } catch {
-        // JSON parse error - skip
+      } else {
+        // 探索履歴からの決定の場合
+        const exploration = explorationMap.get(decision.explorationId);
+        if (!exploration?.result) continue;
+
+        try {
+          const result = JSON.parse(exploration.result);
+          const strategy = result.strategies?.find(
+            (s: { name: string }) => s.name === decision.strategyName
+          );
+
+          if (strategy) {
+            item = {
+              name: strategy.name,
+              reason: strategy.reason || "",
+              question: exploration.question,
+              decisionReason: decision.reason || undefined,
+            };
+          }
+        } catch {
+          // JSON parse error - skip
+        }
+      }
+
+      if (item) {
+        if (decision.decision === "adopt") {
+          adoptedStrategies.push(item);
+        } else {
+          rejectedStrategies.push(item);
+        }
       }
     }
 
