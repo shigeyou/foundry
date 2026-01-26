@@ -32,6 +32,8 @@ export function CompanyProfileTab() {
   const [isConfigured, setIsConfigured] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [inferring, setInferring] = useState(false);
+  const [websiteUrl, setWebsiteUrl] = useState("");
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   // 初期読み込み
@@ -110,6 +112,47 @@ export function CompanyProfileTab() {
     }
   }
 
+  // ホームページから情報を読み込む
+  async function handleInferFromWebsite() {
+    if (!websiteUrl.trim()) {
+      setMessage({ type: "error", text: "URLを入力してください" });
+      return;
+    }
+
+    setInferring(true);
+    setMessage(null);
+    try {
+      const res = await fetch("/api/company-profile/infer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: websiteUrl.trim() }),
+      });
+      const data = await res.json();
+      if (res.ok && data.profile) {
+        // 取得した情報でフォームを更新
+        setProfile((prev) => ({
+          ...prev,
+          name: data.profile.name || prev.name,
+          shortName: data.profile.shortName || prev.shortName,
+          description: data.profile.description || prev.description,
+          background: data.profile.background || prev.background,
+          techStack: data.profile.techStack || prev.techStack,
+          parentCompany: data.profile.parentCompany || prev.parentCompany,
+          parentRelation: data.profile.parentRelation || prev.parentRelation,
+          industry: data.profile.industry || prev.industry,
+        }));
+        setMessage({ type: "success", text: "ホームページから情報を読み込みました。内容を確認・編集して保存してください。" });
+      } else {
+        setMessage({ type: "error", text: data.error || "情報の読み込みに失敗しました" });
+      }
+    } catch (error) {
+      console.error("Failed to infer from website:", error);
+      setMessage({ type: "error", text: "情報の読み込みに失敗しました" });
+    } finally {
+      setInferring(false);
+    }
+  }
+
   const updateField = (field: keyof CompanyProfile, value: string) => {
     setProfile((prev) => ({ ...prev, [field]: value }));
   };
@@ -160,6 +203,41 @@ export function CompanyProfileTab() {
           RAGに親会社などの関連企業の情報を登録する場合は、「親会社との関係」欄を設定することで、
           AIが適切に区別して探索できます。
         </p>
+      </div>
+
+      {/* ホームページから読み込む */}
+      <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 p-4 mb-6">
+        <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-2">
+          ホームページから情報を読み込む
+        </h2>
+        <p className="text-xs text-slate-600 dark:text-slate-400 mb-3">
+          企業のホームページURLを入力すると、AIが自動で企業情報を抽出します。
+        </p>
+        <div className="flex gap-2">
+          <input
+            type="url"
+            value={websiteUrl}
+            onChange={(e) => setWebsiteUrl(e.target.value)}
+            placeholder="https://example.co.jp/"
+            className="flex-1 px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 text-sm"
+            disabled={inferring}
+          />
+          <Button
+            onClick={handleInferFromWebsite}
+            disabled={inferring || !websiteUrl.trim()}
+            variant="outline"
+            className="whitespace-nowrap"
+          >
+            {inferring ? (
+              <>
+                <span className="animate-spin mr-2">&#9696;</span>
+                読み込み中...
+              </>
+            ) : (
+              "読み込む"
+            )}
+          </Button>
+        </div>
       </div>
 
       {/* フォーム */}
