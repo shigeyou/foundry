@@ -54,7 +54,7 @@ export interface ExplorationResult {
   thinking?: string;
 }
 
-export type TabType = "intro" | "swot" | "rag" | "score" | "explore" | "history" | "ranking" | "strategies" | "insights";
+export type TabType = "intro" | "company" | "swot" | "rag" | "score" | "explore" | "history" | "ranking" | "strategies" | "insights";
 
 export type ExplorationStatus = "idle" | "running" | "completed" | "failed";
 

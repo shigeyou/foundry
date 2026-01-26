@@ -3,6 +3,7 @@
 import { AppProvider, useApp, TabType } from "@/contexts/AppContext";
 import { Navigation } from "@/components/navigation";
 import { IntroTab } from "@/components/tabs/IntroTab";
+import { CompanyProfileTab } from "@/components/tabs/CompanyProfileTab";
 import { SwotTab } from "@/components/tabs/SwotTab";
 import { RagTab } from "@/components/tabs/RagTab";
 import { ScoreSettingsTab } from "@/components/tabs/ScoreSettingsTab";
@@ -14,6 +15,7 @@ import { InsightsTab } from "@/components/tabs/InsightsTab";
 
 const tabComponents: Record<TabType, React.FC> = {
   intro: IntroTab,
+  company: CompanyProfileTab,
   swot: SwotTab,
   rag: RagTab,
   score: ScoreSettingsTab,

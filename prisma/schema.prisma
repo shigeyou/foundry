@@ -163,3 +163,18 @@ model MetaAnalysisRun {
   thinkingProcess   String
   createdAt         DateTime @default(now())
 }
+
+// 対象企業プロファイル（勝ち筋探索の主体）
+model CompanyProfile {
+  id                String   @id @default("default")
+  name              String   // 会社名
+  shortName         String?  // 略称
+  description       String?  // 会社概要
+  background        String?  // 背景・経緯（例：合併など）
+  techStack         String?  // 技術基盤の説明
+  parentCompany     String?  // 親会社名
+  parentRelation    String?  // 親会社との関係
+  industry          String?  // 業界
+  additionalContext String?  // その他の文脈情報
+  updatedAt         DateTime @updatedAt
+}

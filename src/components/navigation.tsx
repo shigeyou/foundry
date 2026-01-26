@@ -10,6 +10,7 @@ interface TabItem {
 
 const tabItems: TabItem[] = [
   { id: "intro", label: "はじめに" },
+  { id: "company", label: "対象企業" },
   { id: "rag", label: "RAG情報" },
   { id: "swot", label: "SWOT" },
   { id: "score", label: "スコア設定" },

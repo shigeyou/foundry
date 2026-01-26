@@ -3,6 +3,75 @@ import { prisma } from "@/lib/db";
 
 let client: AzureOpenAI | null = null;
 
+// 対象企業プロファイルの型
+interface CompanyProfile {
+  name: string;
+  shortName?: string | null;
+  description?: string | null;
+  background?: string | null;
+  techStack?: string | null;
+  parentCompany?: string | null;
+  parentRelation?: string | null;
+  industry?: string | null;
+  additionalContext?: string | null;
+}
+
+// 対象企業プロファイルを取得
+async function getCompanyProfile(): Promise<CompanyProfile | null> {
+  try {
+    const profile = await prisma.companyProfile.findUnique({
+      where: { id: "default" },
+    });
+    return profile;
+  } catch (error) {
+    console.error("Failed to fetch company profile:", error);
+    return null;
+  }
+}
+
+// 対象企業セクションを生成
+function buildCompanySection(profile: CompanyProfile | null): string {
+  if (!profile) {
+    return `## 対象企業
+対象企業が設定されていません。「設定」タブから対象企業の情報を登録してください。
+勝ち筋探索を行う前に、対象企業の基本情報を設定することを推奨します。`;
+  }
+
+  let section = `## 対象企業（勝ち筋を探す主体）
+**${profile.name}${profile.shortName ? `（${profile.shortName}）` : ""}**`;
+
+  if (profile.industry) {
+    section += `\n- 業界: ${profile.industry}`;
+  }
+
+  if (profile.description) {
+    section += `\n- ${profile.description}`;
+  }
+
+  if (profile.background) {
+    section += `\n- ${profile.background}`;
+  }
+
+  if (profile.parentCompany) {
+    section += `\n\n### 親会社との関係`;
+    section += `\n親会社: ${profile.parentCompany}`;
+    if (profile.parentRelation) {
+      section += `\n${profile.parentRelation}`;
+    }
+    section += `\n※ RAGに親会社の情報が含まれる場合、それは参考情報です。勝ち筋は${profile.shortName || profile.name}の視点で探索してください。`;
+  }
+
+  if (profile.techStack) {
+    section += `\n\n### 技術基盤\n${profile.techStack}`;
+  }
+
+  if (profile.additionalContext) {
+    section += `\n\n### その他の文脈\n${profile.additionalContext}`;
+  }
+
+  return section;
+}
+
 // 学習パターンを取得
 async function getLearningPatterns(): Promise<{
   successPatterns: string[];
@@ -90,23 +159,28 @@ export async function generateWinningStrategies(
   constraints: string,
   ragContext: string
 ): Promise<ExplorationResult> {
-  // 学習パターンを取得
-  const { successPatterns, failurePatterns } = await getLearningPatterns();
+  // 学習パターンと対象企業プロファイルを並行取得
+  const [{ successPatterns, failurePatterns }, companyProfile] = await Promise.all([
+    getLearningPatterns(),
+    getCompanyProfile(),
+  ]);
+
+  // 対象企業セクションを動的に生成
+  const companySection = buildCompanySection(companyProfile);
+  const companyName = companyProfile?.shortName || companyProfile?.name || "対象企業";
 
   const systemPrompt = `あなたは「勝ち筋ファインダーVer.0.6」のAIアシスタントです。
-海運グループ企業の戦略立案を支援します。
+
+${companySection}
 
 ## あなたの役割
-現場が持っている力（実績・技術・ノウハウ）を、AIの視点で増幅し、具体的な戦略オプション（勝ち筋）に変換します。
+${companyName}の現場が持っている力（実績・技術・ノウハウ）を、AIの視点で増幅し、具体的な戦略オプション（勝ち筋）に変換します。
 
 ## 重要な原則
 1. 既存リソースの活用を優先する
 2. 実行可能な提案のみ行う
 3. 抽象的ではなく具体的に
-4. 3社統合のシナジーを意識する
-
-## 技術基盤
-商船三井マリテックスでは、マイクロソフトのAzure環境を商船三井と共有しており、機密性が高いプライバシーやセキュリティが高い環境で各種の自社アプリケーションの開発が可能である。すでに生成AIを活用した各種アプリケーションの自社開発を進めている。これを武器として、今後のDXに活かしたい。
+4. 組織のシナジーを意識する
 
 ## 評価基準（各1〜5点）
 各勝ち筋を以下の6軸で評価してください：

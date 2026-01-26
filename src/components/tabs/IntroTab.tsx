@@ -45,6 +45,15 @@ export function IntroTab() {
             <li className="flex gap-3">
               <span className="flex-shrink-0 w-7 h-7 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full flex items-center justify-center text-sm font-bold">1</span>
               <div>
+                <p className="font-medium text-slate-800 dark:text-slate-200">対象企業の設定</p>
+                <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+                  勝ち筋を探索する対象企業の基本情報を設定します。親会社がある場合はその関係性も設定できます。
+                </p>
+              </div>
+            </li>
+            <li className="flex gap-3">
+              <span className="flex-shrink-0 w-7 h-7 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full flex items-center justify-center text-sm font-bold">2</span>
+              <div>
                 <p className="font-medium text-slate-800 dark:text-slate-200">RAG情報の登録</p>
                 <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
                   会社案内や事業計画などの資料を登録すると、AIがそれらを参照して提案の精度を高めます。
@@ -52,7 +61,7 @@ export function IntroTab() {
               </div>
             </li>
             <li className="flex gap-3">
-              <span className="flex-shrink-0 w-7 h-7 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full flex items-center justify-center text-sm font-bold">2</span>
+              <span className="flex-shrink-0 w-7 h-7 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full flex items-center justify-center text-sm font-bold">3</span>
               <div>
                 <p className="font-medium text-slate-800 dark:text-slate-200">SWOT分析の確認</p>
                 <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
@@ -61,7 +70,7 @@ export function IntroTab() {
               </div>
             </li>
             <li className="flex gap-3">
-              <span className="flex-shrink-0 w-7 h-7 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full flex items-center justify-center text-sm font-bold">3</span>
+              <span className="flex-shrink-0 w-7 h-7 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full flex items-center justify-center text-sm font-bold">4</span>
               <div>
                 <p className="font-medium text-slate-800 dark:text-slate-200">勝ち筋の探索</p>
                 <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
@@ -70,7 +79,7 @@ export function IntroTab() {
               </div>
             </li>
             <li className="flex gap-3">
-              <span className="flex-shrink-0 w-7 h-7 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full flex items-center justify-center text-sm font-bold">4</span>
+              <span className="flex-shrink-0 w-7 h-7 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full flex items-center justify-center text-sm font-bold">5</span>
               <div>
                 <p className="font-medium text-slate-800 dark:text-slate-200">採否の判断と学習</p>
                 <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
@@ -79,7 +88,7 @@ export function IntroTab() {
               </div>
             </li>
             <li className="flex gap-3">
-              <span className="flex-shrink-0 w-7 h-7 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full flex items-center justify-center text-sm font-bold">5</span>
+              <span className="flex-shrink-0 w-7 h-7 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full flex items-center justify-center text-sm font-bold">6</span>
               <div>
                 <p className="font-medium text-slate-800 dark:text-slate-200">シン・勝ち筋の探求</p>
                 <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
@@ -88,7 +97,7 @@ export function IntroTab() {
               </div>
             </li>
             <li className="flex gap-3">
-              <span className="flex-shrink-0 w-7 h-7 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full flex items-center justify-center text-sm font-bold">6</span>
+              <span className="flex-shrink-0 w-7 h-7 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full flex items-center justify-center text-sm font-bold">7</span>
               <div>
                 <p className="font-medium text-slate-800 dark:text-slate-200">インサイト</p>
                 <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
@@ -148,10 +157,10 @@ export function IntroTab() {
       {/* 始めるボタン */}
       <div className="text-center">
         <button
-          onClick={() => setActiveTab("rag")}
+          onClick={() => setActiveTab("company")}
           className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
         >
-          RAG情報の登録から始める
+          対象企業の設定から始める
         </button>
       </div>
     </div>
