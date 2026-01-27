@@ -176,7 +176,11 @@ model MetaAnalysisRun {
   clusters          String   // JSON array
   blindSpots        String   // JSON array
   thinkingProcess   String
+  userId            String?  // ユーザー別メタ分析用（null = レガシー）
+  userName          String?  // 表示用
   createdAt         DateTime @default(now())
+
+  @@index([userId])
 }
 
 // 対象企業プロファイル（勝ち筋探索の主体）

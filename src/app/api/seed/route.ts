@@ -12,8 +12,11 @@ interface SeedDocument {
 }
 
 // GET: シードデータの状態確認
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    const detail = searchParams.get("detail") === "true";
+
     const [ragCount, explorationCount, topStrategyCount, strategyDecisionCount] = await Promise.all([
       prisma.rAGDocument.count(),
       prisma.exploration.count(),
@@ -24,6 +27,26 @@ export async function GET() {
     const ragSeedPath = path.join(process.cwd(), "prisma/seed-data/rag-documents.json");
     const explorationSeedPath = path.join(process.cwd(), "prisma/seed-data/exploration-data.json");
 
+    // 詳細モード: RAGドキュメントのcontent長さも表示
+    let ragDocumentDetails = null;
+    if (detail) {
+      const ragDocs = await prisma.rAGDocument.findMany({
+        select: {
+          id: true,
+          filename: true,
+          fileType: true,
+          content: true,
+        },
+      });
+      ragDocumentDetails = ragDocs.map(doc => ({
+        id: doc.id,
+        filename: doc.filename,
+        fileType: doc.fileType,
+        contentLength: doc.content?.length || 0,
+        hasContent: !!(doc.content && doc.content.length > 0),
+      }));
+    }
+
     return NextResponse.json({
       ragDocumentCount: ragCount,
       explorationCount,
@@ -33,6 +56,7 @@ export async function GET() {
       explorationSeedFileExists: fs.existsSync(explorationSeedPath),
       needsRagSeeding: ragCount === 0,
       needsExplorationSeeding: explorationCount === 0,
+      ...(ragDocumentDetails && { ragDocumentDetails }),
     });
   } catch (error) {
     console.error("Seed status error:", error);
@@ -291,11 +315,15 @@ export async function DELETE(request: NextRequest) {
         deletedStrategies,
         deletedExplorations,
         deletedMemories,
+        deletedAutoExploreRuns,
+        deletedMetaAnalysisRuns,
       ] = await Promise.all([
         prisma.strategyDecision.deleteMany({ where: { userId: user.id } }),
         prisma.topStrategy.deleteMany({ where: { userId: user.id } }),
         prisma.exploration.deleteMany({ where: { userId: user.id } }),
         prisma.learningMemory.deleteMany({ where: { userId: user.id } }),
+        prisma.autoExploreRun.deleteMany({ where: { userId: user.id } }),
+        prisma.metaAnalysisRun.deleteMany({ where: { userId: user.id } }),
       ]);
 
       return NextResponse.json({
@@ -308,6 +336,8 @@ export async function DELETE(request: NextRequest) {
           topStrategies: deletedStrategies.count,
           explorations: deletedExplorations.count,
           learningMemories: deletedMemories.count,
+          autoExploreRuns: deletedAutoExploreRuns.count,
+          metaAnalysisRuns: deletedMetaAnalysisRuns.count,
         },
       });
     } else {

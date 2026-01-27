@@ -1,14 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { AzureOpenAI } from "openai";
+import { getCurrentUser } from "@/lib/auth";
 
-// GET: メタ分析履歴を取得
+// GET: メタ分析履歴を取得（ユーザー別）
 export async function GET(request: NextRequest) {
   try {
+    const user = await getCurrentUser();
     const searchParams = request.nextUrl.searchParams;
     const limit = parseInt(searchParams.get("limit") || "10");
 
+    // 自分のメタ分析履歴のみ取得
     const history = await prisma.metaAnalysisRun.findMany({
+      where: { userId: user.id },
       orderBy: { createdAt: "desc" },
       take: limit,
     });
@@ -70,8 +74,11 @@ interface MetaAnalysisResult {
 
 export async function POST() {
   try {
-    // 全履歴を取得
+    const user = await getCurrentUser();
+
+    // 自分の探索履歴のみを取得
     const explorations = await prisma.exploration.findMany({
+      where: { userId: user.id },
       orderBy: { createdAt: "desc" },
     });
 
@@ -216,7 +223,7 @@ ${strategiesSummary}
       thinkingProcess: aiResult.thinkingProcess || "",
     };
 
-    // 履歴をデータベースに保存
+    // 履歴をデータベースに保存（ユーザー別）
     const savedRun = await prisma.metaAnalysisRun.create({
       data: {
         totalExplorations: result.totalExplorations,
@@ -226,6 +233,8 @@ ${strategiesSummary}
         clusters: JSON.stringify(result.clusters),
         blindSpots: JSON.stringify(result.blindSpots),
         thinkingProcess: result.thinkingProcess,
+        userId: user.id,
+        userName: user.name,
       },
     });
 
