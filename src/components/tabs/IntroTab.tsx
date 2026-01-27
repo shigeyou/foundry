@@ -1,9 +1,34 @@
 "use client";
 
+import { useState } from "react";
 import { useApp } from "@/contexts/AppContext";
 
 export function IntroTab() {
   const { setActiveTab } = useApp();
+  const [seedStatus, setSeedStatus] = useState<string | null>(null);
+  const [isSeeding, setIsSeeding] = useState(false);
+
+  const handleForceSeed = async () => {
+    if (!confirm("強制シードを実行すると、現在の探索データが初期データに置き換わります。続行しますか？")) {
+      return;
+    }
+    setIsSeeding(true);
+    setSeedStatus("シード中...");
+    try {
+      const res = await fetch("/api/seed?type=exploration&force=true", { method: "POST" });
+      const data = await res.json();
+      if (data.success) {
+        const counts = data.results?.exploration?.seeded || {};
+        setSeedStatus(`完了: Exploration ${counts.explorations || 0}件, TopStrategy ${counts.topStrategies || 0}件, StrategyDecision ${counts.strategyDecisions || 0}件`);
+      } else {
+        setSeedStatus(`エラー: ${data.error || "不明なエラー"}`);
+      }
+    } catch (e) {
+      setSeedStatus(`エラー: ${e instanceof Error ? e.message : "通信エラー"}`);
+    } finally {
+      setIsSeeding(false);
+    }
+  };
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-4xl">
@@ -157,7 +182,7 @@ export function IntroTab() {
       </section>
 
       {/* 始めるボタン */}
-      <div className="text-center">
+      <div className="text-center mb-12">
         <button
           onClick={() => setActiveTab("company")}
           className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
@@ -165,6 +190,33 @@ export function IntroTab() {
           対象企業の設定から始める
         </button>
       </div>
+
+      {/* 管理者向け */}
+      <section className="mb-8">
+        <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2">
+          <span className="w-1 h-6 bg-slate-500 rounded"></span>
+          管理者向け
+        </h2>
+        <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-5">
+          <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">
+            デプロイ後にデータが不足している場合、以下のボタンで初期データを強制的に読み込みます。
+          </p>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={handleForceSeed}
+              disabled={isSeeding}
+              className="px-4 py-2 bg-slate-600 hover:bg-slate-700 disabled:bg-slate-400 text-white font-medium rounded-lg transition-colors text-sm"
+            >
+              {isSeeding ? "シード中..." : "強制シード実行"}
+            </button>
+            {seedStatus && (
+              <span className={`text-sm ${seedStatus.startsWith("エラー") ? "text-red-600" : "text-green-600"}`}>
+                {seedStatus}
+              </span>
+            )}
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
