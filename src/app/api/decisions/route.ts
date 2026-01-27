@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { getCurrentUserId } from "@/lib/auth";
 
 // 採否を記録
 export async function POST(request: NextRequest) {
@@ -22,12 +23,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // upsert: 既存なら更新、なければ作成
+    const userId = await getCurrentUserId();
+
+    // upsert: 既存なら更新、なければ作成（ユーザーごとに独立）
     const result = await prisma.strategyDecision.upsert({
       where: {
-        explorationId_strategyName: {
+        explorationId_strategyName_userId: {
           explorationId,
           strategyName,
+          userId,
         },
       },
       update: {
@@ -41,6 +45,7 @@ export async function POST(request: NextRequest) {
         decision,
         reason: reason || null,
         feasibilityNote: feasibilityNote || null,
+        userId,
       },
     });
 
@@ -65,18 +70,20 @@ export async function GET(request: NextRequest) {
     const decisionFilter = searchParams.get("decision");
     const stats = searchParams.get("stats") === "true";
 
-    // 統計情報を返す
+    const userId = await getCurrentUserId();
+
+    // 統計情報を返す（自分のデータのみ）
     if (stats) {
       const [total, adopted, rejected, pending] = await Promise.all([
-        prisma.strategyDecision.count(),
-        prisma.strategyDecision.count({ where: { decision: "adopt" } }),
-        prisma.strategyDecision.count({ where: { decision: "reject" } }),
-        prisma.strategyDecision.count({ where: { decision: "pending" } }),
+        prisma.strategyDecision.count({ where: { userId } }),
+        prisma.strategyDecision.count({ where: { userId, decision: "adopt" } }),
+        prisma.strategyDecision.count({ where: { userId, decision: "reject" } }),
+        prisma.strategyDecision.count({ where: { userId, decision: "pending" } }),
       ]);
 
       // よくある却下理由を取得
       const rejectReasons = await prisma.strategyDecision.findMany({
-        where: { decision: "reject", reason: { not: null } },
+        where: { userId, decision: "reject", reason: { not: null } },
         select: { reason: true },
         take: 100,
       });
@@ -106,18 +113,20 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // 特定のExplorationの採否を取得
+    // 特定のExplorationの採否を取得（自分のデータのみ）
     if (explorationId) {
       const decisions = await prisma.strategyDecision.findMany({
-        where: { explorationId },
+        where: { explorationId, userId },
         orderBy: { createdAt: "desc" },
       });
 
       return NextResponse.json({ decisions });
     }
 
-    // フィルター付き一覧取得
-    const where = decisionFilter ? { decision: decisionFilter } : {};
+    // フィルター付き一覧取得（自分のデータのみ）
+    const where = decisionFilter
+      ? { decision: decisionFilter, userId }
+      : { userId };
     const decisions = await prisma.strategyDecision.findMany({
       where,
       orderBy: { createdAt: "desc" },
@@ -142,23 +151,28 @@ export async function DELETE(request: NextRequest) {
     const clearAll = searchParams.get("clearAll");
     const clearRanking = searchParams.get("clearRanking");
 
-    // ランキングの採否をすべてクリア
+    const userId = await getCurrentUserId();
+
+    // ランキングの採否をすべてクリア（自分のデータのみ）
     if (clearRanking === "true") {
       const result = await prisma.strategyDecision.deleteMany({
         where: {
+          userId,
           explorationId: { startsWith: "ranking-" },
         },
       });
       return NextResponse.json({ success: true, deleted: result.count });
     }
 
-    // すべての採否をクリア
+    // すべての採否をクリア（自分のデータのみ）
     if (clearAll === "true") {
-      const result = await prisma.strategyDecision.deleteMany({});
+      const result = await prisma.strategyDecision.deleteMany({
+        where: { userId },
+      });
       return NextResponse.json({ success: true, deleted: result.count });
     }
 
-    // explorationId + strategyName で削除
+    // explorationId + strategyName で削除（自分のデータのみ）
     const explorationId = searchParams.get("explorationId");
     const strategyName = searchParams.get("strategyName");
     if (explorationId && strategyName) {
@@ -166,16 +180,35 @@ export async function DELETE(request: NextRequest) {
         where: {
           explorationId,
           strategyName,
+          userId,
         },
       });
       return NextResponse.json({ success: true, deleted: result.count });
     }
 
-    // 個別削除（idで）
+    // 個別削除（idで）- 自分のデータのみ
     if (!id) {
       return NextResponse.json(
         { error: "id または explorationId + strategyName は必須です" },
         { status: 400 }
+      );
+    }
+
+    const decision = await prisma.strategyDecision.findUnique({
+      where: { id },
+    });
+
+    if (!decision) {
+      return NextResponse.json(
+        { error: "採否記録が見つかりません" },
+        { status: 404 }
+      );
+    }
+
+    if (decision.userId !== userId) {
+      return NextResponse.json(
+        { error: "他のユーザーの採否記録は削除できません" },
+        { status: 403 }
       );
     }
 

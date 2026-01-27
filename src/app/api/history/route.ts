@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { getCurrentUserId } from "@/lib/auth";
 
 export async function GET() {
   try {
+    const userId = await getCurrentUserId();
+
+    // 自分の探索履歴のみ取得
     const history = await prisma.exploration.findMany({
+      where: { userId },
       orderBy: { createdAt: "desc" },
     });
     return NextResponse.json(history);
@@ -25,6 +30,27 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json(
         { error: "履歴IDが必要です" },
         { status: 400 }
+      );
+    }
+
+    const userId = await getCurrentUserId();
+
+    // 自分の探索のみ削除可能
+    const exploration = await prisma.exploration.findUnique({
+      where: { id },
+    });
+
+    if (!exploration) {
+      return NextResponse.json(
+        { error: "履歴が見つかりません" },
+        { status: 404 }
+      );
+    }
+
+    if (exploration.userId !== userId) {
+      return NextResponse.json(
+        { error: "他のユーザーの履歴は削除できません" },
+        { status: 403 }
       );
     }
 

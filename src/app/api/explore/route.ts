@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { generateWinningStrategies } from "@/lib/claude";
 import { generateRAGContext } from "@/lib/rag";
+import { getCurrentUser } from "@/lib/auth";
 
 // Background task runner (using Promise to not block the response)
 async function runExplorationInBackground(explorationId: string, question: string, context: string, constraintIds: string[]) {
@@ -82,6 +83,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // ユーザー情報を取得
+    const user = await getCurrentUser();
+
     // Background mode: create record and return immediately
     if (background) {
       const exploration = await prisma.exploration.create({
@@ -91,6 +95,8 @@ export async function POST(request: NextRequest) {
           constraints: JSON.stringify(constraintIds || []),
           status: "processing",
           result: null,
+          userId: user.id,
+          userName: user.name,
         },
       });
 
@@ -147,6 +153,8 @@ export async function POST(request: NextRequest) {
         constraints: JSON.stringify(constraintIds || []),
         status: "completed",
         result: JSON.stringify(result),
+        userId: user.id,
+        userName: user.name,
       },
     });
 

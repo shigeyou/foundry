@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { getCurrentUserId } from "@/lib/auth";
 
 interface StrategyScores {
   revenuePotential: number;
@@ -72,9 +73,11 @@ export async function GET(request: NextRequest) {
     const minScore = parseFloat(searchParams.get("minScore") || "0");
     const judgment = searchParams.get("judgment"); // filter by judgment
 
-    // Fetch all completed explorations
+    const userId = await getCurrentUserId();
+
+    // Fetch user's completed explorations only
     const explorations = await prisma.exploration.findMany({
-      where: { status: "completed" },
+      where: { status: "completed", userId },
       orderBy: { createdAt: "desc" },
     });
 

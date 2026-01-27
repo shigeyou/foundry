@@ -46,8 +46,8 @@ export function getJudgment(scores: StrategyScores): string {
   return "見送り";
 }
 
-// 全戦略のスコアを取得
-export async function getAllStrategiesWithScores(): Promise<
+// 全戦略のスコアを取得（ユーザー別）
+export async function getAllStrategiesWithScores(userId?: string): Promise<
   {
     explorationId: string;
     name: string;
@@ -60,7 +60,10 @@ export async function getAllStrategiesWithScores(): Promise<
   }[]
 > {
   const explorations = await prisma.exploration.findMany({
-    where: { status: "completed" },
+    where: {
+      status: "completed",
+      ...(userId ? { userId } : {}),
+    },
     select: {
       id: true,
       question: true,
@@ -151,12 +154,17 @@ export async function recordBaseline(runId?: string) {
   return baseline;
 }
 
-// 高スコア戦略をアーカイブ（重複チェック付き）
-export async function archiveTopStrategies(minScore: number = 4.0) {
-  const allStrategies = await getAllStrategiesWithScores();
+// 高スコア戦略をアーカイブ（重複チェック付き、ユーザー別）
+export async function archiveTopStrategies(
+  minScore: number = 4.0,
+  userId?: string,
+  userName?: string
+) {
+  const allStrategies = await getAllStrategiesWithScores(userId);
 
-  // 既存のアーカイブを取得（重複チェック用）
+  // 既存のアーカイブを取得（重複チェック用、ユーザー別）
   const existingArchives = await prisma.topStrategy.findMany({
+    where: userId ? { userId } : {},
     select: {
       explorationId: true,
       name: true,
@@ -181,7 +189,7 @@ export async function archiveTopStrategies(minScore: number = 4.0) {
     return { archived: 0, total: highScoreStrategies.length };
   }
 
-  // バッチ作成
+  // バッチ作成（ユーザー情報付き）
   await prisma.topStrategy.createMany({
     data: newStrategies.map((s) => ({
       explorationId: s.explorationId,
@@ -192,6 +200,8 @@ export async function archiveTopStrategies(minScore: number = 4.0) {
       scores: JSON.stringify(s.scores),
       question: s.question,
       judgment: s.judgment,
+      userId,
+      userName,
     })),
   });
 
@@ -213,9 +223,10 @@ export async function getBaselineHistory(limit: number = 30) {
   });
 }
 
-// 高スコア戦略を取得
-export async function getTopStrategies(limit: number = 50) {
+// 高スコア戦略を取得（ユーザー別）
+export async function getTopStrategies(limit: number = 50, userId?: string) {
   return prisma.topStrategy.findMany({
+    where: userId ? { userId } : {},
     orderBy: { totalScore: "desc" },
     take: limit,
   });

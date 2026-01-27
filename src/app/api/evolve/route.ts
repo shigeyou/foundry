@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { AzureOpenAI } from "openai";
+import { getCurrentUser } from "@/lib/auth";
 
 // API route の最大実行時間を延長（秒）
 // 進化生成は時間がかかるため長めに設定
@@ -33,8 +34,8 @@ interface EvolveResult {
   thinkingProcess: string;
 }
 
-// 採用された戦略を取得
-async function getAdoptedStrategies(limit: number = 10): Promise<
+// 採用された戦略を取得（ユーザー別）
+async function getAdoptedStrategies(userId: string, limit: number = 10): Promise<
   {
     name: string;
     reason: string;
@@ -43,16 +44,17 @@ async function getAdoptedStrategies(limit: number = 10): Promise<
     scores?: string;
   }[]
 > {
-  // StrategyDecisionから採用された戦略を取得
+  // StrategyDecisionから採用された戦略を取得（自分のデータのみ）
   const decisions = await prisma.strategyDecision.findMany({
-    where: { decision: "adopt" },
+    where: { userId, decision: "adopt" },
     orderBy: { createdAt: "desc" },
     take: limit * 2, // 重複を考慮して多めに取得
   });
 
   if (decisions.length === 0) {
-    // TopStrategyから高スコア戦略を取得（フォールバック）
+    // TopStrategyから高スコア戦略を取得（フォールバック、自分のデータのみ）
     const topStrategies = await prisma.topStrategy.findMany({
+      where: { userId },
       orderBy: { totalScore: "desc" },
       take: limit,
     });
@@ -78,11 +80,11 @@ async function getAdoptedStrategies(limit: number = 10): Promise<
   const rankingDecisions = decisions.filter((d) => d.explorationId.startsWith("ranking-"));
   const explorationDecisions = decisions.filter((d) => !d.explorationId.startsWith("ranking-"));
 
-  // ランキングから採用された戦略をTopStrategyから取得
+  // ランキングから採用された戦略をTopStrategyから取得（自分のデータのみ）
   if (rankingDecisions.length > 0) {
     const strategyNames = rankingDecisions.map((d) => d.strategyName);
     const topStrategies = await prisma.topStrategy.findMany({
-      where: { name: { in: strategyNames } },
+      where: { userId, name: { in: strategyNames } },
     });
 
     for (const topStrategy of topStrategies) {
@@ -337,15 +339,17 @@ function calculateTotalScore(scores: {
   return weightedSum / totalWeight;
 }
 
-// POST: 進化生成を実行
+// POST: 進化生成を実行（ユーザー別）
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const mode: EvolveMode = body.mode || "all";
     const limit = body.limit || 5;
 
-    // 採用された戦略を取得
-    const strategies = await getAdoptedStrategies(limit);
+    const user = await getCurrentUser();
+
+    // 採用された戦略を取得（自分のデータのみ）
+    const strategies = await getAdoptedStrategies(user.id, limit);
 
     if (strategies.length === 0) {
       return NextResponse.json(
@@ -380,13 +384,15 @@ export async function POST(request: NextRequest) {
       return s;
     });
 
-    // 探索として保存
+    // 探索として保存（ユーザー情報付き）
     const exploration = await prisma.exploration.create({
       data: {
         question: `[進化生成] ${mode}モード - ${strategies.slice(0, 3).map((s) => s.name).join(", ")}から`,
         context: `[進化生成] 元戦略: ${strategies.map((s) => s.name).join(", ")}`,
         constraints: "[]",
         status: "completed",
+        userId: user.id,
+        userName: user.name,
         result: JSON.stringify({
           strategies: strategiesWithScores.map((s) => ({
             name: s.name,
@@ -407,13 +413,13 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // 高スコア（4.0以上）の戦略をランキング（TopStrategy）に自動登録
+    // 高スコア（4.0以上）の戦略をランキング（TopStrategy）に自動登録（ユーザー別）
     let archivedCount = 0;
     for (const strategy of strategiesWithScores) {
       if (strategy.totalScore && strategy.totalScore >= 4.0 && strategy.scores) {
-        // 既存チェック
+        // 既存チェック（自分のデータのみ）
         const existing = await prisma.topStrategy.findFirst({
-          where: { name: strategy.name },
+          where: { userId: user.id, name: strategy.name },
         });
 
         if (!existing) {
@@ -427,6 +433,8 @@ export async function POST(request: NextRequest) {
               scores: JSON.stringify(strategy.scores),
               question: `[進化生成] ${strategy.evolveType}`,
               judgment: "",
+              userId: user.id,
+              userName: user.name,
             },
           });
           archivedCount++;
@@ -455,20 +463,25 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET: 進化生成の情報を取得
+// GET: 進化生成の情報を取得（ユーザー別）
 export async function GET() {
   try {
-    // 採用された戦略数を取得
+    const user = await getCurrentUser();
+
+    // 採用された戦略数を取得（自分のデータのみ）
     const adoptedCount = await prisma.strategyDecision.count({
-      where: { decision: "adopt" },
+      where: { userId: user.id, decision: "adopt" },
     });
 
-    // TopStrategy数を取得
-    const topStrategyCount = await prisma.topStrategy.count();
+    // TopStrategy数を取得（自分のデータのみ）
+    const topStrategyCount = await prisma.topStrategy.count({
+      where: { userId: user.id },
+    });
 
-    // 最近の進化生成を取得（戦略情報も含む）
+    // 最近の進化生成を取得（戦略情報も含む、自分のデータのみ）
     const recentEvolutionsRaw = await prisma.exploration.findMany({
       where: {
+        userId: user.id,
         question: { startsWith: "[進化生成]" },
       },
       orderBy: { createdAt: "desc" },

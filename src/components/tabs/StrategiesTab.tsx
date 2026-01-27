@@ -239,37 +239,24 @@ export function StrategiesTab() {
           {/* 進化生成タブ */}
           {activeSubTab === "evolution" && (
             <div className="space-y-6">
-              <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
-                <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
-                  進化生成
-                </h2>
-                <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">
-                  ランキング画面であなたが採用した勝ち筋をもとに、一部を変えたり組み合わせたりしながら検証を行い、シン・勝ち筋を段階的に生み出していく仕組みです。
-                </p>
-
-                {/* 「あなたが採用した勝ち筋」の説明 */}
-                <div className="mb-4 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
-                  <p className="text-sm font-medium text-amber-800 dark:text-amber-200 mb-2">
-                    「あなたが採用した勝ち筋」とは？
-                  </p>
-                  <p className="text-xs text-amber-700 dark:text-amber-300 mb-2">
-                    進化生成は、あなたが「これは良い」と判断した勝ち筋をベースに、シン・勝ち筋を生み出します。
-                  </p>
-                  <div className="flex items-center gap-2 text-xs text-amber-600 dark:text-amber-400">
-                    <span className="inline-flex items-center gap-1">
-                      <span className="text-green-600">✓</span>
-                      <span>ランキングタブで「採用」にチェックを入れた勝ち筋が対象になります</span>
-                    </span>
-                    <button
-                      onClick={() => setActiveTab("ranking")}
-                      className="underline hover:text-amber-800 dark:hover:text-amber-200"
-                    >
-                      → ランキングで採用を選ぶ
-                    </button>
+              {/* 進化生成とは */}
+              <div className="p-4 bg-gradient-to-r from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 rounded-lg border-2 border-indigo-300 dark:border-indigo-700">
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl">🧬</span>
+                  <div className="flex-1">
+                    <h2 className="text-lg font-bold text-indigo-800 dark:text-indigo-200">
+                      進化生成とは
+                    </h2>
+                    <p className="text-sm text-indigo-700 dark:text-indigo-300 mt-2">
+                      ランキングで<span className="text-green-600 dark:text-green-400 font-medium"> ✓採用 </span>
+                      した勝ち筋をベースに、シン・勝ち筋を生み出します。
+                    </p>
                   </div>
                 </div>
+              </div>
 
-                {/* 進化生成の流れ説明 */}
+              <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
+                {/* 進化生成の3つのアプローチ */}
                 <div className="mb-4 p-4 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
                   <div className="flex items-center gap-2 mb-2">
                     <p className="text-xs font-medium text-slate-700 dark:text-slate-300">進化生成の3つのアプローチ:</p>
@@ -363,20 +350,18 @@ export function StrategiesTab() {
                 )}
 
                 {!evolveInfo?.canEvolve && evolveStatus !== "running" && (
-                  <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
-                    <p className="text-sm text-amber-700 dark:text-amber-300 font-medium mb-2">
-                      進化生成を始めるには、まず勝ち筋を採用してください
-                    </p>
-                    <p className="text-xs text-amber-600 dark:text-amber-400">
-                      「ランキング」タブで良いと思った勝ち筋の「✓」ボタンを押すと、その勝ち筋が進化のベースとして使われます。
-                    </p>
+                  <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800 flex items-center gap-3">
+                    <span className="text-amber-600">⚠</span>
+                    <span className="text-sm text-amber-700 dark:text-amber-300">
+                      まずランキングで勝ち筋を採用してください
+                    </span>
                     <Button
                       variant="outline"
                       size="sm"
-                      className="mt-2 text-amber-700 border-amber-300 hover:bg-amber-100 dark:text-amber-300 dark:border-amber-700 dark:hover:bg-amber-900/30"
+                      className="text-amber-700 border-amber-300 hover:bg-amber-100 dark:text-amber-300 dark:border-amber-700 dark:hover:bg-amber-900/30"
                       onClick={() => setActiveTab("ranking")}
                     >
-                      ランキングで勝ち筋を採用する →
+                      採用する →
                     </Button>
                   </div>
                 )}
@@ -579,14 +564,22 @@ export function StrategiesTab() {
           {/* AI自動探索タブ */}
           {activeSubTab === "auto-explore" && (
             <div className="space-y-6">
-              <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
-                <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
-                  AI自動探索
-                </h2>
-                <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">
-                  AIが自分でさまざまな視点から問いを立て、それぞれを試しながら結果を比較し、うまくいったパターン（スコアの高い勝ち筋）を見つけ出していく仕組みです。
-                </p>
+              {/* AI自動探索とは（概要＋仕組み） */}
+              <div className="p-4 bg-gradient-to-r from-emerald-100 to-teal-100 dark:from-emerald-900/30 dark:to-teal-900/30 rounded-lg border-2 border-emerald-300 dark:border-emerald-700">
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl">🤖</span>
+                  <div className="flex-1">
+                    <h2 className="text-lg font-bold text-emerald-800 dark:text-emerald-200">
+                      AI自動探索とは
+                    </h2>
+                    <p className="text-sm text-emerald-700 dark:text-emerald-300 mt-2">
+                      AIが自分で問いを立て、探索を実行し、高スコア（4.0以上）の勝ち筋を自動でランキングに登録します。
+                    </p>
+                  </div>
+                </div>
+              </div>
 
+              <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
                 {/* AI自動探索の流れ説明 */}
                 <div className="mb-4 p-4 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
                   <p className="text-xs font-medium text-slate-700 dark:text-slate-300 mb-2">AIが行う3つのステップ:</p>
@@ -677,10 +670,6 @@ export function StrategiesTab() {
                   </div>
                 )}
 
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  ※ <span className="font-medium">AIが自分で5つの問いを作成</span>し、それぞれの問いで探索を実行します。
-                  高スコア（<span className="font-medium text-yellow-600 dark:text-yellow-400">4.0以上</span>）の勝ち筋は自動的にランキングに追加されます。
-                </p>
               </div>
 
               {/* 実行結果 */}

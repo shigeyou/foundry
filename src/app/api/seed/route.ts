@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { getCurrentUser } from "@/lib/auth";
 import fs from "fs";
 import path from "path";
 
@@ -275,30 +276,65 @@ export async function POST(request: NextRequest) {
 }
 
 // DELETE: 探索データのみクリア（会社情報やRAGは残す）
-export async function DELETE() {
+// クエリパラメータ: user-only=true で自分のデータのみ削除、指定なしで全データ削除（管理者用）
+export async function DELETE(request: NextRequest) {
   try {
-    // 探索関連データのみ削除
-    const [
-      deletedDecisions,
-      deletedStrategies,
-      deletedExplorations,
-      deletedMemories,
-    ] = await Promise.all([
-      prisma.strategyDecision.deleteMany(),
-      prisma.topStrategy.deleteMany(),
-      prisma.exploration.deleteMany(),
-      prisma.learningMemory.deleteMany(),
-    ]);
+    const { searchParams } = new URL(request.url);
+    const userOnly = searchParams.get("user-only") === "true";
 
-    return NextResponse.json({
-      success: true,
-      deleted: {
-        strategyDecisions: deletedDecisions.count,
-        topStrategies: deletedStrategies.count,
-        explorations: deletedExplorations.count,
-        learningMemories: deletedMemories.count,
-      },
-    });
+    if (userOnly) {
+      // ユーザー別のデータのみ削除
+      const user = await getCurrentUser();
+
+      const [
+        deletedDecisions,
+        deletedStrategies,
+        deletedExplorations,
+        deletedMemories,
+      ] = await Promise.all([
+        prisma.strategyDecision.deleteMany({ where: { userId: user.id } }),
+        prisma.topStrategy.deleteMany({ where: { userId: user.id } }),
+        prisma.exploration.deleteMany({ where: { userId: user.id } }),
+        prisma.learningMemory.deleteMany({ where: { userId: user.id } }),
+      ]);
+
+      return NextResponse.json({
+        success: true,
+        userOnly: true,
+        userId: user.id,
+        userName: user.name,
+        deleted: {
+          strategyDecisions: deletedDecisions.count,
+          topStrategies: deletedStrategies.count,
+          explorations: deletedExplorations.count,
+          learningMemories: deletedMemories.count,
+        },
+      });
+    } else {
+      // 全探索関連データを削除（管理者用）
+      const [
+        deletedDecisions,
+        deletedStrategies,
+        deletedExplorations,
+        deletedMemories,
+      ] = await Promise.all([
+        prisma.strategyDecision.deleteMany(),
+        prisma.topStrategy.deleteMany(),
+        prisma.exploration.deleteMany(),
+        prisma.learningMemory.deleteMany(),
+      ]);
+
+      return NextResponse.json({
+        success: true,
+        userOnly: false,
+        deleted: {
+          strategyDecisions: deletedDecisions.count,
+          topStrategies: deletedStrategies.count,
+          explorations: deletedExplorations.count,
+          learningMemories: deletedMemories.count,
+        },
+      });
+    }
   } catch (error) {
     console.error("Clear exploration data error:", error);
     return NextResponse.json(

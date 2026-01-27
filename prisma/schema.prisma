@@ -44,8 +44,12 @@ model Exploration {
   status      String   @default("completed")
   result      String?
   error       String?
+  userId      String?  // ユーザー別データ用（null = 共有/レガシー）
+  userName    String?  // 表示用ユーザー名
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@index([userId])
 }
 
 model RAGDocument {
@@ -81,10 +85,13 @@ model TopStrategy {
   question          String
   judgment          String
   learningExtracted Boolean  @default(false)
+  userId            String?  // ユーザー別ランキング用（null = レガシー）
+  userName          String?  // 表示用
   createdAt         DateTime @default(now())
 
   @@index([totalScore])
   @@index([learningExtracted])
+  @@index([userId])
 }
 
 model AutoExploreRun {
@@ -103,6 +110,10 @@ model AutoExploreRun {
   completedAt           DateTime?
   duration              Int?
   errors                String?
+  userId                String?   // ユーザー別自動探索用
+  userName              String?   // 表示用
+
+  @@index([userId])
 }
 
 model LearningMemory {
@@ -118,12 +129,14 @@ model LearningMemory {
   usedCount       Int       @default(0)
   lastUsedAt      DateTime?
   isActive        Boolean   @default(true)
+  userId          String?   // ユーザー別学習用（null = 共有/レガシー）
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
   @@index([type])
   @@index([isActive])
   @@index([confidence])
+  @@index([userId])
 }
 
 model StrategyDecision {
@@ -133,12 +146,14 @@ model StrategyDecision {
   decision        String
   reason          String?
   feasibilityNote String?
+  userId          String?  // ユーザー別判断用（null = 共有/レガシー）
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  @@unique([explorationId, strategyName])
+  @@unique([explorationId, strategyName, userId])
   @@index([decision])
   @@index([createdAt])
+  @@index([userId])
 }
 
 model DefaultSwot {

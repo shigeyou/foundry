@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { generateWinningStrategies } from "@/lib/claude";
 import { generateRAGContext } from "@/lib/rag";
 import { AzureOpenAI } from "openai";
+import { getCurrentUser } from "@/lib/auth";
 import {
   recordBaseline,
   archiveTopStrategies,
@@ -112,11 +113,15 @@ export async function POST(request: NextRequest) {
     errors: [],
   };
 
-  // Create AutoExploreRun record
+  const user = await getCurrentUser();
+
+  // Create AutoExploreRun record（ユーザー別）
   const run = await prisma.autoExploreRun.create({
     data: {
       status: "running",
       triggerType: "manual",
+      userId: user.id,
+      userName: user.name,
     },
   });
 
@@ -180,7 +185,7 @@ export async function POST(request: NextRequest) {
           ragContext
         );
 
-        // Save exploration
+        // Save exploration（ユーザー別）
         await prisma.exploration.create({
           data: {
             question,
@@ -188,6 +193,8 @@ export async function POST(request: NextRequest) {
             constraints: "[]",
             status: "completed",
             result: JSON.stringify(explorationResult),
+            userId: user.id,
+            userName: user.name,
           },
         });
 
@@ -221,8 +228,8 @@ export async function POST(request: NextRequest) {
     const newBaseline = await recordBaseline(run.id);
     const achievedScore = newBaseline?.topScore ?? result.topScore;
 
-    // Archive top strategies
-    const archiveResult = await archiveTopStrategies(4.0);
+    // Archive top strategies（ユーザー別）
+    const archiveResult = await archiveTopStrategies(4.0, user.id, user.name);
     console.log(`[Auto-Explore] Archived ${archiveResult.archived} top strategies`);
 
     // Calculate improvement
@@ -281,11 +288,14 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET: Check last auto-exploration results and history
+// GET: Check last auto-exploration results and history（ユーザー別）
 export async function GET() {
   try {
-    // Get AutoExploreRun history
+    const user = await getCurrentUser();
+
+    // Get AutoExploreRun history（自分のデータのみ）
     const runHistory = await prisma.autoExploreRun.findMany({
+      where: { userId: user.id },
       orderBy: { startedAt: "desc" },
       take: 5,
     });
@@ -293,9 +303,10 @@ export async function GET() {
     // For each run, get related explorations (created between startedAt and completedAt)
     const runHistoryWithStrategies = await Promise.all(
       runHistory.map(async (run) => {
-        // Get explorations created during this run
+        // Get explorations created during this run（自分のデータのみ）
         const explorations = await prisma.exploration.findMany({
           where: {
+            userId: user.id,
             context: { contains: "[自動探索]" },
             createdAt: {
               gte: run.startedAt,
@@ -352,9 +363,10 @@ export async function GET() {
       })
     );
 
-    // Find recent auto-explorations (exploration records)
+    // Find recent auto-explorations (exploration records)（自分のデータのみ）
     const recentAutoExplorations = await prisma.exploration.findMany({
       where: {
+        userId: user.id,
         context: { contains: "[自動探索]" },
       },
       orderBy: { createdAt: "desc" },

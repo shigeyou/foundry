@@ -222,105 +222,49 @@ export function InsightsTab() {
           {/* 学習パターンタブ */}
           {activeSubTab === "patterns" && (
             <div className="space-y-6">
-              {/* 違いを明確にするヘッダー */}
+              {/* 学習パターンとは（概要＋仕組み） */}
               <div className="p-4 bg-gradient-to-r from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30 rounded-lg border-2 border-amber-300 dark:border-amber-700">
                 <div className="flex items-start gap-3">
                   <span className="text-2xl">📝</span>
-                  <div>
+                  <div className="flex-1">
                     <h2 className="text-lg font-bold text-amber-800 dark:text-amber-200">
-                      学習パターン ＝「あなたの判断基準」を形式知化
+                      学習パターンとは
                     </h2>
-                    <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
-                      <strong>入力：</strong>あなたが「採用」「却下」した勝ち筋の履歴<br />
-                      <strong>出力：</strong>「こういう勝ち筋は良い／悪い」というルール（成功・失敗パターン）
+                    <p className="text-sm text-amber-700 dark:text-amber-300 mt-2">
+                      「探索履歴」や「ランキング」で勝ち筋を
+                      <span className="text-green-600 dark:text-green-400 font-medium"> ✓採用 </span>
+                      または
+                      <span className="text-red-600 dark:text-red-400 font-medium"> ✗却下 </span>
+                      すると、その傾向をAIが学習。次回の探索であなた好みの提案が出やすくなります。
                     </p>
-                    <p className="text-xs text-amber-600 dark:text-amber-400 mt-2 italic">
-                      → 次回の探索で「あなた好みの提案」が出やすくなる
-                    </p>
+                    <div className="flex gap-3 mt-3">
+                      <button
+                        onClick={() => setActiveTab("history")}
+                        className="text-xs text-amber-700 dark:text-amber-300 underline hover:text-amber-900 dark:hover:text-amber-100"
+                      >
+                        → 探索履歴で採否を判断
+                      </button>
+                      <button
+                        onClick={() => setActiveTab("ranking")}
+                        className="text-xs text-amber-700 dark:text-amber-300 underline hover:text-amber-900 dark:hover:text-amber-100"
+                      >
+                        → ランキングで採否を判断
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* 学習パターンの仕組み説明 */}
-              <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
-                <p className="text-sm font-medium text-amber-800 dark:text-amber-200 mb-2">
-                  学習パターンの仕組み
-                </p>
-                <p className="text-xs text-amber-700 dark:text-amber-300 mb-2">
-                  「探索履歴」や「ランキング」で勝ち筋に対して採否を判断すると、その履歴がここに蓄積されます。
-                </p>
-                <div className="text-xs text-amber-600 dark:text-amber-400 space-y-1">
-                  <p>
-                    <span className="text-green-600 dark:text-green-400 font-medium">✓ 採用</span>
-                    した勝ち筋 → 「成功パターン」として学習
-                  </p>
-                  <p>
-                    <span className="text-red-600 dark:text-red-400 font-medium">✗ 却下</span>
-                    した勝ち筋 → 「失敗パターン」として学習
-                  </p>
-                </div>
-                <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
-                  採否の判断が蓄積されるほど、AIは「どんな勝ち筋が求められているか」を学習し、次回の探索でより的確な提案ができるようになります。
-                </p>
-                <div className="flex gap-2 mt-3">
-                  <button
-                    onClick={() => setActiveTab("history")}
-                    className="text-xs text-amber-700 dark:text-amber-300 underline hover:text-amber-900 dark:hover:text-amber-100"
-                  >
-                    → 探索履歴で採否を判断
-                  </button>
-                  <button
-                    onClick={() => setActiveTab("ranking")}
-                    className="text-xs text-amber-700 dark:text-amber-300 underline hover:text-amber-900 dark:hover:text-amber-100"
-                  >
-                    → ランキングで採否を判断
-                  </button>
-                </div>
-              </div>
-
-              {/* パターン抽出の説明 */}
+              {/* パターン抽出のメリット */}
               <div className="p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-200 dark:border-indigo-800">
-                <p className="text-sm font-medium text-indigo-800 dark:text-indigo-200 mb-3">
-                  パターン抽出とは？
+                <p className="text-sm font-medium text-indigo-800 dark:text-indigo-200 mb-2">
+                  パターン抽出のメリット
                 </p>
-
-                <div className="space-y-3 text-xs text-indigo-700 dark:text-indigo-300">
-                  <div>
-                    <p className="font-medium text-indigo-800 dark:text-indigo-200 mb-1">
-                      実施目的（なぜ行うのか）
-                    </p>
-                    <p>
-                      あなたが「採用」「却下」した勝ち筋には、意思決定の傾向が隠れています。
-                      パターン抽出は、その傾向をAIが言語化し、
-                      <span className="font-medium">「成功パターン」「失敗パターン」</span>として明示します。
-                      暗黙知を形式知に変える作業です。
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="font-medium text-indigo-800 dark:text-indigo-200 mb-1">
-                      得られるメリット（何が有効なのか）
-                    </p>
-                    <ul className="list-disc list-inside space-y-0.5">
-                      <li><span className="font-medium">探索精度の向上</span>：抽出されたパターンは次回以降の探索時にAIへ自動的に渡され、あなた好みの勝ち筋が提案されやすくなる</li>
-                      <li><span className="font-medium">意思決定基準の可視化</span>：自分がどんな勝ち筋を好み、何を避けているかを客観視できる</li>
-                      <li><span className="font-medium">組織知の蓄積</span>：個人の判断基準をチームで共有可能な形で残せる</li>
-                    </ul>
-                  </div>
-
-                  <div>
-                    <p className="font-medium text-indigo-800 dark:text-indigo-200 mb-1">
-                      考え方の整理（どのようなロジックか）
-                    </p>
-                    <p>
-                      採否ログ（採用/却下した勝ち筋とその理由）を入力とし、AIが以下を分析します：
-                      (1) 採用された勝ち筋の共通点を「成功パターン」として抽出、
-                      (2) 却下された勝ち筋の共通点を「失敗パターン」として抽出、
-                      (3) 各パターンに確信度（どれだけ確からしいか）を付与。
-                      採否の数が増えるほど、パターンの精度が上がります。
-                    </p>
-                  </div>
-                </div>
+                <ul className="text-xs text-indigo-700 dark:text-indigo-300 space-y-1">
+                  <li>・<span className="font-medium">探索精度の向上</span>：抽出パターンが次回探索時にAIへ自動で渡される</li>
+                  <li>・<span className="font-medium">意思決定基準の可視化</span>：自分の好み・避けている傾向を客観視</li>
+                  <li>・<span className="font-medium">組織知の蓄積</span>：判断基準をチームで共有可能な形で残せる</li>
+                </ul>
               </div>
 
               <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
@@ -466,76 +410,39 @@ export function InsightsTab() {
           {/* メタ分析タブ */}
           {activeSubTab === "meta" && (
             <div className="space-y-6">
-              {/* 違いを明確にするヘッダー */}
+              {/* メタ分析とは（概要＋仕組み） */}
               <div className="p-4 bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 rounded-lg border-2 border-purple-300 dark:border-purple-700">
                 <div className="flex items-start gap-3">
                   <span className="text-2xl">🔭</span>
-                  <div>
+                  <div className="flex-1">
                     <h2 className="text-lg font-bold text-purple-800 dark:text-purple-200">
-                      メタ分析 ＝「全探索結果の俯瞰」で本質を発見
+                      メタ分析とは
                     </h2>
-                    <p className="text-sm text-purple-700 dark:text-purple-300 mt-1">
-                      <strong>入力：</strong>これまでの全ての探索結果（問い＋勝ち筋）<br />
-                      <strong>出力：</strong>何度も出現する「勝ち筋の勝ち筋」＋ 探索されていない「盲点」
-                    </p>
-                    <p className="text-xs text-purple-600 dark:text-purple-400 mt-2 italic">
-                      → 個別の探索では見えない「全体像」と「次に探るべき方向」がわかる
+                    <p className="text-sm text-purple-700 dark:text-purple-300 mt-2">
+                      過去の全探索結果を俯瞰し、<span className="font-medium">何度も出現する「勝ち筋の勝ち筋」</span>と
+                      <span className="font-medium">探索されていない「盲点」</span>を発見します。
+                      個別の探索では見えない全体像を把握するための分析です。
                     </p>
                   </div>
                 </div>
               </div>
 
-              {/* メタ分析の説明 */}
+              {/* メタ分析のメリット */}
               <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
-                <p className="text-sm font-medium text-purple-800 dark:text-purple-200 mb-3">
-                  メタ分析とは？
+                <p className="text-sm font-medium text-purple-800 dark:text-purple-200 mb-2">
+                  メタ分析のメリット
                 </p>
-
-                <div className="space-y-3 text-xs text-purple-700 dark:text-purple-300">
-                  <div>
-                    <p className="font-medium text-purple-800 dark:text-purple-200 mb-1">
-                      実施目的（なぜ行うのか）
-                    </p>
-                    <p>
-                      個別の探索では「その問いに対する勝ち筋」しか見えません。メタ分析は、過去のすべての探索結果を俯瞰し、
-                      <span className="font-medium">何度も出現する本質的な勝ちパターン</span>を発見します。
-                      木を見て森を見ず、にならないための分析です。
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="font-medium text-purple-800 dark:text-purple-200 mb-1">
-                      得られるメリット（何が有効なのか）
-                    </p>
-                    <ul className="list-disc list-inside space-y-0.5">
-                      <li><span className="font-medium">頻出勝ち筋の発見</span>：異なる問いから同じ方向性の勝ち筋が出てくれば、それは本質的な強みの可能性が高い</li>
-                      <li><span className="font-medium">盲点の発見</span>：探索されていない領域を指摘し、次に探るべき問いのヒントを得られる</li>
-                      <li><span className="font-medium">クラスタリング</span>：類似の勝ち筋をグループ化し、全体像を把握できる</li>
-                    </ul>
-                  </div>
-
-                  <div>
-                    <p className="font-medium text-purple-800 dark:text-purple-200 mb-1">
-                      考え方の整理（どのようなロジックか）
-                    </p>
-                    <p>
-                      探索履歴の全勝ち筋を入力とし、AIが以下を分析します：
-                      (1) 勝ち筋名・理由・タグの類似性から頻出パターンを抽出、
-                      (2) 意味的に近い勝ち筋をクラスタに分類、
-                      (3) 探索されていない空白領域を推定。
-                      探索回数が増えるほど、分析の精度が上がります。
-                    </p>
-                  </div>
-                </div>
+                <ul className="text-xs text-purple-700 dark:text-purple-300 space-y-1">
+                  <li>・<span className="font-medium">頻出パターンの発見</span>：異なる問いから同じ方向性が出れば、本質的な強み</li>
+                  <li>・<span className="font-medium">盲点の発見</span>：探索されていない領域を指摘し、次の問いのヒントに</li>
+                  <li>・<span className="font-medium">クラスタリング</span>：類似の勝ち筋をグループ化し、全体像を把握</li>
+                </ul>
               </div>
 
               <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
-                <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
+                <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">
                   メタ分析を実行
                 </h2>
-                <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
-                  全ての探索結果を横断的に分析し、繰り返し出現する勝ちパターンや盲点を発見します。
-                </p>
                 <Button
                   onClick={handleMetaAnalysis}
                   disabled={metaAnalysisStatus === "running"}

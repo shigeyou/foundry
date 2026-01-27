@@ -9,6 +9,8 @@ export function IntroTab() {
   const [isSeeding, setIsSeeding] = useState(false);
   const [clearStatus, setClearStatus] = useState<string | null>(null);
   const [isClearing, setIsClearing] = useState(false);
+  const [myClearStatus, setMyClearStatus] = useState<string | null>(null);
+  const [isMyClear, setIsMyClear] = useState(false);
 
   const handleForceSeed = async () => {
     if (!confirm("強制シードを実行すると、現在の探索データが初期データに置き換わります。続行しますか？")) {
@@ -32,8 +34,30 @@ export function IntroTab() {
     }
   };
 
+  const handleClearMyData = async () => {
+    if (!confirm("あなたの探索データをすべて削除します。会社情報・RAG・SWOTは残ります。続行しますか？")) {
+      return;
+    }
+    setIsMyClear(true);
+    setMyClearStatus("削除中...");
+    try {
+      const res = await fetch("/api/seed?user-only=true", { method: "DELETE" });
+      const data = await res.json();
+      if (data.success) {
+        const d = data.deleted || {};
+        setMyClearStatus(`削除完了: 探索${d.explorations || 0}件, ランキング${d.topStrategies || 0}件, 採否${d.strategyDecisions || 0}件, 学習${d.learningMemories || 0}件`);
+      } else {
+        setMyClearStatus(`エラー: ${data.error || "不明なエラー"}`);
+      }
+    } catch (e) {
+      setMyClearStatus(`エラー: ${e instanceof Error ? e.message : "通信エラー"}`);
+    } finally {
+      setIsMyClear(false);
+    }
+  };
+
   const handleClearExplorations = async () => {
-    if (!confirm("探索データをすべて削除します。会社情報やRAGドキュメントは残ります。続行しますか？")) {
+    if (!confirm("【管理者】全ユーザーの探索データをすべて削除します。会社情報やRAGドキュメントは残ります。続行しますか？")) {
       return;
     }
     setIsClearing(true);
@@ -214,6 +238,34 @@ export function IntroTab() {
           対象企業の設定から始める
         </button>
       </div>
+
+      {/* データ管理 */}
+      <section className="mb-8">
+        <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2">
+          <span className="w-1 h-6 bg-orange-500 rounded"></span>
+          データ管理
+        </h2>
+        <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-5">
+          <p className="text-slate-600 dark:text-slate-400 text-sm mb-3">
+            RAGデータが更新された場合など、自分の探索データをリセットしたい場合に使用します。
+            会社情報・RAG・SWOTは共有データのため残ります。
+          </p>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={handleClearMyData}
+              disabled={isMyClear}
+              className="px-4 py-2 bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400 text-white font-medium rounded-lg transition-colors text-sm"
+            >
+              {isMyClear ? "削除中..." : "自分のデータをクリア"}
+            </button>
+            {myClearStatus && (
+              <span className={`text-sm ${myClearStatus.startsWith("エラー") ? "text-red-600" : "text-green-600"}`}>
+                {myClearStatus}
+              </span>
+            )}
+          </div>
+        </div>
+      </section>
 
       {/* 管理者向け */}
       <section className="mb-8">

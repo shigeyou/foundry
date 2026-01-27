@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { AzureOpenAI } from "openai";
+import { getCurrentUserId } from "@/lib/auth";
 
 // パターン抽出結果の型
 interface ExtractedPattern {
@@ -77,15 +78,18 @@ ${rejectedStrategies.map((s, i) => `${i + 1}. ${s.name}
   }
 }
 
-// POST: パターン抽出を実行
+// POST: パターン抽出を実行（ユーザー別）
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}));
     const minDecisions = body.minDecisions || 10; // 最低必要な採否数
 
-    // 採否ログを取得
+    const userId = await getCurrentUserId();
+
+    // 採否ログを取得（自分のデータのみ）
     const decisions = await prisma.strategyDecision.findMany({
       where: {
+        userId,
         decision: { in: ["adopt", "reject"] },
       },
       orderBy: { createdAt: "desc" },
@@ -102,21 +106,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 関連する探索結果を取得
+    // 関連する探索結果を取得（自分のデータのみ）
     const explorationIds = [...new Set(decisions.map((d) => d.explorationId))];
     const realExplorationIds = explorationIds.filter((id) => !id.startsWith("ranking-"));
     const explorations = await prisma.exploration.findMany({
-      where: { id: { in: realExplorationIds } },
+      where: { id: { in: realExplorationIds }, userId },
     });
 
     const explorationMap = new Map(explorations.map((e) => [e.id, e]));
 
-    // ランキングからの決定用にTopStrategyテーブルも取得
+    // ランキングからの決定用にTopStrategyテーブルも取得（自分のデータのみ）
     const rankingStrategyNames = decisions
       .filter((d) => d.explorationId.startsWith("ranking-"))
       .map((d) => d.strategyName);
     const topStrategies = await prisma.topStrategy.findMany({
-      where: { name: { in: rankingStrategyNames } },
+      where: { name: { in: rankingStrategyNames }, userId },
     });
     const topStrategyMap = new Map(topStrategies.map((s) => [s.name, s]));
 
@@ -188,14 +192,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // LearningMemoryに保存（重複チェック付き）
+    // LearningMemoryに保存（重複チェック付き、ユーザー別）
     let savedCount = 0;
     let updatedCount = 0;
 
     for (const pattern of patterns) {
-      // 類似パターンを検索
+      // 類似パターンを検索（自分のデータのみ）
       const existing = await prisma.learningMemory.findFirst({
         where: {
+          userId,
           type: pattern.type,
           category: pattern.category,
           pattern: { contains: pattern.pattern.substring(0, 20) },
@@ -217,7 +222,7 @@ export async function POST(request: NextRequest) {
         });
         updatedCount++;
       } else {
-        // 新規パターンを作成
+        // 新規パターンを作成（ユーザー情報付き）
         await prisma.learningMemory.create({
           data: {
             type: pattern.type,
@@ -227,6 +232,7 @@ export async function POST(request: NextRequest) {
             evidence: pattern.evidence,
             confidence: pattern.confidence,
             isActive: true,
+            userId,
           },
         });
         savedCount++;
@@ -253,7 +259,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET: 学習パターンを取得
+// GET: 学習パターンを取得（ユーザー別）
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -261,7 +267,9 @@ export async function GET(request: NextRequest) {
     const activeOnly = searchParams.get("active") !== "false";
     const limit = parseInt(searchParams.get("limit") || "50");
 
-    const where: Record<string, unknown> = {};
+    const userId = await getCurrentUserId();
+
+    const where: Record<string, unknown> = { userId };
     if (type) where.type = type;
     if (activeOnly) where.isActive = true;
 
@@ -271,11 +279,11 @@ export async function GET(request: NextRequest) {
       take: limit,
     });
 
-    // 統計情報
+    // 統計情報（自分のデータのみ）
     const stats = await prisma.learningMemory.groupBy({
       by: ["type"],
       _count: true,
-      where: { isActive: true },
+      where: { userId, isActive: true },
     });
 
     return NextResponse.json({
@@ -298,7 +306,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// PATCH: パターンの有効/無効を切り替え
+// PATCH: パターンの有効/無効を切り替え（自分のデータのみ）
 export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json();
@@ -306,6 +314,17 @@ export async function PATCH(request: NextRequest) {
 
     if (!id) {
       return NextResponse.json({ error: "id は必須です" }, { status: 400 });
+    }
+
+    const userId = await getCurrentUserId();
+
+    // 自分のパターンか確認
+    const pattern = await prisma.learningMemory.findUnique({ where: { id } });
+    if (!pattern || pattern.userId !== userId) {
+      return NextResponse.json(
+        { error: "パターンが見つからないか、権限がありません" },
+        { status: 403 }
+      );
     }
 
     const updated = await prisma.learningMemory.update({
@@ -323,7 +342,7 @@ export async function PATCH(request: NextRequest) {
   }
 }
 
-// DELETE: パターンを削除
+// DELETE: パターンを削除（自分のデータのみ）
 export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -331,6 +350,17 @@ export async function DELETE(request: NextRequest) {
 
     if (!id) {
       return NextResponse.json({ error: "id は必須です" }, { status: 400 });
+    }
+
+    const userId = await getCurrentUserId();
+
+    // 自分のパターンか確認
+    const pattern = await prisma.learningMemory.findUnique({ where: { id } });
+    if (!pattern || pattern.userId !== userId) {
+      return NextResponse.json(
+        { error: "パターンが見つからないか、権限がありません" },
+        { status: 403 }
+      );
     }
 
     await prisma.learningMemory.delete({ where: { id } });
