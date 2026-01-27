@@ -38,10 +38,30 @@ export async function register() {
       }
 
       // 探索データのシード
-      const explorationCount = await prisma.exploration.count();
+      // 進化生成に必要なデータ（TopStrategy, StrategyDecision）がない場合もシード
+      const [explorationCount, topStrategyCount, strategyDecisionCount] = await Promise.all([
+        prisma.exploration.count(),
+        prisma.topStrategy.count(),
+        prisma.strategyDecision.count(),
+      ]);
 
-      if (explorationCount === 0) {
-        console.log("[Auto-Seed] 探索データが0件です。シードを実行します...");
+      const needsExplorationSeed = explorationCount === 0 || topStrategyCount === 0 || strategyDecisionCount === 0;
+
+      if (needsExplorationSeed) {
+        console.log(`[Auto-Seed] 探索データが不足しています (Exploration: ${explorationCount}, TopStrategy: ${topStrategyCount}, StrategyDecision: ${strategyDecisionCount})。シードを実行します...`);
+
+        // 既存データがある場合は削除してからシード（データの整合性を保つため）
+        if (explorationCount > 0 || topStrategyCount > 0 || strategyDecisionCount > 0) {
+          console.log("[Auto-Seed] 既存の不完全なデータを削除します...");
+          await prisma.strategyDecision.deleteMany();
+          await prisma.topStrategy.deleteMany();
+          await prisma.exploration.deleteMany();
+          await prisma.learningMemory.deleteMany();
+          await prisma.companyProfile.deleteMany();
+          await prisma.defaultSwot.deleteMany();
+          await prisma.coreAsset.deleteMany();
+          await prisma.coreService.deleteMany();
+        }
 
         const explorationSeedPath = path.join(process.cwd(), "prisma/seed-data/exploration-data.json");
 
@@ -208,7 +228,7 @@ export async function register() {
           console.log("[Auto-Seed] 探索データシードファイルが見つかりません:", explorationSeedPath);
         }
       } else {
-        console.log(`[Auto-Seed] 探索データが${explorationCount}件存在します。シードをスキップします`);
+        console.log(`[Auto-Seed] 探索データが揃っています (Exploration: ${explorationCount}, TopStrategy: ${topStrategyCount}, StrategyDecision: ${strategyDecisionCount})。シードをスキップします`);
       }
     } catch (error) {
       console.error("[Auto-Seed] エラー:", error);
