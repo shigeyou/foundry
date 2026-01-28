@@ -95,7 +95,9 @@ jobs:
             --type zip \
             --clean true \
             --restart true \
-            --async true
+            --async true \
+            --timeout 1800 \
+            --track-status false
 
       - name: Wait for site to be ready
         run: |
