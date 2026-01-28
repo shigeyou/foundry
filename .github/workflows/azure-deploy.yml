@@ -86,7 +86,7 @@ jobs:
           az webapp config set \
             --resource-group rg-ocreader-japaneast \
             --name ${{ env.AZURE_WEBAPP_NAME }} \
-            --startup-file "mkdir -p /home/data && [ ! -f /home/data/kachisuji.db ] && cp data/dev.db /home/data/kachisuji.db; echo 'Running Prisma schema sync...' && npx prisma db push --skip-generate --accept-data-loss && echo 'Schema sync complete' || echo 'Schema sync failed'; node server.js"
+            --startup-file "mkdir -p /home/data && if [ ! -f /home/data/kachisuji.db ]; then cp data/dev.db /home/data/kachisuji.db && echo 'Copied initial database'; fi; DATABASE_URL=file:/home/data/kachisuji.db npx prisma db push --schema=prisma/schema.prisma --skip-generate --accept-data-loss 2>&1 || echo 'Schema sync skipped'; node server.js"
           az webapp config appsettings set \
             --resource-group rg-ocreader-japaneast \
             --name ${{ env.AZURE_WEBAPP_NAME }} \
