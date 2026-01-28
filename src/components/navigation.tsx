@@ -28,49 +28,46 @@ const personalTabs: TabItem[] = [
   { id: "history", label: "探索履歴" },
 ];
 
-// 画面の物理解像度に基づくフォントサイズを計算（ズーム補正あり）
-function useScreenBasedFontSize() {
+// ビューポート幅に基づくフォントサイズを計算（タブが1行に収まるよう調整）
+function useResponsiveFontSize() {
   const [fontSizes, setFontSizes] = useState({
-    tabFont: "20px",
-    labelFont: "14px",
-    tabPadding: "10px",
-    logoSubtitle: "20px",
-    logoTitle: "30px",
-    logoVersion: "27px",
+    tabFont: "14px",
+    labelFont: "11px",
+    tabPadding: "6px",
+    logoSubtitle: "14px",
+    logoTitle: "20px",
+    logoVersion: "18px",
   });
 
   useEffect(() => {
-    // 初期のdevicePixelRatioを記録（ディスプレイスケーリング含む）
-    const initialDpr = window.devicePixelRatio;
-    const screenWidth = window.screen.width;
-
-    // 基準: 1920px 画面で基本サイズ
-    const baseRatio = screenWidth / 1920;
-
-    const clamp = (value: number, min: number, max: number) =>
-      Math.max(min, Math.min(max, value));
-
     const calculateFontSizes = () => {
-      // 現在のdevicePixelRatioと初期値の比率でズームレベルを検出
-      const currentDpr = window.devicePixelRatio;
-      const zoomFactor = currentDpr / initialDpr;
+      // ビューポート幅を使用（実際の表示領域）
+      const viewportWidth = window.innerWidth;
 
-      // ズーム分を逆補正（ズームで大きくなる分を小さくする）
-      const ratio = baseRatio / zoomFactor;
+      // 基準: 1920pxで最大サイズ、1200px以下で最小サイズ
+      // タブが1行に収まるよう、より緩やかにスケーリング
+      const ratio = Math.min(1, Math.max(0.6, (viewportWidth - 800) / (1920 - 800)));
+
+      // 最小値と最大値を設定
+      const tabFont = 11 + ratio * 9;      // 11px ~ 20px
+      const labelFont = 9 + ratio * 5;      // 9px ~ 14px
+      const tabPadding = 4 + ratio * 6;     // 4px ~ 10px
+      const logoSubtitle = 12 + ratio * 8;  // 12px ~ 20px
+      const logoTitle = 18 + ratio * 12;    // 18px ~ 30px
+      const logoVersion = 16 + ratio * 11;  // 16px ~ 27px
 
       setFontSizes({
-        tabFont: `${clamp(ratio * 22.4, 9, 45)}px`,
-        labelFont: `${clamp(ratio * 15.68, 6, 31)}px`,
-        tabPadding: `${clamp(ratio * 11.2, 4, 22)}px`,
-        logoSubtitle: `${clamp(ratio * 20, 8, 40)}px`,
-        logoTitle: `${clamp(ratio * 30, 12, 60)}px`,
-        logoVersion: `${clamp(ratio * 27, 10, 54)}px`,
+        tabFont: `${tabFont}px`,
+        labelFont: `${labelFont}px`,
+        tabPadding: `${tabPadding}px`,
+        logoSubtitle: `${logoSubtitle}px`,
+        logoTitle: `${logoTitle}px`,
+        logoVersion: `${logoVersion}px`,
       });
     };
 
     calculateFontSizes();
 
-    // ズーム変更を検出するためにresizeイベントを監視
     window.addEventListener("resize", calculateFontSizes);
     return () => window.removeEventListener("resize", calculateFontSizes);
   }, []);
@@ -80,7 +77,7 @@ function useScreenBasedFontSize() {
 
 export function Navigation() {
   const { activeTab, setActiveTab, explorationStatus, evolveStatus, autoExploreStatus, metaAnalysisStatus } = useApp();
-  const fontSizes = useScreenBasedFontSize();
+  const fontSizes = useResponsiveFontSize();
 
   return (
     <header className="border-b border-blue-300 dark:border-blue-800 bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-800 dark:to-blue-900">
@@ -109,9 +106,9 @@ export function Navigation() {
           </button>
 
           {/* タブナビゲーション */}
-          <nav className="flex items-center gap-1 flex-1 justify-end">
+          <nav className="flex items-center gap-1 flex-1 justify-end overflow-x-auto flex-nowrap">
             {/* 共通設定グループ */}
-            <div className="flex items-center gap-1 px-2 py-1 bg-blue-500/30 dark:bg-blue-950/50 rounded-lg">
+            <div className="flex items-center gap-1 px-2 py-1 bg-blue-500/30 dark:bg-blue-950/50 rounded-lg flex-shrink-0">
               <span
                 className="text-blue-100 dark:text-blue-300 px-1 whitespace-nowrap"
                 style={{ fontSize: fontSizes.labelFont }}
@@ -122,7 +119,7 @@ export function Navigation() {
                   <button
                     key={item.id}
                     onClick={() => setActiveTab(item.id)}
-                    className={`py-1 font-medium rounded-md transition-colors relative ${
+                    className={`py-1 font-medium rounded-md transition-colors relative whitespace-nowrap ${
                       isActive
                         ? "bg-white dark:bg-blue-700 text-blue-700 dark:text-white shadow-sm"
                         : "text-blue-100 dark:text-blue-200 hover:bg-white/20 dark:hover:bg-blue-700/50 hover:text-white"
@@ -136,10 +133,10 @@ export function Navigation() {
             </div>
 
             {/* セパレーター */}
-            <div className="h-6 w-px bg-blue-400/50 dark:bg-blue-600 mx-1"></div>
+            <div className="h-6 w-px bg-blue-400/50 dark:bg-blue-600 mx-1 flex-shrink-0"></div>
 
             {/* 個別設定グループ */}
-            <div className="flex items-center gap-1 px-2 py-1 bg-blue-400/30 dark:bg-blue-950/50 rounded-lg">
+            <div className="flex items-center gap-1 px-2 py-1 bg-blue-400/30 dark:bg-blue-950/50 rounded-lg flex-shrink-0">
               <span
                 className="text-yellow-200 dark:text-yellow-300 px-1 whitespace-nowrap"
                 style={{ fontSize: fontSizes.labelFont }}
@@ -155,7 +152,7 @@ export function Navigation() {
                   <button
                     key={item.id}
                     onClick={() => setActiveTab(item.id)}
-                    className={`py-1 font-medium rounded-md transition-colors relative ${
+                    className={`py-1 font-medium rounded-md transition-colors relative whitespace-nowrap ${
                       isActive
                         ? "bg-white dark:bg-blue-700 text-blue-700 dark:text-white shadow-sm"
                         : "text-blue-100 dark:text-blue-200 hover:bg-white/20 dark:hover:bg-blue-700/50 hover:text-white"
