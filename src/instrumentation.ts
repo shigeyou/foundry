@@ -6,23 +6,6 @@ export async function register() {
     const path = await import("path");
 
     try {
-      // WebSourceテーブルが存在しない場合は作成
-      try {
-        await prisma.$executeRaw`
-          CREATE TABLE IF NOT EXISTS "WebSource" (
-            "id" TEXT NOT NULL PRIMARY KEY,
-            "name" TEXT NOT NULL,
-            "url" TEXT NOT NULL,
-            "description" TEXT,
-            "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-          )
-        `;
-        console.log("[Auto-Seed] WebSourceテーブルを確認/作成しました");
-      } catch (tableError) {
-        console.log("[Auto-Seed] WebSourceテーブル作成スキップ:", tableError);
-      }
-
       // WebSourceのシード
       const webSourceCount = await prisma.webSource.count();
 
