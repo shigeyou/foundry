@@ -60,10 +60,16 @@ test.describe('Azure版 データ永続化テスト', () => {
       const ragData = ragRes.ok ? await ragRes.json() : { documents: [] };
       const ragDocumentNames = ragData.documents?.slice(0, 5).map((d: { filename: string }) => d.filename) || [];
 
-      // 会社情報を取得
-      const companyRes = await fetch('/api/company');
+      // 会社情報を取得（正しいエンドポイント）
+      const companyRes = await fetch('/api/company-profile');
       const companyData = companyRes.ok ? await companyRes.json() : {};
-      const companyName = companyData.name || null;
+      const companyName = companyData.profile?.name || null;
+      const hasCompanyProfile = companyData.isConfigured ? 1 : 0;
+
+      // SWOT情報を取得
+      const swotRes = await fetch('/api/admin/swot');
+      const swotData = swotRes.ok ? await swotRes.json() : {};
+      const hasSwot = swotData.exists ? 1 : 0;
 
       // 探索履歴から最新の質問を取得
       const historyRes = await fetch('/api/history');
@@ -78,9 +84,9 @@ test.describe('Azure版 データ永続化テスト', () => {
       return {
         timestamp,
         data: {
-          ragDocuments: seedData.ragDocumentCount || 0,
-          companyProfiles: seedData.companyProfileCount || (companyData.name ? 1 : 0),
-          defaultSwots: seedData.defaultSwotCount || 0,
+          ragDocuments: seedData.ragDocumentCount || ragData.documents?.length || 0,
+          companyProfiles: hasCompanyProfile,
+          defaultSwots: hasSwot,
           coreAssets: seedData.coreAssetCount || 0,
           coreServices: seedData.coreServiceCount || 0,
           explorations: seedData.explorationCount || 0,
@@ -157,8 +163,16 @@ test.describe('Azure版 データ永続化テスト', () => {
       const ragData = ragRes.ok ? await ragRes.json() : { documents: [] };
       const ragDocumentNames = ragData.documents?.slice(0, 5).map((d: { filename: string }) => d.filename) || [];
 
-      const companyRes = await fetch('/api/company');
+      // 会社情報を取得（正しいエンドポイント）
+      const companyRes = await fetch('/api/company-profile');
       const companyData = companyRes.ok ? await companyRes.json() : {};
+      const companyName = companyData.profile?.name || null;
+      const hasCompanyProfile = companyData.isConfigured ? 1 : 0;
+
+      // SWOT情報を取得
+      const swotRes = await fetch('/api/admin/swot');
+      const swotData = swotRes.ok ? await swotRes.json() : {};
+      const hasSwot = swotData.exists ? 1 : 0;
 
       const historyRes = await fetch('/api/history');
       const historyData = historyRes.ok ? await historyRes.json() : { explorations: [] };
@@ -168,9 +182,9 @@ test.describe('Azure版 データ永続化テスト', () => {
 
       return {
         data: {
-          ragDocuments: seedData.ragDocumentCount || 0,
-          companyProfiles: seedData.companyProfileCount || (companyData.name ? 1 : 0),
-          defaultSwots: seedData.defaultSwotCount || 0,
+          ragDocuments: seedData.ragDocumentCount || ragData.documents?.length || 0,
+          companyProfiles: hasCompanyProfile,
+          defaultSwots: hasSwot,
           coreAssets: seedData.coreAssetCount || 0,
           coreServices: seedData.coreServiceCount || 0,
           explorations: seedData.explorationCount || 0,
@@ -182,7 +196,7 @@ test.describe('Azure版 データ永続化テスト', () => {
         sampleData: {
           latestExplorationQuestion: historyData.explorations?.[0]?.question || null,
           ragDocumentNames,
-          companyName: companyData.name || null,
+          companyName,
         },
       };
     });
