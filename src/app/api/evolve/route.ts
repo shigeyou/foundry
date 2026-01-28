@@ -80,25 +80,41 @@ async function getAdoptedStrategies(userId: string, limit: number = 10): Promise
   const rankingDecisions = decisions.filter((d) => d.explorationId.startsWith("ranking-"));
   const explorationDecisions = decisions.filter((d) => !d.explorationId.startsWith("ranking-"));
 
-  // ランキングから採用された戦略をTopStrategyから取得（自分のデータのみ）
+  // ランキングから採用された戦略を探索結果から取得
+  // 注: ランキングはExploration.resultからパースされるため、同じソースを使用
   if (rankingDecisions.length > 0) {
-    const strategyNames = rankingDecisions.map((d) => d.strategyName);
-    const topStrategies = await prisma.topStrategy.findMany({
-      where: { userId, name: { in: strategyNames } },
+    const strategyNames = new Set(rankingDecisions.map((d) => d.strategyName));
+
+    // 完了した探索から戦略を検索
+    const explorations = await prisma.exploration.findMany({
+      where: { status: "completed", userId },
+      orderBy: { createdAt: "desc" },
     });
 
-    for (const topStrategy of topStrategies) {
-      if (!strategies.some((s) => s.name === topStrategy.name)) {
-        strategies.push({
-          name: topStrategy.name,
-          reason: topStrategy.reason,
-          howToObtain: topStrategy.howToObtain || undefined,
-          question: topStrategy.question,
-          scores: topStrategy.scores,
-        });
+    let foundCount = 0;
+    for (const exploration of explorations) {
+      if (!exploration.result) continue;
+      try {
+        const result = JSON.parse(exploration.result);
+        if (!result.strategies) continue;
 
-        if (strategies.length >= limit) break;
+        for (const strategy of result.strategies) {
+          if (strategyNames.has(strategy.name) && !strategies.some((s) => s.name === strategy.name)) {
+            strategies.push({
+              name: strategy.name,
+              reason: strategy.reason || "",
+              howToObtain: strategy.howToObtain,
+              question: exploration.question,
+              scores: strategy.scores ? JSON.stringify(strategy.scores) : undefined,
+            });
+            foundCount++;
+            if (strategies.length >= limit) break;
+          }
+        }
+      } catch {
+        // JSON parse error - skip
       }
+      if (strategies.length >= limit) break;
     }
   }
 
