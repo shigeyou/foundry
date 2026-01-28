@@ -107,61 +107,128 @@ export function IntroTab() {
         </div>
       </section>
 
-      {/* 基本的な使い方 */}
+      {/* データの区分 */}
       <section className="mb-8">
         <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2">
           <span className="w-1 h-6 bg-green-500 rounded"></span>
+          データの区分
+        </h2>
+        <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-5">
+          <p className="text-slate-700 dark:text-slate-300 leading-relaxed mb-4">
+            本アプリのデータは<strong>「共通」</strong>と<strong>「個人」</strong>の2種類に分かれています。
+            画面上部のタブも、この区分に応じてグループ化されています。
+          </p>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            {/* 共通設定 */}
+            <div className="p-4 bg-slate-100 dark:bg-slate-700/50 rounded-lg border border-slate-300 dark:border-slate-600">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="px-2 py-0.5 text-xs font-medium bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-300 rounded">共通</span>
+                <p className="font-medium text-slate-800 dark:text-slate-200">全員共通の設定</p>
+              </div>
+              <ul className="text-sm text-slate-600 dark:text-slate-400 space-y-2">
+                <li className="flex items-start gap-2">
+                  <span className="text-slate-400">•</span>
+                  <span><strong>はじめに</strong> - この説明ページ</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-slate-400">•</span>
+                  <span><strong>対象企業</strong> - 探索対象の企業情報</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-slate-400">•</span>
+                  <span><strong>RAG情報</strong> - 参照用ドキュメント</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-slate-400">•</span>
+                  <span><strong>SWOT</strong> - 企業のSWOT分析</span>
+                </li>
+              </ul>
+              <p className="text-xs text-slate-500 dark:text-slate-500 mt-3">
+                ※ これらは管理者が設定し、全ユーザーで共有されます
+              </p>
+            </div>
+
+            {/* 個人設定 */}
+            <div className="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg border border-blue-200 dark:border-blue-800">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="px-2 py-0.5 text-xs font-medium bg-blue-200 dark:bg-blue-800 text-blue-700 dark:text-blue-300 rounded">個人</span>
+                <p className="font-medium text-slate-800 dark:text-slate-200">ユーザーごとの設定</p>
+              </div>
+              <ul className="text-sm text-slate-600 dark:text-slate-400 space-y-2">
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-400">•</span>
+                  <span><strong>スコア設定</strong> - 評価基準のカスタマイズ</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-400">•</span>
+                  <span><strong>勝ち筋探索</strong> - 探索の実行</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-400">•</span>
+                  <span><strong>ランキング</strong> - 戦略の評価・採否</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-400">•</span>
+                  <span><strong>シン・勝ち筋の探求</strong> - 戦略の進化</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-400">•</span>
+                  <span><strong>インサイト</strong> - 学習パターン・メタ分析</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-blue-400">•</span>
+                  <span><strong>探索履歴</strong> - 過去の探索結果</span>
+                </li>
+              </ul>
+              <p className="text-xs text-blue-600 dark:text-blue-400 mt-3">
+                ※ これらはユーザーごとに独立して保存されます
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 基本的な使い方 */}
+      <section className="mb-8">
+        <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2">
+          <span className="w-1 h-6 bg-purple-500 rounded"></span>
           基本的な使い方
         </h2>
         <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-5">
+          <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">
+            共通設定は管理者が事前に設定済みです。一般ユーザーは<span className="font-medium text-blue-600 dark:text-blue-400">「個人」タブ</span>から始めてください。
+          </p>
           <ol className="space-y-4">
             <li className="flex gap-3">
               <span className="flex-shrink-0 w-7 h-7 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full flex items-center justify-center text-sm font-bold">1</span>
               <div>
-                <p className="font-medium text-slate-800 dark:text-slate-200">対象企業の設定</p>
+                <p className="font-medium text-slate-800 dark:text-slate-200">スコア設定（任意）</p>
                 <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                  勝ち筋を探索する対象企業の基本情報を設定します。親会社がある場合はその関係性も設定できます。
+                  勝ち筋の評価基準をカスタマイズできます。デフォルト設定でも十分使えます。
                 </p>
               </div>
             </li>
             <li className="flex gap-3">
               <span className="flex-shrink-0 w-7 h-7 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full flex items-center justify-center text-sm font-bold">2</span>
               <div>
-                <p className="font-medium text-slate-800 dark:text-slate-200">RAG情報の登録</p>
-                <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                  会社案内や事業計画などの資料を登録すると、AIがそれらを参照して提案の精度を高めます。
-                </p>
-              </div>
-            </li>
-            <li className="flex gap-3">
-              <span className="flex-shrink-0 w-7 h-7 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full flex items-center justify-center text-sm font-bold">3</span>
-              <div>
-                <p className="font-medium text-slate-800 dark:text-slate-200">SWOT分析の確認</p>
-                <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                  登録情報をもとにAIがSWOT分析を実行します。必要に応じて内容を調整してください。
-                </p>
-              </div>
-            </li>
-            <li className="flex gap-3">
-              <span className="flex-shrink-0 w-7 h-7 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full flex items-center justify-center text-sm font-bold">4</span>
-              <div>
-                <p className="font-medium text-slate-800 dark:text-slate-200">勝ち筋の探索</p>
+                <p className="font-medium text-slate-800 dark:text-slate-200">勝ち筋探索</p>
                 <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
                   「問い」を入力して探索を実行すると、AIが複数の勝ち筋を提案します。
                 </p>
               </div>
             </li>
             <li className="flex gap-3">
-              <span className="flex-shrink-0 w-7 h-7 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full flex items-center justify-center text-sm font-bold">5</span>
+              <span className="flex-shrink-0 w-7 h-7 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full flex items-center justify-center text-sm font-bold">3</span>
               <div>
-                <p className="font-medium text-slate-800 dark:text-slate-200">採否の判断と学習</p>
+                <p className="font-medium text-slate-800 dark:text-slate-200">ランキングで採否判断</p>
                 <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                  提案された勝ち筋を「採用」「却下」で評価すると、その傾向をAIが学習し、次回以降の提案に反映されます。
+                  提案された勝ち筋を「採用」「却下」で評価。この判断履歴がAIの学習に使われます。
                 </p>
               </div>
             </li>
             <li className="flex gap-3">
-              <span className="flex-shrink-0 w-7 h-7 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full flex items-center justify-center text-sm font-bold">6</span>
+              <span className="flex-shrink-0 w-7 h-7 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full flex items-center justify-center text-sm font-bold">4</span>
               <div>
                 <p className="font-medium text-slate-800 dark:text-slate-200">シン・勝ち筋の探求</p>
                 <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
@@ -170,11 +237,50 @@ export function IntroTab() {
               </div>
             </li>
             <li className="flex gap-3">
-              <span className="flex-shrink-0 w-7 h-7 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full flex items-center justify-center text-sm font-bold">7</span>
+              <span className="flex-shrink-0 w-7 h-7 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full flex items-center justify-center text-sm font-bold">5</span>
               <div>
                 <p className="font-medium text-slate-800 dark:text-slate-200">インサイト</p>
                 <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                  採否の履歴から「学習パターン」を抽出し、全探索結果を俯瞰する「メタ分析」で本質的な勝ちパターンを発見します。
+                  採否の履歴から「学習パターン」を抽出し、「メタ分析」で本質的な勝ちパターンを発見します。
+                </p>
+              </div>
+            </li>
+          </ol>
+        </div>
+      </section>
+
+      {/* 管理者向け：共通設定の手順 */}
+      <section className="mb-8">
+        <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2">
+          <span className="w-1 h-6 bg-slate-500 rounded"></span>
+          管理者向け：共通設定の手順
+        </h2>
+        <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-5">
+          <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">
+            初回セットアップ時に、管理者が以下の共通設定を行ってください。
+          </p>
+          <ol className="space-y-3">
+            <li className="flex gap-3">
+              <span className="flex-shrink-0 w-6 h-6 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400 rounded-full flex items-center justify-center text-xs font-bold">1</span>
+              <div>
+                <p className="text-sm text-slate-700 dark:text-slate-300">
+                  <strong>対象企業</strong> - 探索対象の企業情報（社名、業種、背景など）を設定
+                </p>
+              </div>
+            </li>
+            <li className="flex gap-3">
+              <span className="flex-shrink-0 w-6 h-6 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400 rounded-full flex items-center justify-center text-xs font-bold">2</span>
+              <div>
+                <p className="text-sm text-slate-700 dark:text-slate-300">
+                  <strong>RAG情報</strong> - 会社案内、事業計画などの参照ドキュメントを登録
+                </p>
+              </div>
+            </li>
+            <li className="flex gap-3">
+              <span className="flex-shrink-0 w-6 h-6 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400 rounded-full flex items-center justify-center text-xs font-bold">3</span>
+              <div>
+                <p className="text-sm text-slate-700 dark:text-slate-300">
+                  <strong>SWOT</strong> - AI生成または手動でSWOT分析を作成・調整
                 </p>
               </div>
             </li>
