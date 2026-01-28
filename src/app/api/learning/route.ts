@@ -67,7 +67,7 @@ ${rejectedStrategies.map((s, i) => `${i + 1}. ${s.name}
     model: process.env.AZURE_OPENAI_DEPLOYMENT || "gpt-4",
     messages: [{ role: "user", content: prompt }],
     temperature: 0.3,
-    max_completion_tokens: 2000,
+    max_completion_tokens: 16000,
     response_format: { type: "json_object" },
   });
 
