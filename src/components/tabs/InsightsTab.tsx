@@ -40,6 +40,12 @@ export function InsightsTab() {
     metaAnalysisError,
     startMetaAnalysis,
     clearMetaAnalysisResult,
+    patternExtractStatus,
+    patternExtractProgress,
+    patternExtractResult,
+    patternExtractError,
+    startPatternExtract,
+    clearPatternExtractResult,
   } = useApp();
   const [activeSubTab, setActiveSubTab] = useState<SubTabType>("patterns");
   const [loading, setLoading] = useState(true);
@@ -59,8 +65,6 @@ export function InsightsTab() {
     canExtract: boolean;
   } | null>(null);
   const [filterType, setFilterType] = useState<"all" | "success_pattern" | "failure_pattern">("all");
-  const [isExtracting, setIsExtracting] = useState(false);
-  const [extractResult, setExtractResult] = useState<string | null>(null);
 
   // メタ分析履歴
   const [metaHistory, setMetaHistory] = useState<MetaAnalysisHistory[]>([]);
@@ -117,33 +121,12 @@ export function InsightsTab() {
     await startMetaAnalysis();
   };
 
-  const handleExtractPatterns = async () => {
-    setIsExtracting(true);
-    setExtractResult(null);
-
-    try {
-      const res = await fetch("/api/learning", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ minDecisions: 5 }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setExtractResult(`エラー: ${data.error}`);
-      } else {
-        setExtractResult(
-          `抽出完了: ${data.extracted}パターン（新規${data.saved}件、更新${data.updated}件）`
-        );
-        fetchData();
-      }
-    } catch {
-      setExtractResult("パターン抽出に失敗しました");
-    } finally {
-      setIsExtracting(false);
+  // パターン抽出完了時にデータを再取得
+  useEffect(() => {
+    if (patternExtractStatus === "completed") {
+      fetchData();
     }
-  };
+  }, [patternExtractStatus]);
 
   const handleTogglePattern = async (id: string, isActive: boolean) => {
     try {
@@ -306,28 +289,79 @@ export function InsightsTab() {
 
                 <div className="flex items-center gap-4">
                   <Button
-                    onClick={handleExtractPatterns}
-                    disabled={isExtracting || !decisionStats?.canExtract}
+                    onClick={startPatternExtract}
+                    disabled={patternExtractStatus === "running" || !decisionStats?.canExtract}
                     className={`${
-                      decisionStats?.canExtract
+                      decisionStats?.canExtract && patternExtractStatus !== "running"
                         ? "bg-indigo-600 hover:bg-indigo-700"
                         : "bg-slate-400 cursor-not-allowed"
                     }`}
                   >
-                    {isExtracting ? "抽出中..." : "パターンを抽出"}
+                    {patternExtractStatus === "running" ? "抽出中..." : "パターンを抽出"}
                   </Button>
-                  {extractResult && (
-                    <p
-                      className={`text-sm ${
-                        extractResult.startsWith("エラー")
-                          ? "text-red-600 dark:text-red-400"
-                          : "text-green-600 dark:text-green-400"
-                      }`}
-                    >
-                      {extractResult}
-                    </p>
-                  )}
                 </div>
+
+                {/* プログレスバー */}
+                {patternExtractStatus === "running" && (
+                  <div className="mt-4 p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-200 dark:border-indigo-800">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="animate-spin h-5 w-5 border-2 border-indigo-600 border-t-transparent rounded-full"></div>
+                      <div>
+                        <p className="text-sm font-medium text-indigo-800 dark:text-indigo-200">
+                          パターン抽出中です...
+                        </p>
+                        <p className="text-xs text-indigo-600 dark:text-indigo-400">
+                          採否ログをAIが分析し、成功・失敗パターンを抽出しています。
+                        </p>
+                      </div>
+                    </div>
+                    <div className="w-full bg-indigo-200 dark:bg-indigo-800 rounded-full h-2.5 overflow-hidden">
+                      <div
+                        className="bg-indigo-600 dark:bg-indigo-400 h-2.5 rounded-full transition-all duration-500"
+                        style={{ width: `${Math.max(5, patternExtractProgress)}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-indigo-600 dark:text-indigo-400 mt-2 text-right">
+                      {Math.round(patternExtractProgress)}%
+                    </p>
+                  </div>
+                )}
+
+                {/* 完了表示 */}
+                {patternExtractStatus === "completed" && patternExtractResult && (
+                  <div className="mt-4 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                    <p className="text-sm font-medium text-green-800 dark:text-green-200">
+                      抽出完了: {patternExtractResult.extracted}パターン（新規{patternExtractResult.saved}件、更新{patternExtractResult.updated}件）
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="mt-2"
+                      onClick={clearPatternExtractResult}
+                    >
+                      閉じる
+                    </Button>
+                  </div>
+                )}
+
+                {/* エラー表示 */}
+                {patternExtractStatus === "failed" && patternExtractError && (
+                  <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+                    <p className="text-sm font-medium text-red-800 dark:text-red-200 mb-1">
+                      パターン抽出に失敗しました
+                    </p>
+                    <p className="text-xs text-red-600 dark:text-red-400">{patternExtractError}</p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="mt-2"
+                      onClick={clearPatternExtractResult}
+                    >
+                      閉じる
+                    </Button>
+                  </div>
+                )}
+
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
                   抽出されたパターンは次回の探索時にAIへ自動的に渡され、提案の質が向上します。
                 </p>

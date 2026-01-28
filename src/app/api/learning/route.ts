@@ -318,9 +318,6 @@ export async function GET(request: NextRequest) {
         minRejectRequired: MIN_REJECT_REQUIRED,
         canExtract,
       },
-      debug: {
-        userId,
-      },
     });
   } catch (error) {
     console.error("Learning GET error:", error);

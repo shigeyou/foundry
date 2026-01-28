@@ -133,6 +133,12 @@ export interface SummaryResult {
   createdAt: string;
 }
 
+export interface PatternExtractResult {
+  extracted: number;
+  saved: number;
+  updated: number;
+}
+
 // ===== 定数 =====
 export const defaultWeights: ScoreWeights = {
   revenuePotential: 30,
@@ -255,6 +261,14 @@ interface AppContextType {
   startMetaAnalysis: () => Promise<void>;
   clearMetaAnalysisResult: () => void;
 
+  // パターン抽出
+  patternExtractStatus: ExplorationStatus;
+  patternExtractProgress: number;
+  patternExtractResult: PatternExtractResult | null;
+  patternExtractError: string | null;
+  startPatternExtract: () => Promise<void>;
+  clearPatternExtractResult: () => void;
+
   // まとめ
   summaryStatus: ExplorationStatus;
   summaryProgress: number;
@@ -336,6 +350,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const metaAnalysisProgressRef = useRef<NodeJS.Timeout | null>(null);
   const metaAnalysisStartTimeRef = useRef<number>(0);
   const metaAnalysisMaxProgressRef = useRef<number>(0);
+
+  // パターン抽出
+  const [patternExtractStatus, setPatternExtractStatus] = useState<ExplorationStatus>("idle");
+  const [patternExtractProgress, setPatternExtractProgress] = useState(0);
+  const [patternExtractResult, setPatternExtractResult] = useState<PatternExtractResult | null>(null);
+  const [patternExtractError, setPatternExtractError] = useState<string | null>(null);
+  const patternExtractProgressRef = useRef<NodeJS.Timeout | null>(null);
+  const patternExtractStartTimeRef = useRef<number>(0);
+  const patternExtractMaxProgressRef = useRef<number>(0);
 
   // まとめ
   const [summaryStatus, setSummaryStatus] = useState<ExplorationStatus>("idle");
@@ -926,6 +949,80 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setMetaAnalysisError(null);
   };
 
+  // ===== パターン抽出 =====
+  const startPatternExtract = async () => {
+    if (patternExtractProgressRef.current) {
+      clearInterval(patternExtractProgressRef.current);
+      patternExtractProgressRef.current = null;
+    }
+
+    patternExtractStartTimeRef.current = Date.now();
+    setPatternExtractStatus("running");
+    setPatternExtractProgress(0);
+    patternExtractMaxProgressRef.current = 0;
+    setPatternExtractResult(null);
+    setPatternExtractError(null);
+
+    // パターン抽出は60秒を想定
+    patternExtractProgressRef.current = setInterval(() => {
+      const newProgress = calculateEasedProgress(patternExtractStartTimeRef.current, 60000);
+      patternExtractMaxProgressRef.current = Math.max(patternExtractMaxProgressRef.current, newProgress);
+      setPatternExtractProgress(patternExtractMaxProgressRef.current);
+    }, 500);
+
+    try {
+      const res = await fetch("/api/learning", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ minDecisions: 5 }),
+      });
+
+      if (patternExtractProgressRef.current) {
+        clearInterval(patternExtractProgressRef.current);
+        patternExtractProgressRef.current = null;
+      }
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setPatternExtractError(data.error || "パターン抽出に失敗しました");
+        setPatternExtractStatus("failed");
+        setPatternExtractProgress(0);
+      } else {
+        const result: PatternExtractResult = {
+          extracted: data.extracted || 0,
+          saved: data.saved || 0,
+          updated: data.updated || 0,
+        };
+
+        animateToComplete(patternExtractMaxProgressRef.current, setPatternExtractProgress, () => {
+          setPatternExtractResult(result);
+          setPatternExtractStatus("completed");
+        });
+      }
+    } catch (error) {
+      console.error("Pattern extract failed:", error);
+      if (patternExtractProgressRef.current) {
+        clearInterval(patternExtractProgressRef.current);
+        patternExtractProgressRef.current = null;
+      }
+      setPatternExtractError("パターン抽出に失敗しました");
+      setPatternExtractStatus("failed");
+      setPatternExtractProgress(0);
+    }
+  };
+
+  const clearPatternExtractResult = () => {
+    if (patternExtractProgressRef.current) {
+      clearInterval(patternExtractProgressRef.current);
+      patternExtractProgressRef.current = null;
+    }
+    setPatternExtractStatus("idle");
+    setPatternExtractProgress(0);
+    setPatternExtractResult(null);
+    setPatternExtractError(null);
+  };
+
   // ===== まとめ =====
   const startSummary = async () => {
     // 既存のプログレスタイマーをクリア
@@ -1075,6 +1172,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (metaAnalysisProgressRef.current) {
         clearInterval(metaAnalysisProgressRef.current);
       }
+      if (patternExtractProgressRef.current) {
+        clearInterval(patternExtractProgressRef.current);
+      }
       if (summaryProgressRef.current) {
         clearInterval(summaryProgressRef.current);
       }
@@ -1132,6 +1232,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     metaAnalysisError,
     startMetaAnalysis,
     clearMetaAnalysisResult,
+    patternExtractStatus,
+    patternExtractProgress,
+    patternExtractResult,
+    patternExtractError,
+    startPatternExtract,
+    clearPatternExtractResult,
     summaryStatus,
     summaryProgress,
     summaryResult,
