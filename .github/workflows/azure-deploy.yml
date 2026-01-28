@@ -34,9 +34,10 @@ jobs:
       - name: Create empty database with schema
         run: |
           npx prisma db push --skip-generate
+          ls -la
           ls -la prisma/
         env:
-          DATABASE_URL: file:./prisma/dev.db
+          DATABASE_URL: file:./dev.db
 
       - name: Build
         run: npm run build
@@ -61,7 +62,7 @@ jobs:
           cp -r src/generated .next/standalone/src/
           # Copy database file (used as seed for first deploy)
           mkdir -p .next/standalone/data
-          cp prisma/dev.db .next/standalone/data/dev.db
+          cp dev.db .next/standalone/data/dev.db
           # Copy prisma CLI for schema sync on startup
           mkdir -p .next/standalone/node_modules
           cp -r node_modules/.prisma .next/standalone/node_modules/
