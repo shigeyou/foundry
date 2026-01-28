@@ -53,3 +53,9 @@ next-env.d.ts
 
 # prisma
 /src/generated
+
+# auth state
+.auth/
+
+# demo videos
+demo-video/
