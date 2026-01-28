@@ -295,17 +295,10 @@ export async function GET(request: NextRequest) {
     });
 
     // 採否件数を取得（自分のデータのみ）
-    const decisionCounts = await prisma.strategyDecision.groupBy({
-      by: ["decision"],
-      _count: true,
-      where: {
-        userId,
-        decision: { in: ["adopt", "reject"] },
-      },
-    });
-
-    const adoptCount = decisionCounts.find((d) => d.decision === "adopt")?._count || 0;
-    const rejectCount = decisionCounts.find((d) => d.decision === "reject")?._count || 0;
+    const [adoptCount, rejectCount] = await Promise.all([
+      prisma.strategyDecision.count({ where: { userId, decision: "adopt" } }),
+      prisma.strategyDecision.count({ where: { userId, decision: "reject" } }),
+    ]);
     const canExtract = adoptCount >= MIN_ADOPT_REQUIRED && rejectCount >= MIN_REJECT_REQUIRED;
 
     return NextResponse.json({
