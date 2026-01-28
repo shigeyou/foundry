@@ -62,6 +62,11 @@ jobs:
           # Copy database file (used as seed for first deploy)
           mkdir -p .next/standalone/data
           cp prisma/dev.db .next/standalone/data/dev.db
+          # Copy prisma CLI for schema sync on startup
+          mkdir -p .next/standalone/node_modules
+          cp -r node_modules/.prisma .next/standalone/node_modules/
+          cp -r node_modules/@prisma .next/standalone/node_modules/
+          cp -r node_modules/prisma .next/standalone/node_modules/
           # Create package.json for Azure App Service
           echo '{"name":"kachisuji-finder","version":"1.0.0","scripts":{"start":"node server.js"}}' > .next/standalone/package.json
 
@@ -80,7 +85,7 @@ jobs:
           az webapp config set \
             --resource-group rg-ocreader-japaneast \
             --name ${{ env.AZURE_WEBAPP_NAME }} \
-            --startup-file "mkdir -p /home/data && [ ! -f /home/data/kachisuji.db ] && cp data/dev.db /home/data/kachisuji.db; node server.js"
+            --startup-file "mkdir -p /home/data && [ ! -f /home/data/kachisuji.db ] && cp data/dev.db /home/data/kachisuji.db; npx prisma db push --skip-generate --accept-data-loss 2>/dev/null || true; node server.js"
           az webapp config appsettings set \
             --resource-group rg-ocreader-japaneast \
             --name ${{ env.AZURE_WEBAPP_NAME }} \
