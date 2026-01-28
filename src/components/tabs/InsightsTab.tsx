@@ -284,27 +284,25 @@ export function InsightsTab() {
                 </p>
 
                 {/* 実行条件の表示（常に表示） */}
-                {decisionStats && (
-                  <div className={`mb-4 p-3 rounded-lg border ${
-                    decisionStats.canExtract
-                      ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800"
-                      : "bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800"
-                  }`}>
-                    <p className={`text-sm ${decisionStats.canExtract ? "text-green-800 dark:text-green-200" : "text-amber-800 dark:text-amber-200"}`}>
-                      <span className="font-medium">実行条件:</span> 採用{decisionStats.minAdoptRequired}件以上・却下{decisionStats.minRejectRequired}件以上（計{decisionStats.minAdoptRequired + decisionStats.minRejectRequired}件以上）
-                      {decisionStats.canExtract && <span className="ml-2 text-green-600 dark:text-green-400">✓ 条件を満たしています</span>}
-                    </p>
-                    <p className={`text-sm mt-1 ${decisionStats.canExtract ? "text-green-700 dark:text-green-300" : "text-amber-700 dark:text-amber-300"}`}>
-                      <span className="font-medium">現在:</span> 採用{decisionStats.adoptCount}件・却下{decisionStats.rejectCount}件
-                      {!decisionStats.canExtract && decisionStats.adoptCount < decisionStats.minAdoptRequired && (
-                        <span className="ml-2 text-red-600 dark:text-red-400">（採用があと{decisionStats.minAdoptRequired - decisionStats.adoptCount}件不足）</span>
-                      )}
-                      {!decisionStats.canExtract && decisionStats.rejectCount < decisionStats.minRejectRequired && (
-                        <span className="ml-2 text-red-600 dark:text-red-400">（却下があと{decisionStats.minRejectRequired - decisionStats.rejectCount}件不足）</span>
-                      )}
-                    </p>
-                  </div>
-                )}
+                <div className={`mb-4 p-3 rounded-lg border ${
+                  decisionStats?.canExtract
+                    ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800"
+                    : "bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800"
+                }`}>
+                  <p className={`text-sm ${decisionStats?.canExtract ? "text-green-800 dark:text-green-200" : "text-amber-800 dark:text-amber-200"}`}>
+                    <span className="font-medium">実行条件:</span> 採用5件以上・却下5件以上（計10件以上）
+                    {decisionStats?.canExtract && <span className="ml-2 text-green-600 dark:text-green-400">✓ 条件を満たしています</span>}
+                  </p>
+                  <p className={`text-sm mt-1 ${decisionStats?.canExtract ? "text-green-700 dark:text-green-300" : "text-amber-700 dark:text-amber-300"}`}>
+                    <span className="font-medium">現在:</span> 採用{decisionStats?.adoptCount ?? 0}件・却下{decisionStats?.rejectCount ?? 0}件
+                    {decisionStats && !decisionStats.canExtract && decisionStats.adoptCount < 5 && (
+                      <span className="ml-2 text-red-600 dark:text-red-400">（採用があと{5 - decisionStats.adoptCount}件不足）</span>
+                    )}
+                    {decisionStats && !decisionStats.canExtract && decisionStats.rejectCount < 5 && (
+                      <span className="ml-2 text-red-600 dark:text-red-400">（却下があと{5 - decisionStats.rejectCount}件不足）</span>
+                    )}
+                  </p>
+                </div>
 
                 <div className="flex items-center gap-4">
                   <Button
