@@ -137,50 +137,62 @@ async function runBatchInBackground(batchId: string) {
       documentContext += `### ${doc.filename}\n${doc.content.slice(0, 3000)}\n\n`;
     }
 
-    // 全パターンを順番に探索
+    // 全パターンを構築（未完了のみ）
+    const pendingPatterns: { theme: typeof businessThemes[0]; dept: typeof departments[0] }[] = [];
     for (const theme of businessThemes) {
       for (const dept of departments) {
-        // キャンセルチェック
-        const currentBatch = await prisma.metaFinderBatch.findUnique({
-          where: { id: batchId },
-          select: { status: true },
-        });
-        if (currentBatch?.status === "cancelled") {
-          console.log(`[MetaFinder Batch] Cancelled at ${completedPatterns}/${batch.totalPatterns}`);
-          return;
-        }
-
-        // 既に完了済みのパターンはスキップ
         const patternKey = `${theme.id}:${dept.id}`;
-        if (completedSet.has(patternKey)) {
-          continue;
+        if (!completedSet.has(patternKey)) {
+          pendingPatterns.push({ theme, dept });
         }
+      }
+    }
 
-        try {
-          // 進捗を更新
-          await prisma.metaFinderBatch.update({
-            where: { id: batchId },
-            data: {
-              currentTheme: theme.label,
-              currentDept: dept.label,
-            },
-          });
+    console.log(`[MetaFinder Batch] ${pendingPatterns.length} patterns remaining`);
 
-          console.log(`[MetaFinder Batch] Exploring: ${theme.label} × ${dept.label}`);
+    // 並列数（Azure OpenAI RPM制限に応じて調整）
+    const CONCURRENCY = 10;
 
-          // 探索実行
+    // チャンク単位で並列実行
+    for (let i = 0; i < pendingPatterns.length; i += CONCURRENCY) {
+      // キャンセルチェック
+      const currentBatch = await prisma.metaFinderBatch.findUnique({
+        where: { id: batchId },
+        select: { status: true },
+      });
+      if (currentBatch?.status === "cancelled") {
+        console.log(`[MetaFinder Batch] Cancelled at ${completedPatterns}/${batch.totalPatterns}`);
+        return;
+      }
+
+      const chunk = pendingPatterns.slice(i, i + CONCURRENCY);
+
+      // 進捗表示（チャンク内の最初のパターン名）
+      const labels = chunk.map((p) => `${p.theme.label}×${p.dept.label}`).join(", ");
+      console.log(`[MetaFinder Batch] Exploring ${chunk.length} patterns in parallel: ${labels}`);
+
+      await prisma.metaFinderBatch.update({
+        where: { id: batchId },
+        data: {
+          currentTheme: chunk.map((p) => p.theme.label).join(", "),
+          currentDept: chunk.map((p) => p.dept.label).join(", "),
+        },
+      });
+
+      // 並列実行
+      const results = await Promise.allSettled(
+        chunk.map(async ({ theme, dept }) => {
           const needs = await explorePattern(
-            theme.id,
-            theme.label,
-            dept.id,
-            dept.label,
-            documentContext
+            theme.id, theme.label, dept.id, dept.label, documentContext
           );
+          return { theme, dept, needs };
+        })
+      );
 
-          // アイデアをDBに保存
-          // ★★★ スコアリングルール：BSC 4視点の平均 ★★★
-          // score = (financial + customer + process + growth) / 4
-          // 結果: 1.0 〜 5.0 の小数（平均値）
+      // 結果をDB保存
+      for (const result of results) {
+        if (result.status === "fulfilled") {
+          const { theme, dept, needs } = result.value;
           for (const need of needs) {
             const score = (need.financial + need.customer + need.process + need.growth) / 4;
             await prisma.metaFinderIdea.create({
@@ -204,37 +216,24 @@ async function runBatchInBackground(batchId: string) {
             });
             totalIdeas++;
           }
-
-          completedPatterns++;
-
-          // 進捗を更新
-          await prisma.metaFinderBatch.update({
-            where: { id: batchId },
-            data: {
-              completedPatterns,
-              totalIdeas,
-            },
-          });
-
-          // レート制限対策（1秒待機）
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-
-        } catch (error) {
-          const errorMsg = `${theme.label} × ${dept.label}: ${error instanceof Error ? error.message : "Unknown error"}`;
+        } else {
+          const pattern = chunk[results.indexOf(result)];
+          const errorMsg = `${pattern.theme.label} × ${pattern.dept.label}: ${result.reason instanceof Error ? result.reason.message : "Unknown error"}`;
           console.error(`[MetaFinder Batch] Error:`, errorMsg);
           errors.push(errorMsg);
-
-          // エラーでも次に進む
-          completedPatterns++;
-          await prisma.metaFinderBatch.update({
-            where: { id: batchId },
-            data: {
-              completedPatterns,
-              errors: JSON.stringify(errors),
-            },
-          });
         }
+        completedPatterns++;
       }
+
+      // チャンク完了後に進捗更新
+      await prisma.metaFinderBatch.update({
+        where: { id: batchId },
+        data: {
+          completedPatterns,
+          totalIdeas,
+          ...(errors.length > 0 && { errors: JSON.stringify(errors) }),
+        },
+      });
     }
 
     // 完了
