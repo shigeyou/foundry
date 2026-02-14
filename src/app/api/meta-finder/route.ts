@@ -1,97 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { generateWithClaude } from "@/lib/claude";
+import { SINGLE_PROMPT, normalizeScore, type DiscoveredNeed } from "@/lib/meta-finder-prompt";
 
-interface DiscoveredNeed {
-  id: string;
-  name: string;
-  description: string;
-  reason: string;
+interface SingleDiscoveredNeed extends DiscoveredNeed {
   sourceDocuments: string[];
-  // BSC 4視点スコア
-  financial: number;   // 財務視点
-  customer: number;    // 顧客視点
-  process: number;     // 業務プロセス視点
-  growth: number;      // 学習と成長視点
 }
 
 interface MetaFinderResult {
-  needs: DiscoveredNeed[];
+  needs: SingleDiscoveredNeed[];
   thinkingProcess: string;
   summary: string;
 }
-
-// ★★★ スコア正規化: 5点満点に強制変換 ★★★
-const MAX_SCORE = 5;
-function normalizeScore(value: number): number {
-  if (typeof value !== "number" || isNaN(value)) return 1;
-  // 6以上の場合は10点満点と見なして5点満点に変換
-  if (value > MAX_SCORE) {
-    return Math.round((value / 10) * MAX_SCORE);
-  }
-  // 1未満は1に、5超は5にクランプ
-  return Math.max(1, Math.min(MAX_SCORE, Math.round(value)));
-}
-
-const SYSTEM_PROMPT = `あなたは「メタファインダー」です。
-企業の内部ドキュメントと与えられた文脈に基づいて、本質的な課題と打ち手を発見します。
-
-## 重要な原則
-
-**「追加の指示」セクションの内容を最優先してください。**
-
-テーマと対象に応じて、最も価値のある洞察・提案を出力してください。
-打ち手は「AIアプリ」に限定しません。組織変革、プロセス改善、人材育成、
-新規事業、提携、撤退判断など、あらゆる施策が対象です。
-
-## 出力形式（JSON）
-
-{
-  "needs": [
-    {
-      "id": "idea-1",
-      "name": "課題・打ち手の名称",
-      "description": "内容の説明（2-3文）",
-      "reason": "なぜこれが重要か、背景・根拠",
-      "sourceDocuments": ["参照した情報源（あれば）"],
-      "financial": 1-5,
-      "customer": 1-5,
-      "process": 1-5,
-      "growth": 1-5
-    }
-  ],
-  "thinkingProcess": "どのような思考プロセスで発見したか",
-  "summary": "分析のまとめ（2-3文）"
-}
-
-## 評価基準：バランススコアカード（BSC）4視点
-
-各アイデアを以下の4視点で評価してください（各1〜5点の整数・5点満点厳守）：
-
-1. **financial（財務視点）**: 収益向上・コスト削減への貢献度
-   - 5点: 大きな収益増または大幅なコスト削減が期待できる
-   - 3点: 中程度の財務効果
-   - 1点: 財務への直接的な影響は限定的
-
-2. **customer（顧客視点）**: 顧客価値・満足度への貢献度
-   - 5点: 顧客体験を大きく改善、差別化につながる
-   - 3点: 顧客にとって一定のメリットがある
-   - 1点: 顧客への直接的な影響は限定的
-
-3. **process（業務プロセス視点）**: 業務効率・品質への貢献度
-   - 5点: 業務を大幅に効率化、品質を飛躍的に向上
-   - 3点: 一定の効率化・品質向上が見込める
-   - 1点: 業務プロセスへの影響は限定的
-
-4. **growth（学習と成長視点）**: 人材・組織能力への貢献度
-   - 5点: 組織の能力を大きく高め、将来の競争力につながる
-   - 3点: 一定のスキル向上・組織学習が期待できる
-   - 1点: 人材・組織への影響は限定的
-
-※スコアは必ず1, 2, 3, 4, 5のいずれか。6以上は禁止。
-※4視点のバランスを意識し、すべて高評価にならないよう現実的に評価してください。
-
-10〜20件を目安に出力してください。`;
 
 // GET: 保存された分析結果を取得
 export async function GET() {
@@ -144,7 +64,7 @@ export async function POST(req: NextRequest) {
 ${additionalContext ? `## 追加の指示\n${additionalContext}` : "## 指示\n上記のドキュメントを分析し、最も価値のある課題と打ち手を発見してください。"}`;
 
     const response = await generateWithClaude(
-      `${SYSTEM_PROMPT}\n\n${userPrompt}`,
+      `${SINGLE_PROMPT}\n\n${userPrompt}`,
       {
         temperature: 0.7,
         maxTokens: 8000,
@@ -198,6 +118,7 @@ ${additionalContext ? `## 追加の指示\n${additionalContext}` : "## 指示\n�
           deptName,
           name: need.name,
           description: need.description,
+          actions: need.actions ? JSON.stringify(need.actions) : null,
           reason: need.reason,
           financial: need.financial,
           customer: need.customer,
