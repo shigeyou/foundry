@@ -874,7 +874,7 @@ export default function MetaFinderPage() {
                   <div className="bg-white dark:bg-slate-800 rounded-lg overflow-hidden">
                     <div className="flex border-b border-slate-200 dark:border-slate-700">
                       {[
-                        { id: "top", label: "全体トップ20", count: batchSummary.topIdeas.length },
+                        { id: "top", label: "全体トップ30", count: batchSummary.topIdeas.length },
                         { id: "theme", label: "テーマ別ベスト", count: batchSummary.themeBest.length },
                         { id: "dept", label: "部門別ベスト", count: batchSummary.deptBest.length },
                       ].map((tab) => (

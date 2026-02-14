@@ -67,7 +67,7 @@ ${additionalContext ? `## 追加の指示\n${additionalContext}` : "## 指示\n�
       `${SINGLE_PROMPT}\n\n${userPrompt}`,
       {
         temperature: 0.7,
-        maxTokens: 8000,
+        maxTokens: 16000,
         jsonMode: true,
       }
     );

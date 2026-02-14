@@ -20,11 +20,11 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "バッチが見つかりません" }, { status: 404 });
     }
 
-    // 全体トップ20
+    // 全体トップ30
     const topIdeas = await prisma.metaFinderIdea.findMany({
       where: { batchId },
       orderBy: { score: "desc" },
-      take: 20,
+      take: 30,
     });
 
     // テーマ別ベスト（各テーマのトップ1）

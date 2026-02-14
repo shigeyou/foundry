@@ -367,9 +367,12 @@ export async function generateWithClaude(
     ...(options?.jsonMode && { response_format: { type: "json_object" as const } }),
   });
 
-  const content = response.choices[0]?.message?.content;
+  const choice = response.choices[0];
+  const content = choice?.message?.content;
   if (!content) {
-    throw new Error("No response from AI");
+    const finishReason = choice?.finish_reason ?? "no_choice";
+    console.error(`[generateWithClaude] No content. finish_reason=${finishReason}, prompt length=${prompt.length}`);
+    throw new Error(`No response from AI (finish_reason: ${finishReason})`);
   }
 
   return content;
