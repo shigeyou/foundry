@@ -9,93 +9,8 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model CoreService {
-  id          String   @id @default(cuid())
-  name        String
-  category    String?
-  description String?
-  url         String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-
-model CoreAsset {
-  id          String   @id @default(cuid())
-  name        String
-  type        String
-  description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-
-model Constraint {
-  id          String   @id @default(cuid())
-  name        String
-  description String?
-  isDefault   Boolean  @default(false)
-  createdAt   DateTime @default(now())
-}
-
-model Exploration {
-  id          String   @id @default(cuid())
-  question    String
-  context     String?
-  constraints String
-  status      String   @default("completed")
-  result      String?
-  error       String?
-  userId      String?  // ユーザー別データ用（null = 共有/レガシー）
-  userName    String?  // 表示用ユーザー名
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@index([userId])
-}
-
-model RAGDocument {
-  id        String   @id @default(cuid())
-  filename  String
-  fileType  String
-  content   String
-  metadata  String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model ScoreBaseline {
-  id              String   @id @default(cuid())
-  date            DateTime @default(now())
-  runId           String?
-  topScore        Float
-  avgScore        Float
-  totalStrategies Int
-  highScoreCount  Int
-  improvement     Float?
-  createdAt       DateTime @default(now())
-}
-
-model TopStrategy {
-  id                String   @id @default(cuid())
-  explorationId     String
-  name              String
-  reason            String
-  howToObtain       String?
-  totalScore        Float
-  scores            String
-  question          String
-  judgment          String
-  learningExtracted Boolean  @default(false)
-  userId            String?  // ユーザー別ランキング用（null = レガシー）
-  userName          String?  // 表示用
-  createdAt         DateTime @default(now())
-
-  @@index([totalScore])
-  @@index([learningExtracted])
-  @@index([userId])
-}
-
 model AutoExploreRun {
-  id                    String    @id @default(cuid())
+  id                    String    @id
   status                String    @default("running")
   triggerType           String    @default("manual")
   questionsGenerated    Int       @default(0)
@@ -110,50 +25,53 @@ model AutoExploreRun {
   completedAt           DateTime?
   duration              Int?
   errors                String?
-  userId                String?   // ユーザー別自動探索用
-  userName              String?   // 表示用
+  userId                String?
+  userName              String?
+  finderId              String?
 
   @@index([userId])
+  @@index([finderId])
 }
 
-model LearningMemory {
-  id              String    @id @default(cuid())
-  type            String
-  category        String?
-  pattern         String
-  examples        String
-  evidence        String?
-  confidence      Float     @default(0.5)
-  validationCount Int       @default(0)
-  successRate     Float?
-  usedCount       Int       @default(0)
-  lastUsedAt      DateTime?
-  isActive        Boolean   @default(true)
-  userId          String?   // ユーザー別学習用（null = 共有/レガシー）
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-
-  @@index([type])
-  @@index([isActive])
-  @@index([confidence])
-  @@index([userId])
+model CompanyProfile {
+  id                String   @id @default("default")
+  name              String
+  shortName         String?
+  description       String?
+  background        String?
+  techStack         String?
+  parentCompany     String?
+  parentRelation    String?
+  industry          String?
+  additionalContext String?
+  updatedAt         DateTime @updatedAt
 }
 
-model StrategyDecision {
-  id              String   @id @default(cuid())
-  explorationId   String
-  strategyName    String
-  decision        String
-  reason          String?
-  feasibilityNote String?
-  userId          String?  // ユーザー別判断用（null = 共有/レガシー）
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+model Constraint {
+  id          String   @id
+  name        String
+  description String?
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
 
-  @@unique([explorationId, strategyName, userId])
-  @@index([decision])
-  @@index([createdAt])
-  @@index([userId])
+model CoreAsset {
+  id          String   @id
+  name        String
+  type        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model CoreService {
+  id          String   @id
+  name        String
+  category    String?
+  description String?
+  url         String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model DefaultSwot {
@@ -167,68 +85,241 @@ model DefaultSwot {
   updatedBy     String?
 }
 
-model MetaAnalysisRun {
-  id                String   @id @default(cuid())
-  totalExplorations Int
-  totalStrategies   Int
-  topStrategies     String   // JSON array
-  frequentTags      String   // JSON array
-  clusters          String   // JSON array
-  blindSpots        String   // JSON array
-  thinkingProcess   String
-  userId            String?  // ユーザー別メタ分析用（null = レガシー）
-  userName          String?  // 表示用
-  createdAt         DateTime @default(now())
+model Exploration {
+  id          String   @id
+  question    String
+  context     String?
+  constraints String
+  status      String   @default("completed")
+  result      String?
+  error       String?
+  userId      String?
+  userName    String?
+  finderId    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@index([userId])
+  @@index([finderId])
 }
 
-// 対象企業プロファイル（勝ち筋探索の主体）
-model CompanyProfile {
-  id                String   @id @default("default")
-  name              String   // 会社名
-  shortName         String?  // 略称
-  description       String?  // 会社概要
-  background        String?  // 背景・経緯（例：合併など）
-  techStack         String?  // 技術基盤の説明
-  parentCompany     String?  // 親会社名
-  parentRelation    String?  // 親会社との関係
-  industry          String?  // 業界
-  additionalContext String?  // その他の文脈情報
-  updatedAt         DateTime @updatedAt
-}
-
-// ユーザー別スコア設定
-model UserScoreConfig {
-  id                   String   @id @default(cuid())
-  userId               String   @unique // ユーザーごとに1件
-  revenuePotential     Int      @default(30)
-  timeToRevenue        Int      @default(20)
-  competitiveAdvantage Int      @default(20)
-  executionFeasibility Int      @default(15)
-  hqContribution       Int      @default(10)
-  mergerSynergy        Int      @default(5)
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
-}
-
-// ユーザー別探索まとめ
 model ExploreSummary {
-  id        String   @id @default(cuid())
+  id        String   @id
   userId    String
-  content   String   // JSON形式のまとめ内容
-  stats     String?  // JSON形式の統計情報
+  content   String
+  stats     String?
   createdAt DateTime @default(now())
 
   @@index([userId])
 }
 
-// ネット情報（RAG参照用の外部URL）
-model WebSource {
+model LearningMemory {
+  id              String    @id
+  type            String
+  category        String?
+  pattern         String
+  examples        String
+  evidence        String?
+  confidence      Float     @default(0.5)
+  validationCount Int       @default(0)
+  successRate     Float?
+  usedCount       Int       @default(0)
+  lastUsedAt      DateTime?
+  isActive        Boolean   @default(true)
+  userId          String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([confidence])
+  @@index([isActive])
+  @@index([type])
+}
+
+model MetaAnalysisRun {
+  id                String   @id
+  totalExplorations Int
+  totalStrategies   Int
+  topStrategies     String
+  frequentTags      String
+  clusters          String
+  blindSpots        String
+  thinkingProcess   String
+  userId            String?
+  userName          String?
+  finderId          String?
+  createdAt         DateTime @default(now())
+
+  @@index([userId])
+  @@index([finderId])
+}
+
+model RAGDocument {
+  id        String   @id
+  filename  String
+  fileType  String
+  content   String
+  metadata  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ScoreBaseline {
+  id              String   @id
+  date            DateTime @default(now())
+  runId           String?
+  topScore        Float
+  avgScore        Float
+  totalStrategies Int
+  highScoreCount  Int
+  improvement     Float?
+  createdAt       DateTime @default(now())
+}
+
+model StrategyDecision {
+  id              String   @id
+  explorationId   String
+  strategyName    String
+  decision        String
+  reason          String?
+  feasibilityNote String?
+  userId          String?
+  finderId        String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([explorationId, strategyName, userId, finderId])
+  @@index([userId])
+  @@index([finderId])
+  @@index([createdAt])
+  @@index([decision])
+}
+
+model TopStrategy {
+  id                String   @id
+  explorationId     String
+  name              String
+  reason            String
+  howToObtain       String?
+  totalScore        Float
+  scores            String
+  question          String
+  judgment          String
+  learningExtracted Boolean  @default(false)
+  userId            String?
+  userName          String?
+  finderId          String?
+  createdAt         DateTime @default(now())
+
+  @@index([userId])
+  @@index([finderId])
+  @@index([learningExtracted])
+  @@index([totalScore])
+}
+
+// ユーザー別スコア設定
+model UserScoreConfig {
   id          String   @id @default(cuid())
-  name        String   // 表示名（例：商船三井マリテックス）
-  url         String   // URL
-  description String?  // 説明（オプション）
+  userId      String
+  finderId    String   @default("winning-strategy")
+  weightsJson String   // JSON形式で動的キーの重みを保存
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@unique([userId, finderId])
+  @@index([userId])
+  @@index([finderId])
+}
+
+model WebSource {
+  id          String   @id
+  name        String
+  url         String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ドラフターテンプレート
+model DrafterTemplate {
+  id        String   @id
+  drafterId String   // minutes, approval-document, proposal など
+  name      String
+  content   String
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([drafterId])
+}
+
+// ドラフタープロジェクト（定例会議など繰り返し使う設定を保存）
+model DrafterProject {
+  id              String   @id
+  drafterId       String   // minutes, approval-document, proposal など
+  name            String   // プロジェクト名（例：「月例営業会議」）
+  templateId      String?  // 使用するテンプレートID
+  meetingOverview String?  // 議事概要の定型部分（会議名、場所、参加者など）
+  pastMinutesJson String?  // 過去の議事録（お手本）のJSON配列
+  additionalInstructions String? // 追加指示の定型部分
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([drafterId])
+}
+
+// 俺ナビ履歴
+model OreNaviHistory {
+  id        String   @id
+  question  String   // 問い
+  result    String   // JSON形式の結果（insights, summary, warning）
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+// メタファインダー全探索バッチ
+model MetaFinderBatch {
+  id                String    @id
+  status            String    @default("running") // running, completed, failed
+  totalPatterns     Int       // 探索パターン総数（テーマ×部門）
+  completedPatterns Int       @default(0)
+  totalIdeas        Int       @default(0)
+  currentTheme      String?   // 現在処理中のテーマ
+  currentDept       String?   // 現在処理中の部門
+  errors            String?   // エラー情報（JSON配列）
+  startedAt         DateTime  @default(now())
+  completedAt       DateTime?
+
+  ideas             MetaFinderIdea[]
+
+  @@index([status])
+}
+
+// メタファインダーで発見されたアイデア
+// スコアリング: バランススコアカード（BSC）の4視点
+model MetaFinderIdea {
+  id          String   @id
+  batchId     String
+  themeId     String   // テーマID（holistic, cost, revenue等）
+  themeName   String   // テーマ名
+  deptId      String   // 部門ID（all, planning, hr等）
+  deptName    String   // 部門名
+  name        String   // アイデア名
+  description String   // 説明
+  reason      String   // 理由・根拠
+  // BSC 4視点スコア（各1-5）
+  financial   Int      // 財務視点: 収益・コスト改善への貢献
+  customer    Int      // 顧客視点: 顧客価値・満足度への貢献
+  process     Int      // 業務プロセス視点: 業務効率・品質への貢献
+  growth      Int      // 学習と成長視点: 人材・組織能力への貢献
+  score       Float    // 総合スコア: (financial + customer + process + growth) / 4
+  createdAt   DateTime @default(now())
+
+  batch       MetaFinderBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+
+  @@index([batchId])
+  @@index([themeId])
+  @@index([deptId])
+  @@index([score])
 }

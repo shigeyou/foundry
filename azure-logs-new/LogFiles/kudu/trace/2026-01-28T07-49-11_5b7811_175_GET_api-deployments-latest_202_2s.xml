@@ -1,0 +1,11 @@
+<step title="Incoming Request" date="2026-01-28T07:49:11.433" instance="5b7811" url="/api/deployments/latest" method="GET" type="request" pid="835,1,31" Accept="*/*" Host="kachisuji-finder.scm.azurewebsites.net" User-Agent="AZURECLI/2.82.0 (DEB)" Accept-Encoding="gzip, deflate" Authorization="Bea..." x-ms-client-request-id="8c66b79e-fc1d-11f0-a095-6045bd25ab64" X-ARR-LOG-ID="8c66b79e-fc1d-11f0-a095-6045bd25ab64" CLIENT-IP="57.151.129.35:22555" X-SITE-DEPLOYMENT-ID="kachisuji-finder" WAS-DEFAULT-HOSTNAME="kachisuji-finder.scm.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/api/deployments/latest" X-Client-IP="57.151.129.35" X-Client-Port="22555" >
+  <step title="Cleanup Xml Logs" date="2026-01-28T07:49:11.453" >
+    <step title="Cleanup Infos" date="2026-01-28T07:49:11.567" totalFiles="611" totalCleanup="451" /><!-- duration: 21ms -->
+  </step><!-- duration: 165ms -->
+  <step title="DeploymentService.GetResult" date="2026-01-28T07:49:11.649" >
+    <step title="DeploymentService.GetLatestDeployment" date="2026-01-28T07:49:11.686" >
+      <step title="DeploymentManager.GetResults" date="2026-01-28T07:49:11.707" /><!-- duration: 1397ms -->
+    </step><!-- duration: 1427ms -->
+  </step><!-- duration: 1469ms -->
+  <step title="Outgoing response" date="2026-01-28T07:49:13.120" type="response" statusCode="202" statusText="Accepted" /><!-- duration: 2ms -->
+</step><!-- duration: 1696ms -->

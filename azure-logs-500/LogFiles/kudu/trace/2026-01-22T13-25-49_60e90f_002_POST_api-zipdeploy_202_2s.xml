@@ -1,0 +1,17 @@
+<step title="Incoming Request" date="2026-01-22T13:25:49.206" instance="60e90f" url="/api/zipdeploy?isAsync=true" method="POST" type="request" pid="831,1,15" Accept="*/*" Host="kachisuji-finder.scm.azurewebsites.net" User-Agent="AZURECLI/2.81.0 (DEB)" Accept-Encoding="gzip, deflate" Authorization="Bea..." Cache-Control="no-cache" Content-Type="application/octet-stream" Content-Length="27967331" x-ms-client-request-id="d97582e0-f795-11f0-b2c9-7ced8d3cd826" x-ms-artifact-checksum="a5257ff33097d00c02928b80cf15009c70d5fdbf660123b10481123790e50c1a" X-ARR-LOG-ID="d97582e0-f795-11f0-b2c9-7ced8d3cd826" CLIENT-IP="68.220.60.229:12328" X-SITE-DEPLOYMENT-ID="kachisuji-finder" WAS-DEFAULT-HOSTNAME="kachisuji-finder.scm.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/api/zipdeploy?isAsync=true" X-Client-IP="68.220.60.229" X-Client-Port="12328" >
+  <step title="ZipPushDeploy" date="2026-01-22T13:25:49.941" >
+    <step title="ZipDeploy. Extract zip. Remote build." date="2026-01-22T13:25:49.946" /><!-- duration: 2ms -->
+    <step title="None repository commit" date="2026-01-22T13:25:49.952" >
+      <step title="Commit id: 547b6f72-fafe-4e0c-a6fc-4bc1968ec288" date="2026-01-22T13:25:49.955" Message="N/A" AuthorName="N/A" AuthorEmail="N/A" /><!-- duration: 3ms -->
+    </step><!-- duration: 8ms -->
+    <step title="Starting PushDeployAsync" date="2026-01-22T13:25:49.962" /><!-- duration: 2ms -->
+    <step title="Writing artifact to /tmp/zipdeploy/4a1df852-ced8-48d2-9e95-fc06faa42ecb.zip" date="2026-01-22T13:25:49.993" >
+      <step title="Writing multipart request body to /tmp/zipdeploy/4a1df852-ced8-48d2-9e95-fc06faa42ecb.zip" date="2026-01-22T13:25:50.001" /><!-- duration: 10ms -->
+    </step><!-- duration: 1206ms -->
+    <step title="Start deployment in the background" date="2026-01-22T13:25:51.238" >
+      <step title="Acquiring Deployment Lock" date="2026-01-22T13:25:51.309" /><!-- duration: 10ms -->
+      <step title="Acquired Deployment Lock" date="2026-01-22T13:25:51.369" /><!-- duration: 3ms -->
+    </step><!-- duration: 205ms -->
+  </step><!-- duration: 1511ms -->
+  <step title="Outgoing response" date="2026-01-22T13:25:51.481" type="response" statusCode="202" statusText="Accepted" /><!-- duration: 3ms -->
+</step><!-- duration: 2280ms -->

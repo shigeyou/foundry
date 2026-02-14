@@ -3,24 +3,26 @@ import { prisma } from "@/lib/db";
 import { AzureOpenAI } from "openai";
 import { getCurrentUserId } from "@/lib/auth";
 
-// GET: 保存済みのまとめを取得
-export async function GET() {
+// GET: 保存済みのまとめを取得（ファインダー別）
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const finderId = searchParams.get("finderId") || null;
     const userId = await getCurrentUserId();
 
-    // 最新のまとめを取得
+    // 最新のまとめを取得（ファインダー別）
     const summary = await prisma.exploreSummary.findFirst({
-      where: { userId },
+      where: { userId, finderId },
       orderBy: { createdAt: "desc" },
     });
 
-    // 探索データの統計
+    // 探索データの統計（ファインダー別）
     const explorationCount = await prisma.exploration.count({
-      where: { userId },
+      where: { userId, finderId },
     });
 
     const topStrategiesCount = await prisma.topStrategy.count({
-      where: { userId },
+      where: { userId, finderId },
     });
 
     return NextResponse.json({
@@ -46,14 +48,16 @@ export async function GET() {
   }
 }
 
-// POST: AIでまとめを生成
-export async function POST() {
+// POST: AIでまとめを生成（ファインダー別）
+export async function POST(request: Request) {
   try {
+    const body = await request.json().catch(() => ({}));
+    const finderId: string | null = body.finderId || null;
     const userId = await getCurrentUserId();
 
-    // 探索履歴を取得
+    // 探索履歴を取得（ファインダー別）
     const explorations = await prisma.exploration.findMany({
-      where: { userId, status: "completed" },
+      where: { userId, finderId, status: "completed" },
       orderBy: { createdAt: "desc" },
       take: 50, // 最新50件
     });
@@ -65,16 +69,16 @@ export async function POST() {
       );
     }
 
-    // トップ戦略を取得
+    // トップ戦略を取得（ファインダー別）
     const topStrategies = await prisma.topStrategy.findMany({
-      where: { userId },
+      where: { userId, finderId },
       orderBy: { totalScore: "desc" },
       take: 20,
     });
 
-    // 採否データを取得
+    // 採否データを取得（ファインダー別）
     const decisions = await prisma.strategyDecision.findMany({
-      where: { userId },
+      where: { userId, finderId },
       orderBy: { createdAt: "desc" },
     });
 
@@ -189,6 +193,7 @@ ${rejectedStrategies.slice(0, 10).map((d) => `- ${d.strategyName}`).join("\n") |
     const savedSummary = await prisma.exploreSummary.create({
       data: {
         userId,
+        finderId,
         content: JSON.stringify(parsedContent),
         stats: JSON.stringify(stats),
       },
@@ -212,13 +217,15 @@ ${rejectedStrategies.slice(0, 10).map((d) => `- ${d.strategyName}`).join("\n") |
   }
 }
 
-// DELETE: まとめを削除
-export async function DELETE() {
+// DELETE: まとめを削除（ファインダー別）
+export async function DELETE(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const finderId = searchParams.get("finderId") || null;
     const userId = await getCurrentUserId();
 
     await prisma.exploreSummary.deleteMany({
-      where: { userId },
+      where: { userId, finderId },
     });
 
     return NextResponse.json({ success: true });

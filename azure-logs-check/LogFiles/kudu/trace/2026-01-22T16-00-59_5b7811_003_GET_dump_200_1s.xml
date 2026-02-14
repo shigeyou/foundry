@@ -1,0 +1,4 @@
+<step title="Incoming Request" date="2026-01-22T16:00:59.936" instance="5b7811" url="/dump" method="GET" type="request" pid="841,1,5" Host="kachisuji-finder.scm.azurewebsites.net" User-Agent="AZURECLI/2.78.0 (MSI)" Accept-Encoding="identity" Authorization="Bea..." x-ms-client-request-id="85ee7668-f7ab-11f0-8a57-84b1e256839b" X-ARR-LOG-ID="85ee7668-f7ab-11f0-8a57-84b1e256839b" CLIENT-IP="113.148.113.239:56620" X-SITE-DEPLOYMENT-ID="kachisuji-finder" WAS-DEFAULT-HOSTNAME="kachisuji-finder.scm.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/dump" X-Client-IP="113.148.113.239" X-Client-Port="56620" >
+  <step title="Cleanup Xml Logs" date="2026-01-22T16:00:59.938" /><!-- duration: 7ms -->
+  <step title="Outgoing response" date="2026-01-22T16:01:00.578" type="response" statusCode="200" statusText="OK" /><!-- duration: 2ms -->
+</step><!-- duration: 644ms -->

@@ -1,5 +1,6 @@
 import { AzureOpenAI } from "openai";
 import { prisma } from "@/lib/db";
+import { getFinderSettings } from "@/config/finder-config";
 
 let client: AzureOpenAI | null = null;
 
@@ -135,6 +136,27 @@ export interface StrategyScores {
   mergerSynergy: number;         // F: 合併シナジー (1-5)
 }
 
+// ★★★ スコア正規化: 5点満点に強制変換 ★★★
+// AIが10点満点で返した場合は5点満点に変換、範囲外の値はクランプ
+const MAX_SCORE = 5;
+function normalizeScore(value: number): number {
+  if (typeof value !== "number" || isNaN(value)) return 1;
+  // 6以上の場合は10点満点と見なして5点満点に変換
+  if (value > MAX_SCORE) {
+    return Math.round((value / 10) * MAX_SCORE);
+  }
+  // 1未満は1に、5超は5にクランプ
+  return Math.max(1, Math.min(MAX_SCORE, Math.round(value)));
+}
+
+function normalizeStrategyScores(scores: Record<string, number>): Record<string, number> {
+  const normalized: Record<string, number> = {};
+  for (const [key, value] of Object.entries(scores)) {
+    normalized[key] = normalizeScore(value);
+  }
+  return normalized;
+}
+
 export interface WinningStrategy {
   name: string;
   reason: string;
@@ -151,13 +173,83 @@ export interface ExplorationResult {
   followUpQuestions?: string[];
 }
 
+// finderIdに応じたシステムプロンプトを構築
+function buildFinderSystemPrompt(finderId: string, companySection: string, companyName: string): string {
+  const settings = getFinderSettings(finderId);
+
+  // スコア定義を動的に構築（finder-config.tsのscoreConfigから）
+  // ★★★ 重要: スコアは必ず1〜5点の整数 ★★★
+  const labels = "ABCDEFGHIJ";
+  const scoreDefinitions = settings.scoreConfig
+    .map((sc, i) => `${labels[i]}. ${sc.label}（${sc.key}）：${sc.description}\n- 5点：非常に優れている（最高点）\n- 4点：優れている\n- 3点：一定の水準\n- 2点：やや不足\n- 1点：効果が限定的（最低点）`)
+    .join("\n\n");
+
+  // スコアキーのJSON部分を構築
+  const scoreJsonKeys = settings.scoreConfig
+    .map((sc) => `        "${sc.key}": 1-5`)
+    .join(",\n");
+
+  return `あなたは「${settings.name}」のAIアシスタントです。
+
+${companySection}
+
+## あなたの役割
+${companyName}について、${settings.description}
+
+## 重要な原則
+1. 既存リソースの活用を優先する
+2. 実行可能な提案のみ行う
+3. 抽象的ではなく具体的に
+4. 組織のシナジーを意識する
+
+## 評価基準（各1〜5点の整数・5点満点厳守）
+【重要】スコアは必ず1, 2, 3, 4, 5のいずれかの整数で評価してください。6以上や小数は禁止です。
+各${settings.resultLabel}を以下の${settings.scoreConfig.length}軸で評価してください：
+
+${scoreDefinitions}
+
+## 出力形式
+必ず以下のJSON形式で回答してください：
+{
+  "strategies": [
+    {
+      "name": "${settings.resultLabel}名（簡潔に）",
+      "reason": "なぜこれが重要か（既存の強みとの関連）",
+      "howToObtain": "具体的な実現ステップ・アクション",
+      "metrics": "成功を測る指標例",
+      "confidence": "high/medium/low",
+      "tags": ["タグ1", "タグ2"],
+      "scores": {
+${scoreJsonKeys}
+      }
+    }
+  ],
+  "thinkingProcess": "どのような思考プロセスでこれらの${settings.resultLabel}を導いたか",
+  "followUpQuestions": ["追加で確認したい質問（あれば）"]
+}
+
+10〜20件の${settings.resultLabel}を生成してください。スコアは厳密に評価し、すべて高評価にならないよう現実的に判定してください。${
+  settings.departmentBadgeEnabled
+    ? `
+
+## 事業部・部門の割り当て
+tagsフィールドの最初の要素には、その${settings.resultLabel}が最も活躍できる事業部・部門名を入れてください。
+事業部名はRAGドキュメント（企業情報）や対象企業の情報から抽出してください。
+例: "tags": ["海技部", "エンジニアリング", "AI活用"]
+事業部が特定できない場合は「全社共通」としてください。
+tagsの2番目以降には、スキル分野や役割など自由なタグを入れてください。`
+    : ""
+}`;
+}
+
 export async function generateWinningStrategies(
   question: string,
   context: string,
   coreServices: string,
   coreAssets: string,
   constraints: string,
-  ragContext: string
+  ragContext: string,
+  finderId?: string
 ): Promise<ExplorationResult> {
   // 学習パターンと対象企業プロファイルを並行取得
   const [{ successPatterns, failurePatterns }, companyProfile] = await Promise.all([
@@ -169,78 +261,8 @@ export async function generateWinningStrategies(
   const companySection = buildCompanySection(companyProfile);
   const companyName = companyProfile?.shortName || companyProfile?.name || "対象企業";
 
-  const systemPrompt = `あなたは「勝ち筋ファインダーVer.0.7」のAIアシスタントです。
-
-${companySection}
-
-## あなたの役割
-${companyName}の現場が持っている力（実績・技術・ノウハウ）を、AIの視点で増幅し、具体的な戦略オプション（勝ち筋）に変換します。
-
-## 重要な原則
-1. 既存リソースの活用を優先する
-2. 実行可能な提案のみ行う
-3. 抽象的ではなく具体的に
-4. 組織のシナジーを意識する
-
-## 評価基準（各1〜5点）
-各勝ち筋を以下の6軸で評価してください：
-
-A. 収益ポテンシャル（revenuePotential）：儲かる大きさ
-- 5点：市場が大きく、単価と量の両方が立つ。勝てば会社の柱になる
-- 3点：特定領域で十分な利益が出る。部門の柱にはなる
-- 1点：良い話だが、上限が小さく事業になりにくい
-
-B. 収益化までの距離（timeToRevenue）：いつ儲かるか
-- 5点：3〜12か月で課金検証まで進める
-- 3点：12〜24か月
-- 1点：3年超。規制や大規模投資が前提
-
-C. 勝ち筋の強さ（competitiveAdvantage）：なぜ自社が勝てるか
-- 5点：自社にしかない資産が決定的に効く
-- 3点：優位性はあるが、模倣も可能
-- 1点：誰でもできる。価格競争になりやすい
-
-D. 実行可能性（executionFeasibility）：作れる、売れる、運用できる
-- 5点：必要なデータ、システム、体制、意思決定が揃っている
-- 3点：不足はあるが、半年以内に埋められる
-- 1点：権限、データ、現場運用のいずれかが欠けて詰む
-
-E. 本社貢献（hqContribution）：グループとして意味があるか
-- 5点：本社の戦略テーマや収益に直結し、横展開できる
-- 3点：間接効果はあるが、主戦場ではない
-- 1点：ローカル最適で、説明が難しい
-
-F. 合併シナジー（mergerSynergy）：1社では出ない価値が出るか
-- 5点：両社の資産が掛け算になる
-- 3点：足し算の効率化レベル
-- 1点：シナジーが薄く、調整コストが勝つ
-
-## 出力形式
-必ず以下のJSON形式で回答してください：
-{
-  "strategies": [
-    {
-      "name": "勝ち筋名（簡潔に）",
-      "reason": "なぜこれが勝ち筋か（既存の強みとの関連）",
-      "howToObtain": "具体的な実現ステップ・アクション",
-      "metrics": "成功を測る指標例",
-      "confidence": "high/medium/low",
-      "tags": ["タグ1", "タグ2"],
-      "scores": {
-        "revenuePotential": 1-5,
-        "timeToRevenue": 1-5,
-        "competitiveAdvantage": 1-5,
-        "executionFeasibility": 1-5,
-        "hqContribution": 1-5,
-        "mergerSynergy": 1-5
-      }
-    }
-  ],
-  "thinkingProcess": "どのような思考プロセスでこれらの勝ち筋を導いたか",
-  "followUpQuestions": ["追加で確認したい質問（あれば）"]
-}
-
-10〜20件の勝ち筋を生成してください。スコアは厳密に評価し、すべて高評価にならないよう現実的に判定してください。`;
+  // finderId に応じたプロンプトを構築
+  const systemPrompt = buildFinderSystemPrompt(finderId || "winning-strategy", companySection, companyName);
 
   // 学習パターンセクションを構築
   const learningSection = (successPatterns.length > 0 || failurePatterns.length > 0)
@@ -299,12 +321,28 @@ ${learningSection}
   }
 
   try {
-    return JSON.parse(content) as ExplorationResult;
+    const parsed = JSON.parse(content) as ExplorationResult;
+    // ★★★ スコアを5点満点に強制正規化 ★★★
+    if (parsed.strategies) {
+      parsed.strategies = parsed.strategies.map((s) => ({
+        ...s,
+        scores: s.scores ? normalizeStrategyScores(s.scores as unknown as Record<string, number>) as unknown as StrategyScores : s.scores,
+      }));
+    }
+    return parsed;
   } catch {
     // If JSON parsing fails, try to extract JSON from the response
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]) as ExplorationResult;
+      const parsed = JSON.parse(jsonMatch[0]) as ExplorationResult;
+      // ★★★ スコアを5点満点に強制正規化 ★★★
+      if (parsed.strategies) {
+        parsed.strategies = parsed.strategies.map((s) => ({
+          ...s,
+          scores: s.scores ? normalizeStrategyScores(s.scores as unknown as Record<string, number>) as unknown as StrategyScores : s.scores,
+        }));
+      }
+      return parsed;
     }
     throw new Error("Failed to parse AI response as JSON");
   }

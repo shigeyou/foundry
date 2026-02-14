@@ -1,0 +1,21 @@
+<step title="Incoming Request" date="2026-01-26T10:46:57.159" instance="5b7811" url="/api/publish?type=zip&amp;async=True&amp;restart=True&amp;clean=True" method="POST" type="request" pid="833,1,16" Accept="*/*" Host="kachisuji-finder.scm.azurewebsites.net" User-Agent="AZURECLI/2.82.0 (DEB)" Accept-Encoding="gzip, deflate" Authorization="Bea..." Cache-Control="no-cache" Content-Type="application/octet-stream" Cookie="ARRAffinity=5b7811789b1e33b7cc756bce49c73cf44172046100af9c564b5a3ebcd20cab6c; ARRAffinitySameSite=5b7811789b1e33b7cc756bce49c73cf44172046100af9c564b5a3ebcd20cab6c" Content-Length="46183784" x-ms-client-request-id="3de84e18-faa4-11f0-a095-7ced8d2aa000" x-ms-artifact-checksum="d7c6e685133114da23c3f9d572c7ea8d03e0e0a56932d3fb6e00ed36586679ff" X-ARR-LOG-ID="3de84e18-faa4-11f0-a095-7ced8d2aa000" CLIENT-IP="172.183.89.132:50209" X-SITE-DEPLOYMENT-ID="kachisuji-finder" WAS-DEFAULT-HOSTNAME="kachisuji-finder.scm.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/api/publish?type=zip&amp;async=True&amp;restart=True&amp;clean=True" X-Client-IP="172.183.89.132" X-Client-Port="50209" >
+  <step title="Cleanup Xml Logs" date="2026-01-26T10:46:57.187" >
+    <step title="Cleanup Infos" date="2026-01-26T10:46:57.243" totalFiles="248" totalCleanup="88" /><!-- duration: 30ms -->
+  </step><!-- duration: 104ms -->
+  <step title="OneDeploy" date="2026-01-26T10:46:58.019" >
+    <step title="None repository commit" date="2026-01-26T10:46:58.039" >
+      <step title="Commit id: 7dd49f30-af69-45d4-bb13-c778a342c56b" date="2026-01-26T10:46:58.042" Message="N/A" AuthorName="N/A" AuthorEmail="N/A" /><!-- duration: 2ms -->
+    </step><!-- duration: 8ms -->
+    <step title="Starting PushDeployAsync" date="2026-01-26T10:46:58.049" /><!-- duration: 2ms -->
+    <step title="Removing node_modules symlink" date="2026-01-26T10:46:58.322" >
+      <step title="Removing _del_node_modules symlink" date="2026-01-26T10:46:58.590" >
+        <step title="Writing artifact to /tmp/zipdeploy/67856d4b-e686-4d6b-8591-44936b6cd26a.zip" date="2026-01-26T10:46:58.719" >
+          <step title="Writing multipart request body to /tmp/zipdeploy/67856d4b-e686-4d6b-8591-44936b6cd26a.zip" date="2026-01-26T10:46:58.755" /><!-- duration: 40ms -->
+        </step><!-- duration: 2742ms -->
+        <step title="Start deployment in the background" date="2026-01-26T10:47:01.481" >
+          <step title="Acquiring Deployment Lock" date="2026-01-26T10:47:01.524" /><!-- duration: 2ms -->
+          <step title="Acquired Deployment Lock" date="2026-01-26T10:47:01.601" /><!-- duration: 2ms -->
+        </step><!-- duration: 243ms -->
+      </step><!-- duration: 3147ms -->
+      <step title="Outgoing response" date="2026-01-26T10:47:01.750" type="response" statusCode="202" statusText="Accepted" /><!-- duration: 9ms -->
+    </step><!-- duration: 3445ms -->

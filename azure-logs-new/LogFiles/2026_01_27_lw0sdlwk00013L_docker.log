@@ -1,0 +1,328 @@
+2026-01-27T03:10:53.4654747Z Container start method called.
+2026-01-27T03:10:53.4758072Z Establishing network.
+2026-01-27T03:10:53.4766617Z Pulling image: appsvc/node:20-lts_20251016.4.tuxprod.
+2026-01-27T03:10:54.0937533Z Container is starting.
+2026-01-27T03:10:54.0947677Z Establishing user namespace if not established already.
+2026-01-27T03:10:54.1011709Z Establishing network if not established already.
+2026-01-27T03:10:54.1019288Z Mounting volumes.
+2026-01-27T03:10:54.1049646Z Nested mountpoint 
+2026-01-27T03:10:54.1960226Z Nested mountpoint volatile/logs
+2026-01-27T03:10:54.2854360Z Nested mountpoint 
+2026-01-27T03:10:54.3552688Z Nested mountpoint 
+2026-01-27T03:10:54.3839451Z Nested mountpoint 
+2026-01-27T03:10:56.1802705Z Creating container.
+2026-01-27T03:10:56.1809373Z Creating pipes for streaming container io.
+2026-01-27T03:10:56.1886836Z Creating stdout named pipe at /podr/container/pipe/cbca86d4e09d_kachisuji-finder/stdout_1a1eedd205334392be42ef93d863bccc.
+2026-01-27T03:10:56.1983871Z Successfully created stdout named pipe at: /podr/container/pipe/cbca86d4e09d_kachisuji-finder/stdout_1a1eedd205334392be42ef93d863bccc.
+2026-01-27T03:10:56.1990452Z Opening named pipe /podr/container/pipe/cbca86d4e09d_kachisuji-finder/stdout_1a1eedd205334392be42ef93d863bccc for reading in non-blocking mode.
+2026-01-27T03:10:56.2075583Z Successfully opened named pipe: /podr/container/pipe/cbca86d4e09d_kachisuji-finder/stdout_1a1eedd205334392be42ef93d863bccc.
+2026-01-27T03:10:56.2091105Z Successfully removed non-blocking flag from /podr/container/pipe/cbca86d4e09d_kachisuji-finder/stdout_1a1eedd205334392be42ef93d863bccc.
+2026-01-27T03:10:56.2094387Z Creating stderr named pipe at /podr/container/pipe/cbca86d4e09d_kachisuji-finder/stderr_492fbcbb2161450084fadd06f0e2e52e.
+2026-01-27T03:10:56.2103061Z Successfully created stderr named pipe at: /podr/container/pipe/cbca86d4e09d_kachisuji-finder/stderr_492fbcbb2161450084fadd06f0e2e52e.
+2026-01-27T03:10:56.2376145Z Opening named pipe /podr/container/pipe/cbca86d4e09d_kachisuji-finder/stderr_492fbcbb2161450084fadd06f0e2e52e for reading in non-blocking mode.
+2026-01-27T03:10:56.2378231Z Successfully opened named pipe: /podr/container/pipe/cbca86d4e09d_kachisuji-finder/stderr_492fbcbb2161450084fadd06f0e2e52e.
+2026-01-27T03:10:56.2379392Z Successfully removed non-blocking flag from /podr/container/pipe/cbca86d4e09d_kachisuji-finder/stderr_492fbcbb2161450084fadd06f0e2e52e.
+2026-01-27T03:10:56.2390059Z Creating container with image: appsvc/node:20-lts_20251016.4.tuxprod from registry: 10.1.0.5:13209 and fully qualified image name: 10.1.0.5:13209/appsvc/node:20-lts_20251016.4.tuxprod
+2026-01-27T03:10:59.0787075Z Starting container: cbca86d4e09d_kachisuji-finder.
+2026-01-27T03:10:59.2822529Z Starting watchers and probes.
+2026-01-27T03:10:59.3302977Z Starting metrics collection.
+2026-01-27T03:10:59.3406298Z Container is running.
+2026-01-27T03:10:59.6037741Z Container start method finished after 6135 ms.
+2026-01-27T03:12:11.1647890Z Site startup probe succeeded after 71.3272747 seconds.
+2026-01-27T03:12:29.5612172Z Site is running with deployment version: 3e6bf84d-7ac9-4460-8dd2-2b711b3fb4b2
+2026-01-27T03:12:29.5816712Z Site started.
+2026-01-27T03:12:29.6978204Z Site is running with patch version NODE 20.19.5
+2026-01-27T03:12:50.0570196Z Container is terminating. Grace period: 5 seconds.
+2026-01-27T03:12:50.1719762Z Stop and delete container. Retry count = 0
+2026-01-27T03:12:50.1723965Z Stopping container: 70a188c816db_kachisuji-finder.
+2026-01-27T03:12:55.9787834Z Deleting container: 70a188c816db_kachisuji-finder. Retry count = 0
+2026-01-27T03:12:59.4338953Z Container spec TerminationMessagePolicy  path 
+2026-01-27T03:12:59.4545791Z Container is terminated. Total time elapsed: 9390 ms.
+2026-01-27T03:12:59.4745244Z Site: kachisuji-finder stopped.
+2026-01-27T03:25:13.1104898Z Container start method called.
+2026-01-27T03:25:13.1400380Z Establishing network.
+2026-01-27T03:25:13.1585185Z Pulling image: appsvc/node:20-lts_20251016.4.tuxprod.
+2026-01-27T03:25:14.6242051Z Container is starting.
+2026-01-27T03:25:14.6327829Z Establishing user namespace if not established already.
+2026-01-27T03:25:14.6329862Z Establishing network if not established already.
+2026-01-27T03:25:14.6330879Z Mounting volumes.
+2026-01-27T03:25:14.6524801Z Nested mountpoint 
+2026-01-27T03:25:14.7332688Z Nested mountpoint volatile/logs
+2026-01-27T03:25:14.8699087Z Nested mountpoint 
+2026-01-27T03:25:15.0789838Z Nested mountpoint 
+2026-01-27T03:25:15.1101600Z Nested mountpoint 
+2026-01-27T03:25:16.2705565Z Creating container.
+2026-01-27T03:25:16.2786330Z Creating pipes for streaming container io.
+2026-01-27T03:25:16.2801204Z Creating stdout named pipe at /podr/container/pipe/caba623a15df_kachisuji-finder/stdout_fee33169b04541029696fb6d1535b9a5.
+2026-01-27T03:25:16.3014777Z Successfully created stdout named pipe at: /podr/container/pipe/caba623a15df_kachisuji-finder/stdout_fee33169b04541029696fb6d1535b9a5.
+2026-01-27T03:25:16.3023191Z Opening named pipe /podr/container/pipe/caba623a15df_kachisuji-finder/stdout_fee33169b04541029696fb6d1535b9a5 for reading in non-blocking mode.
+2026-01-27T03:25:16.3101140Z Successfully opened named pipe: /podr/container/pipe/caba623a15df_kachisuji-finder/stdout_fee33169b04541029696fb6d1535b9a5.
+2026-01-27T03:25:16.3179737Z Successfully removed non-blocking flag from /podr/container/pipe/caba623a15df_kachisuji-finder/stdout_fee33169b04541029696fb6d1535b9a5.
+2026-01-27T03:25:16.3203327Z Creating stderr named pipe at /podr/container/pipe/caba623a15df_kachisuji-finder/stderr_2593946da026497d9b9d258cc393a2ef.
+2026-01-27T03:25:16.3288842Z Successfully created stderr named pipe at: /podr/container/pipe/caba623a15df_kachisuji-finder/stderr_2593946da026497d9b9d258cc393a2ef.
+2026-01-27T03:25:16.3375782Z Opening named pipe /podr/container/pipe/caba623a15df_kachisuji-finder/stderr_2593946da026497d9b9d258cc393a2ef for reading in non-blocking mode.
+2026-01-27T03:25:16.3397042Z Successfully opened named pipe: /podr/container/pipe/caba623a15df_kachisuji-finder/stderr_2593946da026497d9b9d258cc393a2ef.
+2026-01-27T03:25:16.3483014Z Successfully removed non-blocking flag from /podr/container/pipe/caba623a15df_kachisuji-finder/stderr_2593946da026497d9b9d258cc393a2ef.
+2026-01-27T03:25:16.3508139Z Creating container with image: appsvc/node:20-lts_20251016.4.tuxprod from registry: 10.1.0.5:13209 and fully qualified image name: 10.1.0.5:13209/appsvc/node:20-lts_20251016.4.tuxprod
+2026-01-27T03:25:17.8413948Z Starting container: caba623a15df_kachisuji-finder.
+2026-01-27T03:25:18.0946401Z Starting watchers and probes.
+2026-01-27T03:25:18.1060812Z Starting metrics collection.
+2026-01-27T03:25:18.1830801Z Container is running.
+2026-01-27T03:25:18.4882024Z Container start method finished after 5357 ms.
+2026-01-27T03:26:43.5216358Z Site startup probe succeeded after 84.9058177 seconds.
+2026-01-27T03:26:57.2456577Z Site is running with deployment version: 3424269e-0bc7-441e-a332-223da0d1b4a5
+2026-01-27T03:26:57.2461799Z Site started.
+2026-01-27T03:26:57.4129280Z Site is running with patch version NODE 20.19.5
+2026-01-27T03:27:18.6187847Z Container is terminating. Grace period: 5 seconds.
+2026-01-27T03:27:19.0709349Z Stop and delete container. Retry count = 0
+2026-01-27T03:27:19.0998743Z Stopping container: cbca86d4e09d_kachisuji-finder.
+2026-01-27T03:27:24.0937247Z Deleting container: cbca86d4e09d_kachisuji-finder. Retry count = 0
+2026-01-27T03:27:25.8127537Z Container spec TerminationMessagePolicy  path 
+2026-01-27T03:27:25.8311182Z Container is terminated. Total time elapsed: 7211 ms.
+2026-01-27T03:27:25.8515259Z Site: kachisuji-finder stopped.
+2026-01-27T03:42:39.5003570Z Container start method called.
+2026-01-27T03:42:39.5188183Z Establishing network.
+2026-01-27T03:42:39.5202589Z Pulling image: appsvc/node:20-lts_20251016.4.tuxprod.
+2026-01-27T03:42:41.6106489Z Container is starting.
+2026-01-27T03:42:41.7603246Z Establishing user namespace if not established already.
+2026-01-27T03:42:41.7612877Z Establishing network if not established already.
+2026-01-27T03:42:41.7624754Z Mounting volumes.
+2026-01-27T03:42:41.7923930Z Nested mountpoint 
+2026-01-27T03:42:42.0321434Z Nested mountpoint volatile/logs
+2026-01-27T03:42:42.1850912Z Nested mountpoint 
+2026-01-27T03:42:42.5808543Z Nested mountpoint 
+2026-01-27T03:42:42.6004030Z Nested mountpoint 
+2026-01-27T03:42:47.4350308Z Creating container.
+2026-01-27T03:42:47.5111494Z Creating pipes for streaming container io.
+2026-01-27T03:42:47.5198342Z Creating stdout named pipe at /podr/container/pipe/b44f15f2ec24_kachisuji-finder/stdout_8e7c4302ca334ef7b8b3bd10838712e8.
+2026-01-27T03:42:47.5584455Z Successfully created stdout named pipe at: /podr/container/pipe/b44f15f2ec24_kachisuji-finder/stdout_8e7c4302ca334ef7b8b3bd10838712e8.
+2026-01-27T03:42:47.5667714Z Opening named pipe /podr/container/pipe/b44f15f2ec24_kachisuji-finder/stdout_8e7c4302ca334ef7b8b3bd10838712e8 for reading in non-blocking mode.
+2026-01-27T03:42:47.5770659Z Successfully opened named pipe: /podr/container/pipe/b44f15f2ec24_kachisuji-finder/stdout_8e7c4302ca334ef7b8b3bd10838712e8.
+2026-01-27T03:42:47.5779461Z Successfully removed non-blocking flag from /podr/container/pipe/b44f15f2ec24_kachisuji-finder/stdout_8e7c4302ca334ef7b8b3bd10838712e8.
+2026-01-27T03:42:47.5780956Z Creating stderr named pipe at /podr/container/pipe/b44f15f2ec24_kachisuji-finder/stderr_357caaf599be4a90b82e6de0d9cfe4a4.
+2026-01-27T03:42:47.5783446Z Successfully created stderr named pipe at: /podr/container/pipe/b44f15f2ec24_kachisuji-finder/stderr_357caaf599be4a90b82e6de0d9cfe4a4.
+2026-01-27T03:42:47.6061610Z Opening named pipe /podr/container/pipe/b44f15f2ec24_kachisuji-finder/stderr_357caaf599be4a90b82e6de0d9cfe4a4 for reading in non-blocking mode.
+2026-01-27T03:42:47.6067559Z Successfully opened named pipe: /podr/container/pipe/b44f15f2ec24_kachisuji-finder/stderr_357caaf599be4a90b82e6de0d9cfe4a4.
+2026-01-27T03:42:47.6069340Z Successfully removed non-blocking flag from /podr/container/pipe/b44f15f2ec24_kachisuji-finder/stderr_357caaf599be4a90b82e6de0d9cfe4a4.
+2026-01-27T03:42:47.6074948Z Creating container with image: appsvc/node:20-lts_20251016.4.tuxprod from registry: 10.1.0.4:13209 and fully qualified image name: 10.1.0.4:13209/appsvc/node:20-lts_20251016.4.tuxprod
+2026-01-27T03:42:51.8138215Z Starting container: b44f15f2ec24_kachisuji-finder.
+2026-01-27T03:42:52.1022157Z Starting watchers and probes.
+2026-01-27T03:42:52.1209621Z Starting metrics collection.
+2026-01-27T03:42:52.1227512Z Container is running.
+2026-01-27T03:42:52.4750807Z Container start method finished after 12851 ms.
+2026-01-27T03:45:39.3877062Z Site startup probe succeeded after 166.7906215 seconds.
+2026-01-27T03:45:57.9762333Z Site is running with deployment version: bb226d9c-0e91-4cc0-a49f-9c914f097287
+2026-01-27T03:45:57.9852246Z Site started.
+2026-01-27T03:45:58.0822306Z Site is running with patch version NODE 20.19.5
+2026-01-27T03:46:18.7158219Z Container is terminating. Grace period: 5 seconds.
+2026-01-27T03:46:18.7945149Z Stop and delete container. Retry count = 0
+2026-01-27T03:46:18.8054866Z Stopping container: caba623a15df_kachisuji-finder.
+2026-01-27T03:46:24.1066571Z Deleting container: caba623a15df_kachisuji-finder. Retry count = 0
+2026-01-27T03:46:24.7296464Z Container spec TerminationMessagePolicy  path 
+2026-01-27T03:46:24.7405539Z Container is terminated. Total time elapsed: 6023 ms.
+2026-01-27T03:46:24.7495913Z Site: kachisuji-finder stopped.
+2026-01-27T03:46:35.6231564Z Container start method called.
+2026-01-27T03:46:35.6913976Z Establishing network.
+2026-01-27T03:46:35.7026157Z Pulling image: appsvc/node:20-lts_20251016.4.tuxprod.
+2026-01-27T03:46:36.2748757Z Container is starting.
+2026-01-27T03:46:36.2846789Z Establishing user namespace if not established already.
+2026-01-27T03:46:36.2847920Z Establishing network if not established already.
+2026-01-27T03:46:36.2925847Z Mounting volumes.
+2026-01-27T03:46:36.2928152Z Nested mountpoint 
+2026-01-27T03:46:36.4083773Z Nested mountpoint volatile/logs
+2026-01-27T03:46:36.5081498Z Nested mountpoint 
+2026-01-27T03:46:36.7301237Z Nested mountpoint 
+2026-01-27T03:46:36.7504616Z Nested mountpoint 
+2026-01-27T03:46:38.2274831Z Creating container.
+2026-01-27T03:46:38.2323342Z Creating pipes for streaming container io.
+2026-01-27T03:46:38.2331391Z Creating stdout named pipe at /podr/container/pipe/9529405ad215_kachisuji-finder/stdout_2e9e119d62c14b3fa9ef792a103ab925.
+2026-01-27T03:46:38.2413736Z Successfully created stdout named pipe at: /podr/container/pipe/9529405ad215_kachisuji-finder/stdout_2e9e119d62c14b3fa9ef792a103ab925.
+2026-01-27T03:46:38.2585520Z Opening named pipe /podr/container/pipe/9529405ad215_kachisuji-finder/stdout_2e9e119d62c14b3fa9ef792a103ab925 for reading in non-blocking mode.
+2026-01-27T03:46:38.2671055Z Successfully opened named pipe: /podr/container/pipe/9529405ad215_kachisuji-finder/stdout_2e9e119d62c14b3fa9ef792a103ab925.
+2026-01-27T03:46:38.2685857Z Successfully removed non-blocking flag from /podr/container/pipe/9529405ad215_kachisuji-finder/stdout_2e9e119d62c14b3fa9ef792a103ab925.
+2026-01-27T03:46:38.2761654Z Creating stderr named pipe at /podr/container/pipe/9529405ad215_kachisuji-finder/stderr_60e3f0066b224596b1b05271b01cc331.
+2026-01-27T03:46:38.2763877Z Successfully created stderr named pipe at: /podr/container/pipe/9529405ad215_kachisuji-finder/stderr_60e3f0066b224596b1b05271b01cc331.
+2026-01-27T03:46:38.2764640Z Opening named pipe /podr/container/pipe/9529405ad215_kachisuji-finder/stderr_60e3f0066b224596b1b05271b01cc331 for reading in non-blocking mode.
+2026-01-27T03:46:38.2765608Z Successfully opened named pipe: /podr/container/pipe/9529405ad215_kachisuji-finder/stderr_60e3f0066b224596b1b05271b01cc331.
+2026-01-27T03:46:38.2766424Z Successfully removed non-blocking flag from /podr/container/pipe/9529405ad215_kachisuji-finder/stderr_60e3f0066b224596b1b05271b01cc331.
+2026-01-27T03:46:38.2767233Z Creating container with image: appsvc/node:20-lts_20251016.4.tuxprod from registry: 10.1.0.4:13209 and fully qualified image name: 10.1.0.4:13209/appsvc/node:20-lts_20251016.4.tuxprod
+2026-01-27T03:46:39.0655554Z Starting container: 9529405ad215_kachisuji-finder.
+2026-01-27T03:46:39.1602905Z Starting watchers and probes.
+2026-01-27T03:46:39.1795092Z Starting metrics collection.
+2026-01-27T03:46:39.1798020Z Container is running.
+2026-01-27T03:46:39.7452652Z Container start method finished after 4094 ms.
+2026-01-27T03:48:37.9083972Z Site startup probe succeeded after 118.0947498 seconds.
+2026-01-27T03:48:49.9966205Z Site is running with deployment version: bb226d9c-0e91-4cc0-a49f-9c914f097287
+2026-01-27T03:48:50.0133850Z Site started.
+2026-01-27T03:48:50.0396103Z Site is running with patch version NODE 20.19.5
+2026-01-27T03:49:10.2201149Z Container is terminating. Grace period: 5 seconds.
+2026-01-27T03:49:10.2890632Z Stop and delete container. Retry count = 0
+2026-01-27T03:49:10.2983615Z Stopping container: b44f15f2ec24_kachisuji-finder.
+2026-01-27T03:49:15.4265340Z Deleting container: b44f15f2ec24_kachisuji-finder. Retry count = 0
+2026-01-27T03:49:15.9432577Z Container spec TerminationMessagePolicy  path 
+2026-01-27T03:49:15.9436618Z Container is terminated. Total time elapsed: 5722 ms.
+2026-01-27T03:49:15.9445394Z Site: kachisuji-finder stopped.
+2026-01-27T10:46:42.7626119Z Container start method called.
+2026-01-27T10:46:42.7650601Z Establishing network.
+2026-01-27T10:46:42.7657055Z Pulling image: appsvc/node:20-lts_20251016.4.tuxprod.
+2026-01-27T10:46:43.3952980Z Container is starting.
+2026-01-27T10:46:43.4033082Z Establishing user namespace if not established already.
+2026-01-27T10:46:43.4121839Z Establishing network if not established already.
+2026-01-27T10:46:43.4140683Z Mounting volumes.
+2026-01-27T10:46:43.4235625Z Nested mountpoint 
+2026-01-27T10:46:43.5216269Z Nested mountpoint volatile/logs
+2026-01-27T10:46:43.5560473Z Nested mountpoint 
+2026-01-27T10:46:43.8098256Z Nested mountpoint 
+2026-01-27T10:46:43.8124420Z Nested mountpoint 
+2026-01-27T10:46:44.6612445Z Creating container.
+2026-01-27T10:46:44.6814500Z Creating pipes for streaming container io.
+2026-01-27T10:46:44.6902702Z Creating stdout named pipe at /podr/container/pipe/29ff45344f6f_kachisuji-finder/stdout_040206d8dfff4d29911ccf92c41c10e9.
+2026-01-27T10:46:44.6920071Z Successfully created stdout named pipe at: /podr/container/pipe/29ff45344f6f_kachisuji-finder/stdout_040206d8dfff4d29911ccf92c41c10e9.
+2026-01-27T10:46:44.7014331Z Opening named pipe /podr/container/pipe/29ff45344f6f_kachisuji-finder/stdout_040206d8dfff4d29911ccf92c41c10e9 for reading in non-blocking mode.
+2026-01-27T10:46:44.7016571Z Successfully opened named pipe: /podr/container/pipe/29ff45344f6f_kachisuji-finder/stdout_040206d8dfff4d29911ccf92c41c10e9.
+2026-01-27T10:46:44.7017615Z Successfully removed non-blocking flag from /podr/container/pipe/29ff45344f6f_kachisuji-finder/stdout_040206d8dfff4d29911ccf92c41c10e9.
+2026-01-27T10:46:44.7018796Z Creating stderr named pipe at /podr/container/pipe/29ff45344f6f_kachisuji-finder/stderr_b93ec7a52daa418391f65eaa1835862b.
+2026-01-27T10:46:44.7022401Z Successfully created stderr named pipe at: /podr/container/pipe/29ff45344f6f_kachisuji-finder/stderr_b93ec7a52daa418391f65eaa1835862b.
+2026-01-27T10:46:44.7023594Z Opening named pipe /podr/container/pipe/29ff45344f6f_kachisuji-finder/stderr_b93ec7a52daa418391f65eaa1835862b for reading in non-blocking mode.
+2026-01-27T10:46:44.7028793Z Successfully opened named pipe: /podr/container/pipe/29ff45344f6f_kachisuji-finder/stderr_b93ec7a52daa418391f65eaa1835862b.
+2026-01-27T10:46:44.7030023Z Successfully removed non-blocking flag from /podr/container/pipe/29ff45344f6f_kachisuji-finder/stderr_b93ec7a52daa418391f65eaa1835862b.
+2026-01-27T10:46:44.7117790Z Creating container with image: appsvc/node:20-lts_20251016.4.tuxprod from registry: 10.1.0.5:13209 and fully qualified image name: 10.1.0.5:13209/appsvc/node:20-lts_20251016.4.tuxprod
+2026-01-27T10:46:45.7567252Z Starting container: 29ff45344f6f_kachisuji-finder.
+2026-01-27T10:46:45.9510225Z Starting watchers and probes.
+2026-01-27T10:46:45.9636735Z Starting metrics collection.
+2026-01-27T10:46:45.9734069Z Container is running.
+2026-01-27T10:46:47.2759455Z Container start method finished after 4493 ms.
+2026-01-27T10:48:50.0350587Z Site startup probe succeeded after 122.5962658 seconds.
+2026-01-27T10:49:04.1043550Z Site is running with deployment version: badf4552-fc55-47c6-8ea2-4a0f76383161
+2026-01-27T10:49:04.1230459Z Site started.
+2026-01-27T10:49:04.1746285Z Site is running with patch version NODE 20.19.5
+2026-01-27T10:49:24.3224719Z Container is terminating. Grace period: 5 seconds.
+2026-01-27T10:49:24.3730293Z Stop and delete container. Retry count = 0
+2026-01-27T10:49:24.3748145Z Stopping container: 9529405ad215_kachisuji-finder.
+2026-01-27T10:49:29.5743490Z Deleting container: 9529405ad215_kachisuji-finder. Retry count = 0
+2026-01-27T10:49:30.1221837Z Container spec TerminationMessagePolicy  path 
+2026-01-27T10:49:30.1329330Z Container is terminated. Total time elapsed: 5809 ms.
+2026-01-27T10:49:30.1353985Z Site: kachisuji-finder stopped.
+2026-01-27T11:05:59.8181037Z Container start method called.
+2026-01-27T11:05:59.8289237Z Establishing network.
+2026-01-27T11:05:59.8364143Z Pulling image: appsvc/node:20-lts_20251016.4.tuxprod.
+2026-01-27T11:06:00.7978078Z Container is starting.
+2026-01-27T11:06:00.7991606Z Establishing user namespace if not established already.
+2026-01-27T11:06:00.8001057Z Establishing network if not established already.
+2026-01-27T11:06:00.8082691Z Mounting volumes.
+2026-01-27T11:06:00.8182075Z Nested mountpoint 
+2026-01-27T11:06:00.9080903Z Nested mountpoint volatile/logs
+2026-01-27T11:06:00.9265161Z Nested mountpoint 
+2026-01-27T11:06:01.1731478Z Nested mountpoint 
+2026-01-27T11:06:01.2214492Z Nested mountpoint 
+2026-01-27T11:06:02.9802018Z Creating container.
+2026-01-27T11:06:03.0482398Z Creating pipes for streaming container io.
+2026-01-27T11:06:03.0488093Z Creating stdout named pipe at /podr/container/pipe/556ce52a14ea_kachisuji-finder/stdout_954e433bc8bc4ea6a97dc7ff889f453e.
+2026-01-27T11:06:03.0601235Z Successfully created stdout named pipe at: /podr/container/pipe/556ce52a14ea_kachisuji-finder/stdout_954e433bc8bc4ea6a97dc7ff889f453e.
+2026-01-27T11:06:03.0611019Z Opening named pipe /podr/container/pipe/556ce52a14ea_kachisuji-finder/stdout_954e433bc8bc4ea6a97dc7ff889f453e for reading in non-blocking mode.
+2026-01-27T11:06:03.0978684Z Successfully opened named pipe: /podr/container/pipe/556ce52a14ea_kachisuji-finder/stdout_954e433bc8bc4ea6a97dc7ff889f453e.
+2026-01-27T11:06:03.0998809Z Successfully removed non-blocking flag from /podr/container/pipe/556ce52a14ea_kachisuji-finder/stdout_954e433bc8bc4ea6a97dc7ff889f453e.
+2026-01-27T11:06:03.1091464Z Creating stderr named pipe at /podr/container/pipe/556ce52a14ea_kachisuji-finder/stderr_23b87462b78f4bd0a1f581814aa37895.
+2026-01-27T11:06:03.1100358Z Successfully created stderr named pipe at: /podr/container/pipe/556ce52a14ea_kachisuji-finder/stderr_23b87462b78f4bd0a1f581814aa37895.
+2026-01-27T11:06:03.1105124Z Opening named pipe /podr/container/pipe/556ce52a14ea_kachisuji-finder/stderr_23b87462b78f4bd0a1f581814aa37895 for reading in non-blocking mode.
+2026-01-27T11:06:03.1285300Z Successfully opened named pipe: /podr/container/pipe/556ce52a14ea_kachisuji-finder/stderr_23b87462b78f4bd0a1f581814aa37895.
+2026-01-27T11:06:03.1287809Z Successfully removed non-blocking flag from /podr/container/pipe/556ce52a14ea_kachisuji-finder/stderr_23b87462b78f4bd0a1f581814aa37895.
+2026-01-27T11:06:03.1306212Z Creating container with image: appsvc/node:20-lts_20251016.4.tuxprod from registry: 10.1.0.5:13209 and fully qualified image name: 10.1.0.5:13209/appsvc/node:20-lts_20251016.4.tuxprod
+2026-01-27T11:06:05.5528247Z Starting container: 556ce52a14ea_kachisuji-finder.
+2026-01-27T11:06:05.8792762Z Starting watchers and probes.
+2026-01-27T11:06:05.9299469Z Starting metrics collection.
+2026-01-27T11:06:05.9504200Z Container is running.
+2026-01-27T11:06:06.1400128Z Container start method finished after 6320 ms.
+2026-01-27T11:07:04.5142878Z Site startup probe succeeded after 58.1463866 seconds.
+2026-01-27T11:07:19.0685966Z Site is running with deployment version: a2cb5638-8262-44c4-9853-e5e9cc4a9985
+2026-01-27T11:07:19.0891249Z Site started.
+2026-01-27T11:07:19.1088613Z Site is running with patch version NODE 20.19.5
+2026-01-27T11:07:39.5820010Z Container is terminating. Grace period: 5 seconds.
+2026-01-27T11:07:40.6381342Z Stop and delete container. Retry count = 0
+2026-01-27T11:07:40.6385617Z Stopping container: 29ff45344f6f_kachisuji-finder.
+2026-01-27T11:07:45.7134281Z Deleting container: 29ff45344f6f_kachisuji-finder. Retry count = 0
+2026-01-27T11:07:46.6065949Z Container spec TerminationMessagePolicy  path 
+2026-01-27T11:07:46.6083594Z Container is terminated. Total time elapsed: 7025 ms.
+2026-01-27T11:07:46.6186127Z Site: kachisuji-finder stopped.
+2026-01-27T13:31:16.0846832Z Container start method called.
+2026-01-27T13:31:16.0934815Z Establishing network.
+2026-01-27T13:31:16.1012870Z Pulling image: appsvc/node:20-lts_20251016.4.tuxprod.
+2026-01-27T13:31:17.7287832Z Container is starting.
+2026-01-27T13:31:17.7291527Z Establishing user namespace if not established already.
+2026-01-27T13:31:17.7292397Z Establishing network if not established already.
+2026-01-27T13:31:17.7293274Z Mounting volumes.
+2026-01-27T13:31:17.7406666Z Nested mountpoint 
+2026-01-27T13:31:17.8183385Z Nested mountpoint volatile/logs
+2026-01-27T13:31:17.8755560Z Nested mountpoint 
+2026-01-27T13:31:17.8865737Z Nested mountpoint 
+2026-01-27T13:31:17.8966570Z Nested mountpoint 
+2026-01-27T13:31:18.4876835Z Creating container.
+2026-01-27T13:31:18.4881979Z Creating pipes for streaming container io.
+2026-01-27T13:31:18.4885701Z Creating stdout named pipe at /podr/container/pipe/776cbfe16808_kachisuji-finder/stdout_b1160e9311e449de9e579e18298ff891.
+2026-01-27T13:31:18.4901645Z Successfully created stdout named pipe at: /podr/container/pipe/776cbfe16808_kachisuji-finder/stdout_b1160e9311e449de9e579e18298ff891.
+2026-01-27T13:31:18.4971427Z Opening named pipe /podr/container/pipe/776cbfe16808_kachisuji-finder/stdout_b1160e9311e449de9e579e18298ff891 for reading in non-blocking mode.
+2026-01-27T13:31:18.4977684Z Successfully opened named pipe: /podr/container/pipe/776cbfe16808_kachisuji-finder/stdout_b1160e9311e449de9e579e18298ff891.
+2026-01-27T13:31:18.4985592Z Successfully removed non-blocking flag from /podr/container/pipe/776cbfe16808_kachisuji-finder/stdout_b1160e9311e449de9e579e18298ff891.
+2026-01-27T13:31:18.4989761Z Creating stderr named pipe at /podr/container/pipe/776cbfe16808_kachisuji-finder/stderr_2417d10106d145a284a4e24a81ede826.
+2026-01-27T13:31:18.4993099Z Successfully created stderr named pipe at: /podr/container/pipe/776cbfe16808_kachisuji-finder/stderr_2417d10106d145a284a4e24a81ede826.
+2026-01-27T13:31:18.4997848Z Opening named pipe /podr/container/pipe/776cbfe16808_kachisuji-finder/stderr_2417d10106d145a284a4e24a81ede826 for reading in non-blocking mode.
+2026-01-27T13:31:18.5077348Z Successfully opened named pipe: /podr/container/pipe/776cbfe16808_kachisuji-finder/stderr_2417d10106d145a284a4e24a81ede826.
+2026-01-27T13:31:18.5080624Z Successfully removed non-blocking flag from /podr/container/pipe/776cbfe16808_kachisuji-finder/stderr_2417d10106d145a284a4e24a81ede826.
+2026-01-27T13:31:18.5088903Z Creating container with image: appsvc/node:20-lts_20251016.4.tuxprod from registry: 10.1.0.4:13209 and fully qualified image name: 10.1.0.4:13209/appsvc/node:20-lts_20251016.4.tuxprod
+2026-01-27T13:31:19.8743727Z Starting container: 776cbfe16808_kachisuji-finder.
+2026-01-27T13:31:20.0117062Z Starting watchers and probes.
+2026-01-27T13:31:20.0265899Z Starting metrics collection.
+2026-01-27T13:31:20.0284757Z Container is running.
+2026-01-27T13:31:20.4379521Z Container start method finished after 4336 ms.
+2026-01-27T13:32:53.0237497Z Site startup probe succeeded after 92.5143531 seconds.
+2026-01-27T13:33:08.0314987Z Site is running with deployment version: f7a95399-73ec-4b92-9471-da8a128ffda6
+2026-01-27T13:33:08.0412147Z Site started.
+2026-01-27T13:33:08.0679552Z Site is running with patch version NODE 20.19.5
+2026-01-27T13:33:28.2743895Z Container is terminating. Grace period: 5 seconds.
+2026-01-27T13:33:28.3500152Z Stop and delete container. Retry count = 0
+2026-01-27T13:33:28.3593448Z Stopping container: 556ce52a14ea_kachisuji-finder.
+2026-01-27T13:33:33.4991797Z Deleting container: 556ce52a14ea_kachisuji-finder. Retry count = 0
+2026-01-27T13:33:33.9741731Z Container spec TerminationMessagePolicy  path 
+2026-01-27T13:33:33.9768413Z Container is terminated. Total time elapsed: 5702 ms.
+2026-01-27T13:33:33.9864795Z Site: kachisuji-finder stopped.
+2026-01-27T13:48:41.8656213Z Container start method called.
+2026-01-27T13:48:41.8751303Z Establishing network.
+2026-01-27T13:48:41.8756315Z Pulling image: appsvc/node:20-lts_20251016.4.tuxprod.
+2026-01-27T13:48:42.5055425Z Container is starting.
+2026-01-27T13:48:42.5142218Z Establishing user namespace if not established already.
+2026-01-27T13:48:42.5331929Z Establishing network if not established already.
+2026-01-27T13:48:42.5425381Z Mounting volumes.
+2026-01-27T13:48:42.5521956Z Nested mountpoint 
+2026-01-27T13:48:42.7212072Z Nested mountpoint volatile/logs
+2026-01-27T13:48:42.7481964Z Nested mountpoint 
+2026-01-27T13:48:42.7596991Z Nested mountpoint 
+2026-01-27T13:48:42.7786598Z Nested mountpoint 
+2026-01-27T13:48:44.0190497Z Creating container.
+2026-01-27T13:48:44.0786942Z Creating pipes for streaming container io.
+2026-01-27T13:48:44.0876822Z Creating stdout named pipe at /podr/container/pipe/128472952ca4_kachisuji-finder/stdout_259f193796c84b73b653db9e1369b1a3.
+2026-01-27T13:48:44.1176943Z Successfully created stdout named pipe at: /podr/container/pipe/128472952ca4_kachisuji-finder/stdout_259f193796c84b73b653db9e1369b1a3.
+2026-01-27T13:48:44.1180378Z Opening named pipe /podr/container/pipe/128472952ca4_kachisuji-finder/stdout_259f193796c84b73b653db9e1369b1a3 for reading in non-blocking mode.
+2026-01-27T13:48:44.1188291Z Successfully opened named pipe: /podr/container/pipe/128472952ca4_kachisuji-finder/stdout_259f193796c84b73b653db9e1369b1a3.
+2026-01-27T13:48:44.1276148Z Successfully removed non-blocking flag from /podr/container/pipe/128472952ca4_kachisuji-finder/stdout_259f193796c84b73b653db9e1369b1a3.
+2026-01-27T13:48:44.1283772Z Creating stderr named pipe at /podr/container/pipe/128472952ca4_kachisuji-finder/stderr_ceccf26bbc5841f7aaa0e7d3ee056100.
+2026-01-27T13:48:44.1285545Z Successfully created stderr named pipe at: /podr/container/pipe/128472952ca4_kachisuji-finder/stderr_ceccf26bbc5841f7aaa0e7d3ee056100.
+2026-01-27T13:48:44.1286425Z Opening named pipe /podr/container/pipe/128472952ca4_kachisuji-finder/stderr_ceccf26bbc5841f7aaa0e7d3ee056100 for reading in non-blocking mode.
+2026-01-27T13:48:44.1287368Z Successfully opened named pipe: /podr/container/pipe/128472952ca4_kachisuji-finder/stderr_ceccf26bbc5841f7aaa0e7d3ee056100.
+2026-01-27T13:48:44.1288062Z Successfully removed non-blocking flag from /podr/container/pipe/128472952ca4_kachisuji-finder/stderr_ceccf26bbc5841f7aaa0e7d3ee056100.
+2026-01-27T13:48:44.1381560Z Creating container with image: appsvc/node:20-lts_20251016.4.tuxprod from registry: 10.1.0.4:13209 and fully qualified image name: 10.1.0.4:13209/appsvc/node:20-lts_20251016.4.tuxprod
+2026-01-27T13:48:45.0667788Z Starting container: 128472952ca4_kachisuji-finder.
+2026-01-27T13:48:45.1619792Z Starting watchers and probes.
+2026-01-27T13:48:45.1811992Z Starting metrics collection.
+2026-01-27T13:48:45.1821013Z Container is running.
+2026-01-27T13:48:45.6221288Z Container start method finished after 3706 ms.
+2026-01-27T13:50:25.8672078Z Site startup probe succeeded after 100.14892 seconds.
+2026-01-27T13:50:35.4376074Z Site is running with deployment version: 1a129001-7c4a-4a36-ab21-3057048de7b4
+2026-01-27T13:50:35.4460796Z Site started.
+2026-01-27T13:50:35.4578719Z Site is running with patch version NODE 20.19.5
+2026-01-27T13:50:56.5501114Z Container is terminating. Grace period: 5 seconds.
+2026-01-27T13:50:56.6069828Z Stop and delete container. Retry count = 0
+2026-01-27T13:50:56.6075066Z Stopping container: 776cbfe16808_kachisuji-finder.
+2026-01-27T13:51:02.7918289Z Deleting container: 776cbfe16808_kachisuji-finder. Retry count = 0
+2026-01-27T13:51:03.3541206Z Container spec TerminationMessagePolicy  path 
+2026-01-27T13:51:03.3559437Z Container is terminated. Total time elapsed: 6805 ms.
+2026-01-27T13:51:03.3758808Z Site: kachisuji-finder stopped.

@@ -11,6 +11,7 @@ export function SummaryTab() {
     summaryResult,
     summaryError,
     startSummary,
+    cancelSummary,
     clearSummaryResult,
   } = useApp();
 
@@ -271,6 +272,15 @@ export function SummaryTab() {
             >
               {isRunning ? "生成中..." : summaryResult ? "再生成" : "まとめを生成"}
             </Button>
+            {isRunning && (
+              <Button
+                onClick={cancelSummary}
+                variant="outline"
+                className="bg-slate-700 hover:bg-slate-600 text-slate-300 border-slate-600"
+              >
+                キャンセル
+              </Button>
+            )}
             {summaryResult && (
               <Button
                 onClick={handleExportPDF}

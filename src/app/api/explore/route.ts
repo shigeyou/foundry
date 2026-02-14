@@ -5,7 +5,7 @@ import { generateRAGContext } from "@/lib/rag";
 import { getCurrentUser } from "@/lib/auth";
 
 // Background task runner (using Promise to not block the response)
-async function runExplorationInBackground(explorationId: string, question: string, context: string, constraintIds: string[]) {
+async function runExplorationInBackground(explorationId: string, question: string, context: string, constraintIds: string[], finderId?: string) {
   try {
     // Fetch data in parallel
     const [coreServices, coreAssets, defaultConstraints, ragContext] =
@@ -37,14 +37,15 @@ async function runExplorationInBackground(explorationId: string, question: strin
       .map((c) => `- ${c.name}${c.description ? `: ${c.description}` : ""}`)
       .join("\n");
 
-    // Generate winning strategies
+    // Generate strategies (finderId に応じたプロンプトを使用)
     const result = await generateWinningStrategies(
       question,
       context || "",
       servicesText,
       assetsText,
       constraintsText,
-      ragContext
+      ragContext,
+      finderId
     );
 
     // Update exploration with result
@@ -74,7 +75,7 @@ async function runExplorationInBackground(explorationId: string, question: strin
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { question, context, constraintIds, background } = body;
+    const { question, context, constraintIds, background, finderId } = body;
 
     if (!question || question.trim() === "") {
       return NextResponse.json(
@@ -90,6 +91,7 @@ export async function POST(request: NextRequest) {
     if (background) {
       const exploration = await prisma.exploration.create({
         data: {
+          id: `exp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
           question,
           context: context || null,
           constraints: JSON.stringify(constraintIds || []),
@@ -97,11 +99,12 @@ export async function POST(request: NextRequest) {
           result: null,
           userId: user.id,
           userName: user.name,
+          finderId: finderId || null,
         },
       });
 
       // Start background processing (don't await)
-      runExplorationInBackground(exploration.id, question, context || "", constraintIds || []);
+      runExplorationInBackground(exploration.id, question, context || "", constraintIds || [], finderId);
 
       return NextResponse.json({
         id: exploration.id,
@@ -143,11 +146,13 @@ export async function POST(request: NextRequest) {
       servicesText,
       assetsText,
       constraintsText,
-      ragContext
+      ragContext,
+      finderId
     );
 
     await prisma.exploration.create({
       data: {
+        id: `exp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
         question,
         context: context || null,
         constraints: JSON.stringify(constraintIds || []),
@@ -155,6 +160,7 @@ export async function POST(request: NextRequest) {
         result: JSON.stringify(result),
         userId: user.id,
         userName: user.name,
+        finderId: finderId || null,
       },
     });
 
@@ -168,11 +174,31 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET: Check exploration status
+// GET: Check exploration status or find processing explorations
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
+    const status = searchParams.get("status");
+
+    // processing中の探索を返す（ページ再訪問時の復帰用）
+    if (status === "processing") {
+      const processing = await prisma.exploration.findFirst({
+        where: { status: "processing" },
+        orderBy: { createdAt: "desc" },
+      });
+
+      if (processing) {
+        return NextResponse.json({
+          id: processing.id,
+          status: processing.status,
+          question: processing.question,
+          result: null,
+          createdAt: processing.createdAt,
+        });
+      }
+      return NextResponse.json({ id: null, status: "none" });
+    }
 
     if (!id) {
       return NextResponse.json(

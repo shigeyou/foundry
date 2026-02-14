@@ -223,6 +223,55 @@ const presetQuestions = [
   { id: "new-experience", label: "新しい体験", question: "今年中にすべき新しい体験は何か？" },
   { id: "cultural-immersion", label: "文化体験", question: "異文化に触れる機会は十分か？どこの文化を学ぶべきか？" },
   { id: "milestone-celebrate", label: "節目の祝い", question: "俺が祝うべき節目は何か？どう祝うべきか？" },
+  // === 逆説・挑発：思考の枠を壊す ===
+  { id: "devil-advocate", label: "悪魔の代弁者", question: "俺が今「正しい」と信じていることの中で、実は間違っているものは何か？反論してくれ。" },
+  { id: "fire-yourself", label: "俺をクビにしろ", question: "もし俺が明日CDIOをクビになったら、後任は俺のやってきたことの何を真っ先に変えるか？" },
+  { id: "enemy-view", label: "敵の目で見ろ", question: "俺を潰したい競合やライバルがいるとしたら、俺の最大の弱点をどう突くか？" },
+  { id: "obituary", label: "俺の訃報記事", question: "明日死んだら、新聞の訃報に何と書かれるか？それは俺が望む内容か？足りないものは？" },
+  { id: "anti-pattern", label: "俺の悪癖パターン", question: "俺が繰り返し陥る失敗パターンは何か？同じ穴に落ち続けていないか？具体的に。" },
+  { id: "impostor", label: "インポスター告白", question: "俺が内心「バレたらまずい」と思っている能力の不足や虚勢は何か？正直に分析してくれ。" },
+  { id: "uncomfortable-truth", label: "不都合な真実", question: "俺について、周囲の人が思っているが面と向かって言えないことは何か？" },
+  { id: "sunk-cost", label: "サンクコスト監査", question: "俺が「ここまでやったから」という理由だけで続けているものは何か？今すぐ損切りすべきは？" },
+  // === 思考実験・フレームワーク ===
+  { id: "inversion", label: "逆転思考", question: "俺が最悪のCDIOになるには何をすればいい？その逆をやっているか？" },
+  { id: "10x-thinking", label: "10倍思考", question: "今の成果を10倍にするには？10%改善ではなく、根本的にやり方を変えるとしたら？" },
+  { id: "zero-base", label: "ゼロから再構築", question: "もし今日入社したばかりで、CDIOのポストに就いたとしたら、最初の90日で何をする？" },
+  { id: "time-travel", label: "10年前の俺へ", question: "10年前の自分に1つだけ忠告できるとしたら何と言う？そして10年後の俺は今の俺に何と言うか？" },
+  { id: "last-day", label: "最後の出社日", question: "今日が会社での最後の日だとしたら、俺は何を後悔し、何を誇りに思うか？" },
+  { id: "alien-perspective", label: "宇宙人の目", question: "地球に来た宇宙人が俺の日常を1週間観察したら、何を『非合理的だ』と指摘するか？" },
+  { id: "younger-self", label: "25歳の俺が見たら", question: "25歳の小山成生が今の俺を見たら、何に怒り、何に失望し、何に驚くか？" },
+  { id: "ceo-for-a-day", label: "社長を1日やるなら", question: "もし1日だけ社長の権限をもらえたら、会社に対して何をする？なぜそれを今提案していないのか？" },
+  // === 深層心理・本音 ===
+  { id: "midnight-thought", label: "深夜3時の不安", question: "深夜3時に目が覚めた時、俺の頭を支配する不安は何か？それは本当に対処不能なのか？" },
+  { id: "secret-desire", label: "言えない野望", question: "俺が人に言えない本当の野望は何か？なぜ言えないのか？実現可能か？" },
+  { id: "jealousy-signal", label: "嫉妬が教えること", question: "俺が最近、嫉妬を感じた相手は誰か？その嫉妬は俺の本当の欲求の何を教えてくれるか？" },
+  { id: "anger-decode", label: "怒りの翻訳", question: "最近、俺が強い怒りを感じた場面は？その怒りの裏にある本当の感情は何か？" },
+  { id: "permission-slip", label: "自分への許可証", question: "俺が自分に許可を出せていないことは何か？『これをやってもいい』と言ってやるべきことは？" },
+  { id: "guilty-pleasure", label: "後ろめたい喜び", question: "俺が密かに楽しんでいるが、恥ずかしくて人に言えないことは何か？それは本当に恥ずべきことか？" },
+  { id: "pretending", label: "演技をやめたら", question: "俺が仕事で演技している部分は何か？その仮面を外したら何が起きるか？" },
+  // === 関係性の深堀り ===
+  { id: "toxic-relationship", label: "毒になる関係", question: "俺のエネルギーを奪っている人間関係は何か？距離を置くべき相手はいるか？" },
+  { id: "unsaid-words", label: "言えなかった言葉", question: "俺が誰かに言うべきだったのに言えなかった言葉は何か？今からでも伝えるべきか？" },
+  { id: "apology-owed", label: "借りている謝罪", question: "俺が誰かに謝るべきなのに、まだ謝っていないことは何か？" },
+  { id: "who-needs-me", label: "俺を必要としてる人", question: "今、本当に俺を必要としている人は誰か？俺はその人に十分に応えているか？" },
+  // === 逆張り戦略 ===
+  { id: "do-nothing", label: "何もしない選択", question: "もし俺が向こう3ヶ月、新しいことを一切始めず今あるものだけに集中したら何が起きるか？" },
+  { id: "embrace-chaos", label: "混乱を抱きしめろ", question: "俺が必死にコントロールしようとしているが、実は手放した方がうまくいくものは何か？" },
+  { id: "be-wrong", label: "間違える勇気", question: "俺が『間違えたくない』と思うあまり動けていないことは何か？間違えた場合の最悪の結果は？" },
+  { id: "slow-down", label: "遅くしてみろ", question: "俺がスピードを求めすぎて壊しているものは何か？あえてゆっくりやるべきことは？" },
+  { id: "quit-something", label: "辞める美学", question: "今、勇気を持って辞めるべきことは何か？続けることが美徳とは限らない。何を手放す？" },
+  { id: "boring-solution", label: "つまらない正解", question: "俺が派手な解決策ばかり追い求めて見逃している、地味だが確実な打ち手は何か？" },
+  // === 身体知・直感 ===
+  { id: "gut-feeling", label: "直感は何と言ってる", question: "頭では正しいとわかっているが、腹の底で違和感を感じていることは何か？その直感を信じるべきか？" },
+  { id: "body-signal", label: "身体が出すサイン", question: "最近、身体が出している警告サインは何か？肩の凝り、胃の重さ、不眠…それは何を意味するか？" },
+  { id: "flow-state", label: "ゾーンに入る条件", question: "俺が最後にフロー状態を経験したのはいつか？その条件を意図的に再現するには？" },
+  // === 死角を突く問い ===
+  { id: "what-if-ai-replaces", label: "AIに俺が要らない日", question: "5年後、AIがCDIOの仕事の80%をこなせるようになったら、俺の存在価値は何に変わるか？" },
+  { id: "company-without-me", label: "俺なしの会社", question: "俺が明日いなくなっても会社は回るか？回るなら俺の本当の価値はどこにある？回らないならそれは組織の欠陥では？" },
+  { id: "success-trap", label: "成功の罠", question: "過去の成功体験が、今の俺の足かせになっていることは何か？成功パターンへの執着が新しい可能性を殺していないか？" },
+  { id: "privilege-check", label: "特権の自覚", question: "俺が当たり前だと思っているが、実は恵まれた立場ゆえのものは何か？その自覚が足りないせいで見えないものは？" },
+  { id: "decay-check", label: "腐り始めの兆候", question: "俺の思考やスキルで、すでに陳腐化が始まっているものは何か？まだ気づいていない劣化は？" },
+  { id: "paradox", label: "矛盾を直視しろ", question: "俺が同時に信じている矛盾した信念は何か？その矛盾を解消する必要があるか、共存させるべきか？" },
 ];
 
 export default function OreNaviPage() {
@@ -242,6 +291,7 @@ export default function OreNaviPage() {
   const [autoPlayQueue, setAutoPlayQueue] = useState(true); // デフォルトでON
   const [playingQueueIndex, setPlayingQueueIndex] = useState<number>(-1);
   const lastPlayedIndexRef = useRef<number>(-1);
+  const currentPlayingIdRef = useRef<string | null>(null); // 現在再生中のアイテムID
 
   // プログレスバー関連
   const [progress, setProgress] = useState(0);
@@ -614,6 +664,7 @@ export default function OreNaviPage() {
     // 新しいキューセッション開始時にリセット
     if (questionQueue.length === 0) {
       lastPlayedIndexRef.current = -1;
+      currentPlayingIdRef.current = null;
       setPlayingQueueIndex(-1);
     }
 
@@ -652,11 +703,18 @@ export default function OreNaviPage() {
     }
   };
 
-  // キューアイテムの結果を再生
+  // キュー再生を参照で保持（相互参照のため）
+  const questionQueueRef = useRef<QueueItem[]>([]);
+  questionQueueRef.current = questionQueue;
+  const autoPlayQueueRef = useRef(true);
+  autoPlayQueueRef.current = autoPlayQueue;
+
+  // キューアイテムの結果を再生し、完了後に次へ自動遷移
   const playQueueItemResult = useCallback(async (queueItem: QueueItem, index: number) => {
     const audioManager = getOreNaviAudio();
     if (!queueItem.result || !audioManager) return;
 
+    currentPlayingIdRef.current = queueItem.id;
     setPlayingQueueIndex(index);
     setResult(queueItem.result);
     setQuestion(queueItem.question);
@@ -669,46 +727,48 @@ export default function OreNaviPage() {
       }))
       .filter((s) => s.text.trim());
 
+    console.log(`[AutoPlay] Playing item ${index}: "${queueItem.question.slice(0, 30)}..." (${sectionsData.length} sections)`);
+
     await audioManager.generateAndPlay(sectionsData);
-  }, []);
 
-  // 次の完了済みキューアイテムを再生
-  const playNextQueueItem = useCallback(() => {
-    if (!autoPlayQueue) return;
+    // 再生完了 → 自動再生が有効なら次のアイテムへ
+    if (!autoPlayQueueRef.current) {
+      console.log("[AutoPlay] Auto-play disabled, stopping");
+      setPlayingQueueIndex(-1);
+      currentPlayingIdRef.current = null;
+      return;
+    }
 
+    // 最新のキュー状態から次の完了済みアイテムを探す
+    const currentQueue = questionQueueRef.current;
+    const completedItems = currentQueue.filter(item => item.status === "completed");
     const nextIndex = lastPlayedIndexRef.current + 1;
-    const completedItems = questionQueue.filter(item => item.status === "completed");
+
+    console.log(`[AutoPlay] Item done. lastPlayed=${lastPlayedIndexRef.current}, nextIndex=${nextIndex}, completedCount=${completedItems.length}`);
 
     if (nextIndex < completedItems.length) {
       const nextItem = completedItems[nextIndex];
       lastPlayedIndexRef.current = nextIndex;
-      playQueueItemResult(nextItem, questionQueue.indexOf(nextItem));
+      // 少し間を空けてから次へ
+      await new Promise(resolve => setTimeout(resolve, 500));
+      playQueueItemResult(nextItem, currentQueue.indexOf(nextItem));
     } else {
       // 全部再生完了
+      console.log("[AutoPlay] All items played");
       setPlayingQueueIndex(-1);
+      currentPlayingIdRef.current = null;
     }
-  }, [autoPlayQueue, questionQueue, playQueueItemResult]);
+  }, []);
 
-  // 再生終了時に次のアイテムを再生
-  useEffect(() => {
-    if (autoPlayQueue && playingQueueIndex >= 0 && !isPlaying && !isPaused) {
-      // 少し待ってから次へ（再生終了を確実に検知）
-      const timer = setTimeout(() => {
-        playNextQueueItem();
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [isPlaying, isPaused, autoPlayQueue, playingQueueIndex, playNextQueueItem]);
-
-  // 新しいアイテムが完了したら自動再生開始
+  // 新しいアイテムが完了したら自動再生開始（最初の1件目のみ）
   useEffect(() => {
     if (!autoPlayQueue) return;
 
     const completedItems = questionQueue.filter(item => item.status === "completed");
-    const completedCount = completedItems.length;
 
-    // 新しく完了したアイテムがあり、まだ再生していない場合
-    if (completedCount > 0 && lastPlayedIndexRef.current < 0 && !isPlaying) {
+    // 最初の完了アイテムが出たら再生開始
+    if (completedItems.length > 0 && lastPlayedIndexRef.current < 0 && !isPlaying) {
+      console.log("[AutoPlay Effect] First completed item detected, starting playback");
       lastPlayedIndexRef.current = 0;
       const firstCompleted = completedItems[0];
       playQueueItemResult(firstCompleted, questionQueue.indexOf(firstCompleted));
@@ -1012,6 +1072,7 @@ export default function OreNaviPage() {
                           onClick={() => {
                             setQuestionQueue(prev => prev.filter(item => item.status === "pending" || item.status === "processing"));
                             lastPlayedIndexRef.current = -1;
+                            currentPlayingIdRef.current = null;
                             setPlayingQueueIndex(-1);
                           }}
                           className="text-xs text-slate-500 hover:text-slate-300 transition-colors"

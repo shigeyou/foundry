@@ -1,0 +1,14 @@
+<step title="Incoming Request" date="2026-01-27T03:40:52.157" instance="5b7811" url="/api/publish?type=zip&amp;async=True&amp;restart=True&amp;clean=True" method="POST" type="request" pid="833,1,47" Accept="*/*" Host="kachisuji-finder.scm.azurewebsites.net" User-Agent="AZURECLI/2.82.0 (DEB)" Accept-Encoding="gzip, deflate" Authorization="Bea..." Cache-Control="no-cache" Content-Type="application/octet-stream" Cookie="ARRAffinity=5b7811789b1e33b7cc756bce49c73cf44172046100af9c564b5a3ebcd20cab6c; ARRAffinitySameSite=5b7811789b1e33b7cc756bce49c73cf44172046100af9c564b5a3ebcd20cab6c" Content-Length="46828927" x-ms-client-request-id="f5018a50-fb31-11f0-a095-7c1e52f3c535" x-ms-artifact-checksum="0eae31e7aa49fdbf82ed3a31610a6cc5301bae2f71d3c2049454ed2a2de57058" X-ARR-LOG-ID="f5018a50-fb31-11f0-a095-7c1e52f3c535" CLIENT-IP="20.109.36.224:58369" X-SITE-DEPLOYMENT-ID="kachisuji-finder" WAS-DEFAULT-HOSTNAME="kachisuji-finder.scm.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/api/publish?type=zip&amp;async=True&amp;restart=True&amp;clean=True" X-Client-IP="20.109.36.224" X-Client-Port="58369" >
+  <step title="OneDeploy" date="2026-01-27T03:40:52.175" >
+    <step title="Starting PushDeployAsync" date="2026-01-27T03:40:52.184" /><!-- duration: 2ms -->
+    <step title="Removing node_modules symlink" date="2026-01-27T03:40:52.195" >
+      <step title="Writing artifact to /tmp/zipdeploy/126030ab-31ba-4dca-83dd-54e1eb020741.zip" date="2026-01-27T03:40:52.308" >
+        <step title="Writing multipart request body to /tmp/zipdeploy/126030ab-31ba-4dca-83dd-54e1eb020741.zip" date="2026-01-27T03:40:52.314" /><!-- duration: 3ms -->
+      </step><!-- duration: 3016ms -->
+      <step title="Start deployment in the background" date="2026-01-27T03:40:55.335" >
+        <step title="Acquiring Deployment Lock" date="2026-01-27T03:40:55.420" /><!-- duration: 2ms -->
+        <step title="Acquired Deployment Lock" date="2026-01-27T03:40:55.444" /><!-- duration: 3ms -->
+      </step><!-- duration: 191ms -->
+    </step><!-- duration: 3335ms -->
+    <step title="Outgoing response" date="2026-01-27T03:40:55.535" type="response" statusCode="202" statusText="Accepted" /><!-- duration: 2ms -->
+  </step><!-- duration: 3363ms -->

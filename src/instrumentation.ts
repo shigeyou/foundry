@@ -260,8 +260,90 @@ export async function register() {
       } else {
         console.log(`[Auto-Seed] 探索データが揃っています (Exploration: ${explorationCount}, TopStrategy: ${topStrategyCount}, StrategyDecision: ${strategyDecisionCount})。シードをスキップします`);
       }
+
+      // DrafterTemplateのシード
+      const drafterTemplateCount = await prisma.drafterTemplate.count({
+        where: { drafterId: "minutes" },
+      });
+
+      if (drafterTemplateCount === 0) {
+        console.log("[Auto-Seed] 議事録テンプレートが0件です。シードを実行します...");
+
+        await prisma.drafterTemplate.create({
+          data: {
+            id: crypto.randomUUID(),
+            drafterId: "minutes",
+            name: "サンプル議事録テンプレート_001.md",
+            isDefault: true,
+            content: `# 議事録
+
+## 会議情報
+- **日時**: YYYY年MM月DD日（曜日） HH:MM〜HH:MM
+- **場所**:
+- **出席者**:
+
+## 議題
+1.
+2.
+3.
+
+## 議事内容
+
+### 1. 議題1
+- 説明:
+- 議論:
+- 決定事項:
+
+### 2. 議題2
+- 説明:
+- 議論:
+- 決定事項:
+
+## 決定事項まとめ
+| No | 決定事項 | 担当者 | 期限 |
+|----|----------|--------|------|
+| 1 | | | |
+| 2 | | | |
+
+## 今後のアクション
+| No | アクション | 担当者 | 期限 | 状況 |
+|----|------------|--------|------|------|
+| 1 | | | | 未着手 |
+| 2 | | | | 未着手 |
+| 3 | | | | 未着手 |
+
+## 次回予定
+- 日時:
+- 議題:
+
+## 参考資料
+-
+
+## 備考
+
+`,
+          },
+        });
+
+        console.log("[Auto-Seed] 議事録サンプルテンプレートをシードしました");
+      } else {
+        console.log(`[Auto-Seed] 議事録テンプレートが${drafterTemplateCount}件存在します。シードをスキップします`);
+      }
+
     } catch (error) {
       console.error("[Auto-Seed] エラー:", error);
+    } finally {
+      // ingestディレクトリからの自動インジェスト
+      // シードの成否に関わらず必ず起動する
+      void import("@/lib/auto-ingest").then(({ syncWithManifest, startIngestWatcher }) => {
+        syncWithManifest().catch((err) => console.error("[Auto-Ingest] 初回同期エラー:", err));
+        startIngestWatcher();
+      });
+
+      // 中断されたメタファインダーバッチを再開
+      void import("@/app/api/meta-finder/batch/route").then(({ resumeRunningBatches }) => {
+        resumeRunningBatches().catch((err) => console.error("[MetaFinder] バッチ再開エラー:", err));
+      });
     }
   }
 }

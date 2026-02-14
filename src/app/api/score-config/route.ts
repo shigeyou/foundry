@@ -1,31 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUserId } from "@/lib/auth";
-
-// デフォルトの重み設定
-const defaultWeights = {
-  revenuePotential: 30,
-  timeToRevenue: 20,
-  competitiveAdvantage: 20,
-  executionFeasibility: 15,
-  hqContribution: 10,
-  mergerSynergy: 5,
-};
+import { getDefaultWeights } from "@/config/finder-config";
 
 // GET: ユーザーのスコア設定を取得
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const userId = await getCurrentUserId();
+    const finderId = request.nextUrl.searchParams.get("finderId") || "winning-strategy";
 
     const config = await prisma.userScoreConfig.findUnique({
-      where: { userId },
+      where: { userId_finderId: { userId, finderId } },
     });
 
     if (!config) {
-      // 設定がない場合はデフォルト値を返す
       return NextResponse.json({
         config: null,
-        weights: defaultWeights,
+        weights: getDefaultWeights(finderId),
         isDefault: true,
       });
     }
@@ -34,16 +25,10 @@ export async function GET() {
       config: {
         id: config.id,
         userId: config.userId,
+        finderId: config.finderId,
         updatedAt: config.updatedAt,
       },
-      weights: {
-        revenuePotential: config.revenuePotential,
-        timeToRevenue: config.timeToRevenue,
-        competitiveAdvantage: config.competitiveAdvantage,
-        executionFeasibility: config.executionFeasibility,
-        hqContribution: config.hqContribution,
-        mergerSynergy: config.mergerSynergy,
-      },
+      weights: JSON.parse(config.weightsJson),
       isDefault: false,
     });
   } catch (error) {
@@ -61,54 +46,25 @@ export async function POST(request: NextRequest) {
     const userId = await getCurrentUserId();
     const body = await request.json();
 
-    const {
-      revenuePotential,
-      timeToRevenue,
-      competitiveAdvantage,
-      executionFeasibility,
-      hqContribution,
-      mergerSynergy,
-    } = body;
+    const { finderId: bodyFinderId, ...weights } = body;
+    const finderId = bodyFinderId || "winning-strategy";
 
-    // バリデーション
-    const weights = [
-      revenuePotential,
-      timeToRevenue,
-      competitiveAdvantage,
-      executionFeasibility,
-      hqContribution,
-      mergerSynergy,
-    ];
-
-    for (const w of weights) {
-      if (typeof w !== "number" || w < 0 || w > 100) {
+    // バリデーション: 全ての値が0〜100の数値であること
+    for (const [key, value] of Object.entries(weights)) {
+      if (typeof value !== "number" || value < 0 || value > 100) {
         return NextResponse.json(
-          { error: "重みは0〜100の数値で指定してください" },
+          { error: `重みは0〜100の数値で指定してください (${key}: ${value})` },
           { status: 400 }
         );
       }
     }
 
-    // upsert: 既存なら更新、なければ作成
+    const weightsJson = JSON.stringify(weights);
+
     const config = await prisma.userScoreConfig.upsert({
-      where: { userId },
-      update: {
-        revenuePotential,
-        timeToRevenue,
-        competitiveAdvantage,
-        executionFeasibility,
-        hqContribution,
-        mergerSynergy,
-      },
-      create: {
-        userId,
-        revenuePotential,
-        timeToRevenue,
-        competitiveAdvantage,
-        executionFeasibility,
-        hqContribution,
-        mergerSynergy,
-      },
+      where: { userId_finderId: { userId, finderId } },
+      update: { weightsJson },
+      create: { userId, finderId, weightsJson },
     });
 
     return NextResponse.json({
@@ -116,16 +72,10 @@ export async function POST(request: NextRequest) {
       config: {
         id: config.id,
         userId: config.userId,
+        finderId: config.finderId,
         updatedAt: config.updatedAt,
       },
-      weights: {
-        revenuePotential: config.revenuePotential,
-        timeToRevenue: config.timeToRevenue,
-        competitiveAdvantage: config.competitiveAdvantage,
-        executionFeasibility: config.executionFeasibility,
-        hqContribution: config.hqContribution,
-        mergerSynergy: config.mergerSynergy,
-      },
+      weights,
     });
   } catch (error) {
     console.error("Score config POST error:", error);
@@ -137,12 +87,13 @@ export async function POST(request: NextRequest) {
 }
 
 // DELETE: ユーザーのスコア設定を削除（デフォルトに戻す）
-export async function DELETE() {
+export async function DELETE(request: NextRequest) {
   try {
     const userId = await getCurrentUserId();
+    const finderId = request.nextUrl.searchParams.get("finderId") || "winning-strategy";
 
     await prisma.userScoreConfig.deleteMany({
-      where: { userId },
+      where: { userId, finderId },
     });
 
     return NextResponse.json({

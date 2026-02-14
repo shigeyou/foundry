@@ -1,5 +1,63 @@
 import { NextRequest, NextResponse } from "next/server";
-import * as sdk from "microsoft-cognitiveservices-speech-sdk";
+
+// テキストを文単位でチャンク分割（最大800文字程度）
+function splitTextIntoChunks(text: string, maxChunkSize = 800): string[] {
+  const chunks: string[] = [];
+
+  // 文末で分割（。！？\n）
+  const sentences = text.split(/(?<=[。！？\n])/);
+  let currentChunk = "";
+
+  for (const sentence of sentences) {
+    if (currentChunk.length + sentence.length > maxChunkSize && currentChunk.length > 0) {
+      chunks.push(currentChunk.trim());
+      currentChunk = sentence;
+    } else {
+      currentChunk += sentence;
+    }
+  }
+
+  if (currentChunk.trim()) {
+    chunks.push(currentChunk.trim());
+  }
+
+  return chunks;
+}
+
+// 単一チャンクの音声を生成
+async function synthesizeChunk(
+  text: string,
+  speechKey: string,
+  speechRegion: string,
+  speedRate: string
+): Promise<ArrayBuffer> {
+  const ssml = `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="ja-JP">
+  <voice name="ja-JP-NanamiNeural">
+    <prosody rate="${speedRate}" pitch="-0.3st">
+      ${escapeXml(text)}
+    </prosody>
+  </voice>
+</speak>`;
+
+  const endpoint = `https://${speechRegion}.tts.speech.microsoft.com/cognitiveservices/v1`;
+
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      "Ocp-Apim-Subscription-Key": speechKey,
+      "Content-Type": "application/ssml+xml",
+      "X-Microsoft-OutputFormat": "audio-16khz-32kbitrate-mono-mp3",
+    },
+    body: ssml,
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Azure Speech error: ${response.status} ${errorText}`);
+  }
+
+  return response.arrayBuffer();
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,75 +68,51 @@ export async function POST(request: NextRequest) {
     }
 
     const speechKey = process.env.AZURE_SPEECH_KEY;
-    const speechRegion = process.env.AZURE_SPEECH_REGION;
+    const speechRegion = process.env.AZURE_SPEECH_REGION || "japaneast";
 
-    if (!speechKey || !speechRegion) {
+    if (!speechKey) {
+      console.error("AZURE_SPEECH_KEY is not set");
       return NextResponse.json(
         { error: "Azure Speech設定がありません" },
         { status: 500 }
       );
     }
 
-    // 速度設定（50%-200% → -50% to +100%）
-    const speedRate = rate ? `${(rate - 100)}%` : "0%";
+    // 速度設定（50-200% → -50% to +100%）
+    const numericRate = rate ? rate - 100 : 0;
+    const speedRate = `${numericRate >= 0 ? '+' : ''}${numericRate}%`;
 
-    // SSMLを構築
-    const ssml = `
-      <speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="ja-JP">
-        <voice name="ja-JP-NanamiNeural">
-          <prosody rate="${speedRate}">
-            ${escapeXml(text)}
-          </prosody>
-        </voice>
-      </speak>
-    `;
+    // テキストをチャンクに分割
+    const chunks = splitTextIntoChunks(text);
+    console.log(`[Speech API] Generating speech: ${text.length} chars, ${chunks.length} chunks, rate: ${speedRate}`);
 
-    const speechConfig = sdk.SpeechConfig.fromSubscription(speechKey, speechRegion);
-    speechConfig.speechSynthesisOutputFormat = sdk.SpeechSynthesisOutputFormat.Audio16Khz32KBitRateMonoMp3;
+    // 各チャンクの音声を生成
+    const audioBuffers: ArrayBuffer[] = [];
+    for (let i = 0; i < chunks.length; i++) {
+      console.log(`[Speech API] Processing chunk ${i + 1}/${chunks.length}: ${chunks[i].length} chars`);
+      const buffer = await synthesizeChunk(chunks[i], speechKey, speechRegion, speedRate);
+      audioBuffers.push(buffer);
+    }
 
-    // メモリに音声を出力
-    const synthesizer = new sdk.SpeechSynthesizer(speechConfig, undefined);
+    // バッファを結合
+    const totalLength = audioBuffers.reduce((sum, buf) => sum + buf.byteLength, 0);
+    const combinedBuffer = new Uint8Array(totalLength);
+    let offset = 0;
+    for (const buffer of audioBuffers) {
+      combinedBuffer.set(new Uint8Array(buffer), offset);
+      offset += buffer.byteLength;
+    }
 
-    return new Promise<NextResponse>((resolve) => {
-      synthesizer.speakSsmlAsync(
-        ssml,
-        (result) => {
-          if (result.reason === sdk.ResultReason.SynthesizingAudioCompleted) {
-            const audioData = result.audioData;
-            synthesizer.close();
-            resolve(
-              new NextResponse(audioData, {
-                headers: {
-                  "Content-Type": "audio/mpeg",
-                  "Content-Length": audioData.byteLength.toString(),
-                },
-              })
-            );
-          } else {
-            synthesizer.close();
-            console.error("Speech synthesis failed:", result.errorDetails);
-            resolve(
-              NextResponse.json(
-                { error: "音声合成に失敗しました" },
-                { status: 500 }
-              )
-            );
-          }
-        },
-        (error) => {
-          synthesizer.close();
-          console.error("Speech synthesis error:", error);
-          resolve(
-            NextResponse.json(
-              { error: "音声合成エラー" },
-              { status: 500 }
-            )
-          );
-        }
-      );
+    console.log(`[Speech API] Success: ${combinedBuffer.byteLength} bytes (${chunks.length} chunks combined)`);
+
+    return new NextResponse(combinedBuffer, {
+      headers: {
+        "Content-Type": "audio/mpeg",
+        "Content-Length": combinedBuffer.byteLength.toString(),
+      },
     });
   } catch (error) {
-    console.error("Speech API error:", error);
+    console.error("[Speech API] Error:", error);
     return NextResponse.json(
       { error: "音声APIエラー" },
       { status: 500 }

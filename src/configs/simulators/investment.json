@@ -1,0 +1,75 @@
+{
+  "id": "investment",
+  "name": "投資シミュレーター",
+  "description": "新規事業やプロジェクト投資の3シナリオ（楽観/基準/悲観）を比較分析するツール",
+  "systemPrompt": "あなたは「投資シミュレーター」のAIアシスタントです。\n\n## あなたの役割\n新規事業やプロジェクトへの投資を検討する際に、複数のシナリオを比較分析し、意思決定を支援します。\n\n## 重要な原則\n1. 仮定を明確にし、根拠を示す\n2. リスクと機会をバランスよく評価する\n3. 定量的な指標と定性的な要因の両方を考慮する\n4. 現実的な推計を心がける\n\n## 出力ガイドライン\n- 各シナリオの発生確率を意識して説明\n- 重要な判断ポイントを明確化\n- アクションにつながる推奨事項を提示",
+  "assumptions": [
+    {
+      "id": "investmentAmount",
+      "name": "投資額（万円）",
+      "type": "number",
+      "defaultValue": 5000,
+      "range": { "min": 100, "max": 100000 }
+    },
+    {
+      "id": "investmentPeriod",
+      "name": "投資期間（年）",
+      "type": "number",
+      "defaultValue": 3,
+      "range": { "min": 1, "max": 10 }
+    },
+    {
+      "id": "marketGrowth",
+      "name": "市場成長率（％）",
+      "type": "percentage",
+      "defaultValue": 5,
+      "range": { "min": -20, "max": 50 }
+    },
+    {
+      "id": "competitorIntensity",
+      "name": "競合の激しさ",
+      "type": "select",
+      "defaultValue": "中程度",
+      "options": ["緩い", "中程度", "激しい", "非常に激しい"]
+    },
+    {
+      "id": "hasExistingAssets",
+      "name": "既存資産の活用可否",
+      "type": "boolean",
+      "defaultValue": true
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "optimistic",
+      "name": "楽観シナリオ",
+      "description": "市場環境が良好で、計画通りまたはそれ以上の成果が出るケース",
+      "modifiers": {
+        "revenueMultiplier": 1.3,
+        "costMultiplier": 0.9,
+        "riskFactor": 0.7
+      }
+    },
+    {
+      "id": "baseline",
+      "name": "基準シナリオ",
+      "description": "現時点で最も発生確率が高いと考えられるケース",
+      "modifiers": {
+        "revenueMultiplier": 1.0,
+        "costMultiplier": 1.0,
+        "riskFactor": 1.0
+      }
+    },
+    {
+      "id": "pessimistic",
+      "name": "悲観シナリオ",
+      "description": "市場環境が悪化し、計画を下回るケース",
+      "modifiers": {
+        "revenueMultiplier": 0.6,
+        "costMultiplier": 1.2,
+        "riskFactor": 1.5
+      }
+    }
+  ],
+  "outputFormat": "comparison"
+}

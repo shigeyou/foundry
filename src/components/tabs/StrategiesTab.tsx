@@ -68,12 +68,14 @@ export function StrategiesTab() {
     evolveResult,
     evolveError,
     startEvolve,
+    cancelEvolve,
     clearEvolveResult,
     autoExploreStatus,
     autoExploreProgress,
     autoExploreResult,
     autoExploreError,
     startAutoExplore,
+    cancelAutoExplore,
     clearAutoExploreResult,
   } = useApp();
   const [activeSubTab, setActiveSubTab] = useState<SubTabType>("evolution");
@@ -297,6 +299,15 @@ export function StrategiesTab() {
                   >
                     {evolveStatus === "running" ? "生成中..." : "進化生成を実行"}
                   </Button>
+                  {evolveStatus === "running" && (
+                    <Button
+                      onClick={cancelEvolve}
+                      variant="outline"
+                      className="bg-slate-700 hover:bg-slate-600 text-slate-300 border-slate-600"
+                    >
+                      キャンセル
+                    </Button>
+                  )}
 
                   {evolveInfo && (
                     <span className="text-xs text-slate-500 dark:text-slate-400">
@@ -350,19 +361,29 @@ export function StrategiesTab() {
                 )}
 
                 {!evolveInfo?.canEvolve && evolveStatus !== "running" && (
-                  <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800 flex items-center gap-3">
-                    <span className="text-amber-600">⚠</span>
-                    <span className="text-sm text-amber-700 dark:text-amber-300">
-                      まずランキングで勝ち筋を採用してください
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-amber-700 border-amber-300 hover:bg-amber-100 dark:text-amber-300 dark:border-amber-700 dark:hover:bg-amber-900/30"
-                      onClick={() => setActiveTab("ranking")}
-                    >
-                      採用する →
-                    </Button>
+                  <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
+                    <div className="flex items-start gap-3">
+                      <span className="text-amber-600 text-xl">⚠</span>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-amber-800 dark:text-amber-200 mb-1">
+                          進化生成を実行するには、採用済み戦略が必要です
+                        </p>
+                        <p className="text-xs text-amber-600 dark:text-amber-400 mb-3">
+                          現在、採用済み戦略: {evolveInfo?.adoptedCount || 0}件 / TopStrategy: {evolveInfo?.topStrategyCount || 0}件
+                        </p>
+                        <p className="text-xs text-amber-700 dark:text-amber-300 mb-3">
+                          「ランキング」タブで勝ち筋を「採用」すると、その戦略を基に進化した新戦略を生成できます。
+                        </p>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-amber-700 border-amber-300 hover:bg-amber-100 dark:text-amber-300 dark:border-amber-700 dark:hover:bg-amber-900/30"
+                          onClick={() => setActiveTab("ranking")}
+                        >
+                          ランキングで採用する →
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
@@ -624,6 +645,15 @@ export function StrategiesTab() {
                   >
                     {autoExploreStatus === "running" ? "探索中..." : "自動探索を実行"}
                   </Button>
+                  {autoExploreStatus === "running" && (
+                    <Button
+                      onClick={cancelAutoExplore}
+                      variant="outline"
+                      className="bg-slate-700 hover:bg-slate-600 text-slate-300 border-slate-600"
+                    >
+                      キャンセル
+                    </Button>
+                  )}
                 </div>
 
                 {/* プログレスバー */}

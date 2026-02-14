@@ -1,13 +1,10 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useApp, presetQuestions as defaultPresetQuestions } from "@/contexts/AppContext";
+import { useApp } from "@/contexts/AppContext";
 import { Button } from "@/components/ui/button";
-
-interface PresetQuestion {
-  label: string;
-  question: string;
-}
+import { FileDropzoneInline } from "@/components/ui/file-dropzone";
+import { getFinderSettings, getScoreLabels } from "@/config/finder-config";
 
 export function ExploreTab() {
   const {
@@ -17,6 +14,7 @@ export function ExploreTab() {
     explorationResult,
     explorationError,
     startExploration,
+    cancelExploration,
     clearExplorationResult,
     // グローバルな入力状態（タブ切替時も保持）
     exploreQuestion: question,
@@ -25,17 +23,24 @@ export function ExploreTab() {
     setExploreAdditionalContext: setAdditionalContext,
     exploreSelectedPresets: selectedPresets,
     setExploreSelectedPresets: setSelectedPresets,
+    finderId,
   } = useApp();
 
-  const [expandedStrategy, setExpandedStrategy] = useState<number | null>(null);
+  // ファインダー固有の設定を取得
+  const finderSettings = getFinderSettings(finderId);
+  const scoreLabels = getScoreLabels(finderId);
 
-  // 動的プリセット質問
-  const [presetQuestions, setPresetQuestions] = useState<PresetQuestion[]>(defaultPresetQuestions);
+  const [expandedStrategy, setExpandedStrategy] = useState<number | null>(null);
+  const [attachedFile, setAttachedFile] = useState<{ name: string; content: string } | null>(null);
+  const [fileLoading, setFileLoading] = useState(false);
+
+  // 動的プリセット質問（デフォルトはファインダー設定から）
+  const [presetQuestions, setPresetQuestions] = useState(finderSettings.presetQuestions);
   const [presetsLoading, setPresetsLoading] = useState(false);
   const [presetsSource, setPresetsSource] = useState<"default" | "cached" | "rag">("default");
 
-  // localStorageのキー
-  const PRESETS_CACHE_KEY = "kachisuji_preset_questions";
+  // localStorageのキー（ファインダーごとに別キャッシュ）
+  const PRESETS_CACHE_KEY = `${finderId || "default"}_preset_questions`;
 
   // RAG情報からプリセット質問を生成（手動再生成用）
   const generatePresets = async () => {
@@ -61,7 +66,7 @@ export function ExploreTab() {
     }
   };
 
-  // 初回ロード時：キャッシュがあれば使用、なければ自動生成
+  // 初回ロード時：キャッシュがあれば使用、なければファインダーデフォルトを使用
   useEffect(() => {
     const cached = localStorage.getItem(PRESETS_CACHE_KEY);
     if (cached) {
@@ -70,25 +75,16 @@ export function ExploreTab() {
         if (parsed.questions && parsed.questions.length > 0) {
           setPresetQuestions(parsed.questions);
           setPresetsSource("cached");
-          return; // キャッシュがあれば自動生成しない
+          return;
         }
       } catch {
         // パースエラーの場合は無視
       }
     }
-    // キャッシュがない場合のみ初回自動生成
-    generatePresets();
-  }, []);
-
-  // スコアラベルの日本語マッピング
-  const scoreLabels: Record<string, string> = {
-    revenuePotential: "収益ポテンシャル",
-    timeToRevenue: "収益化までの距離",
-    competitiveAdvantage: "勝ち筋の強さ",
-    executionFeasibility: "実行可能性",
-    hqContribution: "本社貢献",
-    mergerSynergy: "合併シナジー",
-  };
+    // キャッシュがない場合はファインダーのデフォルト質問を使用
+    setPresetQuestions(finderSettings.presetQuestions);
+    setPresetsSource("default");
+  }, [finderId, finderSettings.presetQuestions, PRESETS_CACHE_KEY]);
 
   const togglePreset = (index: number) => {
     const newSelected = new Set(selectedPresets);
@@ -103,6 +99,30 @@ export function ExploreTab() {
       .map((i) => presetQuestions[i].question)
       .join("\n");
     setQuestion(combinedQuestions);
+  };
+
+  const handleFileAttach = async (file: File) => {
+    setFileLoading(true);
+    try {
+      const text = await file.text();
+      setAttachedFile({ name: file.name, content: text });
+      // ファイル内容を追加文脈に追加
+      const fileContext = `\n\n【添付ファイル: ${file.name}】\n${text}`;
+      setAdditionalContext((prev) => prev + fileContext);
+    } catch (error) {
+      console.error("Failed to read file:", error);
+    } finally {
+      setFileLoading(false);
+    }
+  };
+
+  const handleRemoveFile = () => {
+    if (attachedFile) {
+      // 追加文脈からファイル内容を削除
+      const fileContext = `\n\n【添付ファイル: ${attachedFile.name}】\n${attachedFile.content}`;
+      setAdditionalContext((prev) => prev.replace(fileContext, ""));
+      setAttachedFile(null);
+    }
   };
 
   const handleExplore = async () => {
@@ -124,6 +144,7 @@ export function ExploreTab() {
     setAdditionalContext("");
     setSelectedPresets(new Set());
     setExpandedStrategy(null);
+    setAttachedFile(null);
   }, [clearExplorationResult, setQuestion, setAdditionalContext, setSelectedPresets]);
 
   return (
@@ -132,9 +153,9 @@ export function ExploreTab() {
         {/* 左カラム: 入力エリア (2/5) */}
         <div className="lg:col-span-2 flex flex-col space-y-3 min-h-0">
           <div className="flex-shrink-0">
-            <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">勝ち筋探索</h1>
+            <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">{finderSettings.exploreLabel}</h1>
             <p className="text-xs text-slate-600 dark:text-slate-400">
-              問いを立てて、AIが勝ち筋を探索します。
+              問いを立てて、AIが{finderSettings.resultLabel}を探索します。
             </p>
           </div>
 
@@ -196,9 +217,36 @@ export function ExploreTab() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                追加文脈（任意）
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+                  追加文脈（任意）
+                </label>
+                <FileDropzoneInline
+                  accept=".txt,.md,.json,.csv"
+                  onFileSelected={(file) => handleFileAttach(file)}
+                  disabled={explorationStatus === "running" || fileLoading}
+                  loading={fileLoading}
+                />
+              </div>
+              {attachedFile && (
+                <div className="flex items-center gap-2 mb-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <svg className="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <span className="text-xs text-blue-700 dark:text-blue-300 flex-1 truncate">
+                    {attachedFile.name}
+                  </span>
+                  <button
+                    onClick={handleRemoveFile}
+                    className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200"
+                    title="ファイルを削除"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              )}
               <textarea
                 value={additionalContext}
                 onChange={(e) => setAdditionalContext(e.target.value)}
@@ -217,6 +265,15 @@ export function ExploreTab() {
               >
                 {explorationStatus === "running" ? "探索中..." : "探索する"}
               </Button>
+              {explorationStatus === "running" && (
+                <Button
+                  onClick={cancelExploration}
+                  variant="outline"
+                  className="bg-slate-700 hover:bg-slate-600 text-slate-300 border-slate-600"
+                >
+                  キャンセル
+                </Button>
+              )}
               {(explorationResult || explorationError) && (
                 <Button variant="outline" onClick={handleClear}>
                   クリア
@@ -288,16 +345,26 @@ export function ExploreTab() {
                         onClick={() => setExpandedStrategy(expandedStrategy === i ? null : i)}
                       >
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <span className="text-lg font-bold text-blue-600 dark:text-blue-400">
                               #{i + 1}
                             </span>
                             <span className="font-medium text-slate-800 dark:text-slate-200 text-sm">
                               {strategy.name}
                             </span>
+                            {finderSettings.departmentBadgeEnabled && strategy.tags?.[0] && (
+                              <span className="px-2 py-0.5 bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 rounded-full text-xs font-medium">
+                                {strategy.tags[0]}
+                              </span>
+                            )}
+                            {finderSettings.fixedBadge && (
+                              <span className="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 rounded-full text-xs font-medium">
+                                {finderSettings.fixedBadge}
+                              </span>
+                            )}
                           </div>
                           <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded-full text-xs font-medium">
-                            {strategy.totalScore.toFixed(1)}点
+                            {(strategy.totalScore || 0).toFixed(1)}点
                           </span>
                         </div>
 
@@ -333,6 +400,15 @@ export function ExploreTab() {
                                 ))}
                               </div>
                             )}
+                            {strategy.tags && strategy.tags.length > (finderSettings.departmentBadgeEnabled ? 1 : 0) && (
+                              <div className="flex flex-wrap gap-1 mt-2">
+                                {strategy.tags.slice(finderSettings.departmentBadgeEnabled ? 1 : 0).map((tag, ti) => (
+                                  <span key={ti} className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300 rounded text-xs">
+                                    {tag}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
@@ -340,7 +416,7 @@ export function ExploreTab() {
                   </div>
                 ) : (
                   <p className="text-sm text-slate-500 dark:text-slate-400">
-                    勝ち筋が見つかりませんでした
+                    {finderSettings.resultLabel}が見つかりませんでした
                   </p>
                 )}
               </div>

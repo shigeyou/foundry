@@ -1,0 +1,13 @@
+<step title="Incoming Request" date="2026-01-22T14:01:15.341" instance="5b7811" url="/api/publish?type=zip&amp;restart=True&amp;clean=True" method="POST" type="request" pid="833,1,3" Accept="*/*" Host="kachisuji-finder.scm.azurewebsites.net" User-Agent="AZURECLI/2.81.0 (DEB)" Accept-Encoding="gzip, deflate" Authorization="Bea..." Cache-Control="no-cache" Content-Type="application/octet-stream" Cookie="ARRAffinity=5b7811789b1e33b7cc756bce49c73cf44172046100af9c564b5a3ebcd20cab6c; ARRAffinitySameSite=5b7811789b1e33b7cc756bce49c73cf44172046100af9c564b5a3ebcd20cab6c" Content-Length="242393560" x-ms-client-request-id="cc248c26-f79a-11f0-b2c9-7ced8d70835d" x-ms-artifact-checksum="5816ba498d10863358a2bc1d19008d512012b3b72416df408dbafcbb9d211373" X-ARR-LOG-ID="cc248c26-f79a-11f0-b2c9-7ced8d70835d" CLIENT-IP="172.184.214.213:12289" X-SITE-DEPLOYMENT-ID="kachisuji-finder" WAS-DEFAULT-HOSTNAME="kachisuji-finder.scm.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/api/publish?type=zip&amp;restart=True&amp;clean=True" X-Client-IP="172.184.214.213" X-Client-Port="12289" >
+  <step title="OneDeploy" date="2026-01-22T14:01:15.443" >
+    <step title="Starting PushDeployAsync" date="2026-01-22T14:01:15.452" /><!-- duration: 3ms -->
+    <step title="Writing artifact to /tmp/zipdeploy/1dc8777f-0699-4acf-89da-a6f177aa8ba2.zip" date="2026-01-22T14:01:15.464" >
+      <step title="Writing multipart request body to /tmp/zipdeploy/1dc8777f-0699-4acf-89da-a6f177aa8ba2.zip" date="2026-01-22T14:01:15.471" /><!-- duration: 12ms -->
+    </step><!-- duration: 14811ms -->
+    <step title="Attempting to fetch target branch HEAD" date="2026-01-22T14:01:30.289" /><!-- duration: 2ms -->
+    <step title="Acquiring Deployment Lock" date="2026-01-22T14:01:30.295" /><!-- duration: 2ms -->
+    <step title="Cannot Acquire Deployment Lock already held" date="2026-01-22T14:01:30.308" /><!-- duration: 2ms -->
+    <step title="There is a deployment currently in progress. Please try again when it completes." date="2026-01-22T14:01:30.340" /><!-- duration: 32ms -->
+  </step><!-- duration: 14934ms -->
+  <step title="Outgoing response" date="2026-01-22T14:01:30.407" type="response" statusCode="409" statusText="Conflict" /><!-- duration: 2ms -->
+</step><!-- duration: 15108ms -->

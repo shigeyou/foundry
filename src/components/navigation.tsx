@@ -3,19 +3,15 @@
 import { useApp, TabType } from "@/contexts/AppContext";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useState, useEffect } from "react";
+import Link from "next/link";
 
 interface TabItem {
   id: TabType;
   label: string;
 }
 
-// 共通設定（全員共通）
-const commonTabs: TabItem[] = [
-  { id: "intro", label: "はじめに" },
-  { id: "company", label: "対象企業" },
-  { id: "rag", label: "RAG情報" },
-  { id: "swot", label: "SWOT" },
-];
+// ツール固有の導入タブ
+const introTab: TabItem = { id: "intro", label: "はじめに" };
 
 // 個別設定（ユーザーごと）
 const personalTabs: TabItem[] = [
@@ -75,7 +71,11 @@ function useResponsiveFontSize() {
   return fontSizes;
 }
 
-export function Navigation() {
+interface NavigationProps {
+  title?: string;
+}
+
+export function Navigation({ title = "勝ち筋ファインダー" }: NavigationProps) {
   const { activeTab, setActiveTab, explorationStatus, evolveStatus, autoExploreStatus, metaAnalysisStatus } = useApp();
   const fontSizes = useResponsiveFontSize();
 
@@ -83,54 +83,86 @@ export function Navigation() {
     <header className="border-b border-blue-300 dark:border-blue-800 bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-800 dark:to-blue-900">
       <div className="w-full px-3">
         <div className="flex items-center justify-between py-2 gap-4">
-          {/* ロゴ */}
-          <button
-            onClick={() => setActiveTab("explore")}
-            className="text-left hover:opacity-80 flex-shrink-0"
-          >
-            <p
-              className="text-blue-100 dark:text-blue-200"
-              style={{ fontSize: fontSizes.logoSubtitle }}
+          {/* Foundryリンク + ロゴ */}
+          <div className="flex items-center gap-3 flex-shrink-0">
+            <Link
+              href="/"
+              className="flex items-center gap-2 px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg transition-colors group"
             >
-              企業の勝ち筋をAIで探索する
-            </p>
-            <p
-              className="font-bold text-white dark:text-white whitespace-nowrap"
-              style={{ fontSize: fontSizes.logoTitle }}
+              <span className="w-7 h-7 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                {/* 工房アイコン（三角屋根＋煙突＋窯＋炎） */}
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                  <defs>
+                    <linearGradient id="flameNavOuter" x1="0.5" y1="1" x2="0.5" y2="0">
+                      <stop offset="0%" stopColor="#f97316" />
+                      <stop offset="100%" stopColor="#ef4444" />
+                    </linearGradient>
+                    <linearGradient id="flameNavInner" x1="0.5" y1="1" x2="0.5" y2="0">
+                      <stop offset="0%" stopColor="#fbbf24" />
+                      <stop offset="100%" stopColor="#f97316" />
+                    </linearGradient>
+                  </defs>
+                  {/* 煙突 */}
+                  <rect x="15" y="4" width="4" height="7" rx="0.5" fill="white" opacity="0.3" />
+                  <path d="M15 4h4v7h-4V4" strokeLinecap="round" strokeLinejoin="round" />
+                  {/* 三角屋根 */}
+                  <path d="M3 12l9-8 9 8" strokeLinecap="round" strokeLinejoin="round" />
+                  {/* 建物 */}
+                  <rect x="5" y="12" width="14" height="9" fill="white" opacity="0.15" />
+                  <path d="M5 12v9h14v-9" strokeLinecap="round" strokeLinejoin="round" />
+                  {/* 窯（アーチ型開口部） */}
+                  <path d="M8 21v-5a4 4 0 0 1 8 0v5" stroke="white" strokeWidth="1.5" fill="rgba(0,0,0,0.3)" />
+                  {/* 炎（外側） */}
+                  <path d="M10 20.5c0-2.5 1-3.5 2-5 1 1.5 2 2.5 2 5" fill="url(#flameNavOuter)" stroke="none" />
+                  {/* 炎（内側・明るい芯） */}
+                  <path d="M11 20.5c0-1.5 0.5-2 1-3 0.5 1 1 1.5 1 3" fill="url(#flameNavInner)" stroke="none" />
+                </svg>
+              </span>
+              <span className="text-white text-sm font-medium hidden sm:inline group-hover:-translate-x-0.5 transition-transform">← 戻る</span>
+            </Link>
+            <button
+              onClick={() => setActiveTab("explore")}
+              className="text-left hover:opacity-80"
             >
-              勝ち筋ファインダー <span
-                className="font-normal text-blue-200 dark:text-blue-300"
-                style={{ fontSize: fontSizes.logoVersion }}
-              >Ver.0.7</span>
-            </p>
-          </button>
+              <p className="text-blue-100 dark:text-blue-200 text-xs">
+                企業の勝ち筋をAIで探索する
+              </p>
+              <p className="font-bold text-white dark:text-white text-lg whitespace-nowrap">
+                {title}
+              </p>
+            </button>
+          </div>
 
           {/* タブナビゲーション */}
           <nav className="flex items-center gap-1 flex-1 justify-end overflow-x-auto flex-nowrap">
-            {/* 共通設定グループ */}
-            <div className="flex items-center gap-1 px-2 py-1 bg-blue-500/30 dark:bg-blue-950/50 rounded-lg flex-shrink-0">
-              <span
-                className="text-blue-100 dark:text-blue-300 px-1 whitespace-nowrap"
-                style={{ fontSize: fontSizes.labelFont }}
-              >共通</span>
-              {commonTabs.map((item) => {
-                const isActive = activeTab === item.id;
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => setActiveTab(item.id)}
-                    className={`py-1 font-medium rounded-md transition-colors relative whitespace-nowrap ${
-                      isActive
-                        ? "bg-white dark:bg-blue-700 text-blue-700 dark:text-white shadow-sm"
-                        : "text-blue-100 dark:text-blue-200 hover:bg-white/20 dark:hover:bg-blue-700/50 hover:text-white"
-                    }`}
-                    style={{ fontSize: fontSizes.tabFont, paddingLeft: fontSizes.tabPadding, paddingRight: fontSizes.tabPadding }}
-                  >
-                    {item.label}
-                  </button>
-                );
-              })}
-            </div>
+            {/* 共通設定へのリンク */}
+            <Link
+              href="/settings"
+              className="flex items-center gap-1 px-3 py-1.5 bg-slate-500/30 dark:bg-slate-700/50 hover:bg-slate-500/50 dark:hover:bg-slate-600/50 rounded-lg transition-colors flex-shrink-0"
+              style={{ fontSize: fontSizes.tabFont }}
+            >
+              <svg className="w-4 h-4 text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              <span className="text-slate-100 whitespace-nowrap">共通設定</span>
+            </Link>
+
+            {/* セパレーター */}
+            <div className="h-6 w-px bg-blue-400/50 dark:bg-blue-600 mx-1 flex-shrink-0"></div>
+
+            {/* はじめにタブ */}
+            <button
+              onClick={() => setActiveTab(introTab.id)}
+              className={`py-1 font-medium rounded-md transition-colors whitespace-nowrap ${
+                activeTab === introTab.id
+                  ? "bg-white dark:bg-blue-700 text-blue-700 dark:text-white shadow-sm"
+                  : "text-blue-100 dark:text-blue-200 hover:bg-white/20 dark:hover:bg-blue-700/50 hover:text-white"
+              }`}
+              style={{ fontSize: fontSizes.tabFont, paddingLeft: fontSizes.tabPadding, paddingRight: fontSizes.tabPadding }}
+            >
+              {introTab.label}
+            </button>
 
             {/* セパレーター */}
             <div className="h-6 w-px bg-blue-400/50 dark:bg-blue-600 mx-1 flex-shrink-0"></div>

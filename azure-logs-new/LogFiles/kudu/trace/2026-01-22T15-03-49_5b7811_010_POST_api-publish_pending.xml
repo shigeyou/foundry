@@ -1,0 +1,31 @@
+<step title="Incoming Request" date="2026-01-22T15:03:49.113" instance="5b7811" url="/api/publish?type=zip&amp;restart=True&amp;clean=True" method="POST" type="request" pid="833,1,30" Accept="*/*" Host="kachisuji-finder.scm.azurewebsites.net" User-Agent="AZURECLI/2.81.0 (DEB)" Accept-Encoding="gzip, deflate" Authorization="Bea..." Cache-Control="no-cache" Content-Type="application/octet-stream" Cookie="ARRAffinity=5b7811789b1e33b7cc756bce49c73cf44172046100af9c564b5a3ebcd20cab6c; ARRAffinitySameSite=5b7811789b1e33b7cc756bce49c73cf44172046100af9c564b5a3ebcd20cab6c" Content-Length="50253254" x-ms-client-request-id="8875cf86-f7a3-11f0-b2c9-002248c41fe2" x-ms-artifact-checksum="9bf5a49d4783bb9fdfefcda11c8683fc94711181ec09398fc82dd0476e6a644d" X-ARR-LOG-ID="8875cf86-f7a3-11f0-b2c9-002248c41fe2" CLIENT-IP="57.151.136.166:36905" X-SITE-DEPLOYMENT-ID="kachisuji-finder" WAS-DEFAULT-HOSTNAME="kachisuji-finder.scm.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/api/publish?type=zip&amp;restart=True&amp;clean=True" X-Client-IP="57.151.136.166" X-Client-Port="36905" >
+  <step title="Cleanup Xml Logs" date="2026-01-22T15:03:49.197" /><!-- duration: 282ms -->
+  <step title="OneDeploy" date="2026-01-22T15:03:50.237" >
+    <step title="Starting PushDeployAsync" date="2026-01-22T15:03:50.592" /><!-- duration: 91ms -->
+    <step title="Removing node_modules symlink" date="2026-01-22T15:03:50.945" >
+      <step title="Writing artifact to /tmp/zipdeploy/effe9703-08af-4fd6-8fdb-8b8b6ed7bb7d.zip" date="2026-01-22T15:03:51.217" >
+        <step title="Writing multipart request body to /tmp/zipdeploy/effe9703-08af-4fd6-8fdb-8b8b6ed7bb7d.zip" date="2026-01-22T15:03:51.220" /><!-- duration: 3ms -->
+      </step><!-- duration: 5147ms -->
+      <step title="Attempting to fetch target branch HEAD" date="2026-01-22T15:03:56.434" /><!-- duration: 10ms -->
+      <step title="Acquiring Deployment Lock" date="2026-01-22T15:03:56.464" /><!-- duration: 18ms -->
+      <step title="Acquired Deployment Lock" date="2026-01-22T15:03:56.592" /><!-- duration: 38ms -->
+      <step title="Performing fetch based deployment" date="2026-01-22T15:03:56.686" >
+        <step title="Creating temporary deployment" date="2026-01-22T15:03:56.709" /><!-- duration: 189ms -->
+        <step title="Releasing Deployment Lock" date="2026-01-22T15:03:58.419" /><!-- duration: 9ms -->
+        <step title="Cleaning up temp folders from previous zip deployments and extracting pushed zip file /tmp/zipdeploy/effe9703-08af-4fd6-8fdb-8b8b6ed7bb7d.zip (47.93 MB) to /tmp/zipdeploy/extracted" date="2026-01-22T15:03:58.475" >
+          <step title="ChmodRecursive Process exited with total time taken in ms: 341" date="2026-01-22T15:04:16.066" /><!-- duration: 39ms -->
+        </step><!-- duration: 17677ms -->
+        <step title="None repository commit" date="2026-01-22T15:04:16.178" >
+          <step title="Commit id: 5203d20b-54e3-4a34-9d3a-994fd0bf5d33" date="2026-01-22T15:04:16.206" Message="OneDeploy" AuthorName="N/A" AuthorEmail="N/A" /><!-- duration: 26ms -->
+        </step><!-- duration: 56ms -->
+        <step title="Deployment timer started" date="2026-01-22T15:04:18.297" >
+          <step title="DeploymentManager.Deploy(id:5203d20b-54e3-4a34-9d3a-994fd0bf5d33)" date="2026-01-22T15:04:18.333" >
+            <step title="Collecting changeset information" date="2026-01-22T15:04:18.419" /><!-- duration: 349ms -->
+            <step title="Updating submodules" date="2026-01-22T15:04:18.800" /><!-- duration: 1298ms -->
+            <step title="Determining deployment builder" date="2026-01-22T15:04:20.563" >
+              <step title="Builder is OneDeployBuilder" date="2026-01-22T15:04:20.666" /><!-- duration: 49ms -->
+            </step><!-- duration: 220ms -->
+            <step title="PreDeployment: context.CleanOutputPath False" date="2026-01-22T15:04:20.891" >
+              <step title="PreDeployment: context.OutputPath /home/site/wwwroot" date="2026-01-22T15:04:21.172" >
+                <step title="Building" date="2026-01-22T15:04:21.531" >
+                  <step title="Executing external process" date="2026-01-22T15:04:23.550" type="process" path="starter.sh" arguments="/opt/Kudu/Scripts/absoluteTar.sh /tmp/zipdeploy/extracted/node_modules /tmp/zipdeploy/extracted/node_modules.tar.gz" 

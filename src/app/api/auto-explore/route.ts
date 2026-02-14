@@ -113,15 +113,20 @@ export async function POST(request: NextRequest) {
     errors: [],
   };
 
+  const body = await request.json().catch(() => ({}));
+  const finderId: string | null = body.finderId || null;
+
   const user = await getCurrentUser();
 
-  // Create AutoExploreRun record（ユーザー別）
+  // Create AutoExploreRun record（ユーザー別・ファインダー別）
   const run = await prisma.autoExploreRun.create({
     data: {
+      id: `auto-${Date.now()}`,
       status: "running",
       triggerType: "manual",
       userId: user.id,
       userName: user.name,
+      finderId,
     },
   });
 
@@ -185,9 +190,10 @@ export async function POST(request: NextRequest) {
           ragContext
         );
 
-        // Save exploration（ユーザー別）
+        // Save exploration（ユーザー別・ファインダー別）
         await prisma.exploration.create({
           data: {
+            id: `exp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
             question,
             context: "[自動探索] " + new Date().toISOString(),
             constraints: "[]",
@@ -195,6 +201,7 @@ export async function POST(request: NextRequest) {
             result: JSON.stringify(explorationResult),
             userId: user.id,
             userName: user.name,
+            finderId,
           },
         });
 
@@ -228,8 +235,8 @@ export async function POST(request: NextRequest) {
     const newBaseline = await recordBaseline(run.id);
     const achievedScore = newBaseline?.topScore ?? result.topScore;
 
-    // Archive top strategies（ユーザー別）
-    const archiveResult = await archiveTopStrategies(4.0, user.id, user.name);
+    // Archive top strategies（ユーザー別・ファインダー別）
+    const archiveResult = await archiveTopStrategies(4.0, user.id, user.name, finderId);
     console.log(`[Auto-Explore] Archived ${archiveResult.archived} top strategies`);
 
     // Calculate improvement
@@ -288,14 +295,17 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET: Check last auto-exploration results and history（ユーザー別）
-export async function GET() {
+// GET: Check last auto-exploration results and history（ユーザー別・ファインダー別）
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    const finderId = searchParams.get("finderId") || null;
+
     const user = await getCurrentUser();
 
-    // Get AutoExploreRun history（自分のデータのみ）
+    // Get AutoExploreRun history（自分のデータ・ファインダー別）
     const runHistory = await prisma.autoExploreRun.findMany({
-      where: { userId: user.id },
+      where: { userId: user.id, finderId },
       orderBy: { startedAt: "desc" },
       take: 5,
     });
@@ -303,10 +313,11 @@ export async function GET() {
     // For each run, get related explorations (created between startedAt and completedAt)
     const runHistoryWithStrategies = await Promise.all(
       runHistory.map(async (run) => {
-        // Get explorations created during this run（自分のデータのみ）
+        // Get explorations created during this run（自分のデータ・ファインダー別）
         const explorations = await prisma.exploration.findMany({
           where: {
             userId: user.id,
+            finderId,
             context: { contains: "[自動探索]" },
             createdAt: {
               gte: run.startedAt,
@@ -363,10 +374,11 @@ export async function GET() {
       })
     );
 
-    // Find recent auto-explorations (exploration records)（自分のデータのみ）
+    // Find recent auto-explorations (exploration records)（自分のデータ・ファインダー別）
     const recentAutoExplorations = await prisma.exploration.findMany({
       where: {
         userId: user.id,
+        finderId,
         context: { contains: "[自動探索]" },
       },
       orderBy: { createdAt: "desc" },

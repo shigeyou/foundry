@@ -1,5 +1,5 @@
 {
-  "name": "kachisuji_finder",
+  "name": "foundry",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -11,9 +11,12 @@
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
     "test": "playwright test",
-    "test:ui": "playwright test --ui"
+    "test:ui": "playwright test --ui",
+    "core:typecheck": "pnpm --filter @foundry/core typecheck",
+    "dev:safe": "node scripts/safe-start.js"
   },
   "dependencies": {
+    "@foundry/core": "workspace:*",
     "@prisma/adapter-libsql": "6.8.2",
     "@prisma/client": "6.8.2",
     "@radix-ui/react-checkbox": "^1.1.4",
@@ -22,22 +25,27 @@
     "cheerio": "^1.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "csv-parse": "^5.6.0",
+    "docx": "^9.5.1",
+    "file-saver": "^2.0.5",
     "html2canvas": "^1.4.1",
     "jspdf": "^2.5.2",
     "jszip": "^3.10.1",
     "mammoth": "^1.9.0",
     "microsoft-cognitiveservices-speech-sdk": "^1.47.0",
+    "msgreader": "^1.0.1",
     "next": "16.1.4",
     "openai": "^4.77.0",
-    "csv-parse": "^5.6.0",
     "pdf-parse": "^1.1.1",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "tailwind-merge": "^2.6.0"
+    "tailwind-merge": "^2.6.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@playwright/test": "^1.49.1",
     "@tailwindcss/postcss": "^4",
+    "@types/file-saver": "^2.0.7",
     "@types/node": "^20",
     "@types/pdf-parse": "^1.1.4",
     "@types/react": "^19",

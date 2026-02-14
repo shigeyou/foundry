@@ -39,12 +39,14 @@ export function InsightsTab() {
     metaAnalysisResult,
     metaAnalysisError,
     startMetaAnalysis,
+    cancelMetaAnalysis,
     clearMetaAnalysisResult,
     patternExtractStatus,
     patternExtractProgress,
     patternExtractResult,
     patternExtractError,
     startPatternExtract,
+    cancelPatternExtract,
     clearPatternExtractResult,
   } = useApp();
   const [activeSubTab, setActiveSubTab] = useState<SubTabType>("patterns");
@@ -299,6 +301,15 @@ export function InsightsTab() {
                   >
                     {patternExtractStatus === "running" ? "抽出中..." : "パターンを抽出"}
                   </Button>
+                  {patternExtractStatus === "running" && (
+                    <Button
+                      onClick={cancelPatternExtract}
+                      variant="outline"
+                      className="bg-slate-700 hover:bg-slate-600 text-slate-300 border-slate-600"
+                    >
+                      キャンセル
+                    </Button>
+                  )}
                 </div>
 
                 {/* プログレスバー */}
@@ -511,13 +522,24 @@ export function InsightsTab() {
                 <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">
                   メタ分析を実行
                 </h2>
-                <Button
-                  onClick={handleMetaAnalysis}
-                  disabled={metaAnalysisStatus === "running"}
-                  className="bg-purple-600 hover:bg-purple-700"
-                >
-                  {metaAnalysisStatus === "running" ? "分析中..." : "メタ分析を実行"}
-                </Button>
+                <div className="flex items-center gap-4">
+                  <Button
+                    onClick={handleMetaAnalysis}
+                    disabled={metaAnalysisStatus === "running"}
+                    className="bg-purple-600 hover:bg-purple-700"
+                  >
+                    {metaAnalysisStatus === "running" ? "分析中..." : "メタ分析を実行"}
+                  </Button>
+                  {metaAnalysisStatus === "running" && (
+                    <Button
+                      onClick={cancelMetaAnalysis}
+                      variant="outline"
+                      className="bg-slate-700 hover:bg-slate-600 text-slate-300 border-slate-600"
+                    >
+                      キャンセル
+                    </Button>
+                  )}
+                </div>
 
                 {/* プログレスバー */}
                 {metaAnalysisStatus === "running" && (

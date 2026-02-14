@@ -1,0 +1,1097 @@
+2026-01-27T02:40:05.0759835Z Generating SWOT analysis with AI...
+2026-01-27T02:43:02.6769693Z Warning: TT: undefined function: 21
+2026-01-27T02:43:10.1899589Z (node:2082) [DEP0005] DeprecationWarning: Buffer() is deprecated due to security and usability issues. Please use the Buffer.alloc(), Buffer.allocUnsafe(), or Buffer.from() methods instead.
+2026-01-27T02:43:10.1899980Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-01-27T02:43:11.1989522Z Starting Azure OpenAI request...
+2026-01-27T02:45:23.1339442Z Response finish_reason: stop
+2026-01-27T02:45:23.1427129Z Response tokens: {"completion_tokens":6498,"completion_tokens_details":{"accepted_prediction_tokens":0,"audio_tokens":0,"reasoning_tokens":0,"rejected_prediction_tokens":0},"prompt_tokens":37426,"prompt_tokens_details":{"audio_tokens":0,"cached_tokens":0},"total_tokens":43924}
+2026-01-27T02:45:23.3449960Z Exploration cmkvzrc7v0008o5luyi6m3r7x completed
+2026-01-27T02:46:08.8542973Z Starting Azure OpenAI request...
+2026-01-27T02:48:36.9511907Z Response finish_reason: stop
+2026-01-27T02:48:36.9512484Z Response tokens: {"completion_tokens":7393,"completion_tokens_details":{"accepted_prediction_tokens":0,"audio_tokens":0,"reasoning_tokens":0,"rejected_prediction_tokens":0},"prompt_tokens":37447,"prompt_tokens_details":{"audio_tokens":0,"cached_tokens":0},"total_tokens":44840}
+2026-01-27T02:48:37.1202647Z Exploration cmkvzvl5u0009o5lu56qsadno completed
+2026-01-27T02:49:45.0225417Z Starting Azure OpenAI request...
+2026-01-27T02:51:53.3360458Z Response finish_reason: stop
+2026-01-27T02:51:53.3360977Z Response tokens: {"completion_tokens":7430,"completion_tokens_details":{"accepted_prediction_tokens":0,"audio_tokens":0,"reasoning_tokens":0,"rejected_prediction_tokens":0},"prompt_tokens":37524,"prompt_tokens_details":{"audio_tokens":0,"cached_tokens":0},"total_tokens":44954}
+2026-01-27T02:51:53.5429289Z Exploration cmkw007yu000ao5lu6hz65q0e completed
+2026-01-27T03:10:59.8964892Z    _____                               
+2026-01-27T03:10:59.9066880Z   /  _  \ __________ _________   ____  
+2026-01-27T03:10:59.9067220Z  /  /_\  \\___   /  |  \_  __ \_/ __ \ 
+2026-01-27T03:10:59.9067333Z /    |    \/    /|  |  /|  | \/\  ___/ 
+2026-01-27T03:10:59.9067362Z \____|__  /_____ \____/ |__|    \___  >
+2026-01-27T03:10:59.9067415Z         \/      \/                  \/ 
+2026-01-27T03:10:59.9067457Z A P P   S E R V I C E   O N   L I N U X
+2026-01-27T03:10:59.9067478Z 
+2026-01-27T03:10:59.9067502Z Documentation    : http://aka.ms/webapp-linux
+2026-01-27T03:10:59.9067525Z NodeJS quickstart: https://aka.ms/node-qs
+2026-01-27T03:10:59.9067550Z NodeJS Version   : v20.19.5
+2026-01-27T03:10:59.9067572Z Instance Name    : lw0sdlwk00013L
+2026-01-27T03:10:59.9067622Z Instance Id      : 5b7811789b1e33b7cc756bce49c73cf44172046100af9c564b5a3ebcd20cab6c
+2026-01-27T03:10:59.9067642Z 
+2026-01-27T03:10:59.9067664Z Note: Any data outside '/home' is not persisted
+2026-01-27T03:11:05.2429092Z Starting OpenBSD Secure Shell server: sshd.
+2026-01-27T03:11:05.2639844Z WEBSITES_INCLUDE_CLOUD_CERTS is not set to true.
+2026-01-27T03:11:05.3324476Z Updating certificates in /etc/ssl/certs...
+2026-01-27T03:11:35.2656603Z rehash: warning: skipping duplicate certificate in azl_SSL.com_TLS_ECC_Root_CA_2022.pem
+2026-01-27T03:11:35.2657070Z rehash: warning: skipping duplicate certificate in azl_SSL.com_TLS_RSA_Root_CA_2022.pem
+2026-01-27T03:11:35.6066544Z rehash: warning: skipping ca-certificates.crt,it does not contain exactly one certificate or CRL
+2026-01-27T03:11:35.7152772Z 4 added, 0 removed; done.
+2026-01-27T03:11:35.7230216Z Running hooks in /etc/ca-certificates/update.d...
+2026-01-27T03:11:35.7422714Z done.
+2026-01-27T03:11:35.7824112Z CA certificates copied and updated successfully.
+2026-01-27T03:11:36.5899189Z Starting periodic command scheduler: cron.
+2026-01-27T03:11:36.5899539Z Found build manifest file at '/home/site/wwwroot/oryx-manifest.toml'. Deserializing it...
+2026-01-27T03:11:36.5997261Z Could not find operation ID in manifest. Generating an operation id...
+2026-01-27T03:11:36.5999628Z Build Operation ID: 2cca9996-4d23-44c2-bf85-89b5c7a462e7
+2026-01-27T03:11:37.4200269Z Environment Variables for Application Insight's IPA Codeless Configuration exists..
+2026-01-27T03:11:37.5358127Z Writing output script to '/opt/startup/startup.sh'
+2026-01-27T03:11:37.8056273Z Running #!/bin/sh
+2026-01-27T03:11:37.8056774Z 
+2026-01-27T03:11:37.8056810Z # Enter the source directory to make sure the script runs where the user expects
+2026-01-27T03:11:37.8056913Z cd "/home/site/wwwroot"
+2026-01-27T03:11:37.8056935Z 
+2026-01-27T03:11:37.8056957Z export NODE_PATH=/usr/local/lib/node_modules:$NODE_PATH
+2026-01-27T03:11:37.8056980Z if [ -z "$PORT" ]; then
+2026-01-27T03:11:37.8057006Z 		export PORT=8080
+2026-01-27T03:11:37.8057025Z fi
+2026-01-27T03:11:37.8057046Z 
+2026-01-27T03:11:37.8057084Z echo Found tar.gz based node_modules.
+2026-01-27T03:11:37.8057139Z extractionCommand="tar -xzf node_modules.tar.gz -C /node_modules"
+2026-01-27T03:11:37.8057163Z echo "Removing existing modules directory from root..."
+2026-01-27T03:11:37.8057185Z rm -fr /node_modules
+2026-01-27T03:11:37.8057206Z mkdir -p /node_modules
+2026-01-27T03:11:37.8057227Z echo Extracting modules...
+2026-01-27T03:11:37.8057266Z $extractionCommand
+2026-01-27T03:11:37.8057289Z export NODE_PATH="/node_modules":$NODE_PATH
+2026-01-27T03:11:37.8057311Z export PATH=/node_modules/.bin:$PATH
+2026-01-27T03:11:37.8057332Z if [ -d node_modules ]; then
+2026-01-27T03:11:37.8057353Z     mv -f node_modules _del_node_modules || true
+2026-01-27T03:11:37.8057373Z fi
+2026-01-27T03:11:37.8057393Z 
+2026-01-27T03:11:37.8057413Z if [ -d /node_modules ]; then
+2026-01-27T03:11:37.8057453Z     ln -sfn /node_modules ./node_modules 
+2026-01-27T03:11:37.8057474Z fi
+2026-01-27T03:11:37.8267559Z 
+2026-01-27T03:11:37.8267970Z echo "Done."
+2026-01-27T03:11:37.8268621Z PATH="$PATH:/home/site/wwwroot" node server.js
+2026-01-27T03:11:37.8268857Z Found tar.gz based node_modules.
+2026-01-27T03:11:37.8268884Z Removing existing modules directory from root...
+2026-01-27T03:11:37.8467987Z Extracting modules...
+2026-01-27T03:11:47.5919512Z Done.
+2026-01-27T03:11:53.9044644Z ▲ Next.js 16.1.4
+2026-01-27T03:11:53.9241636Z - Local:         http://114fb8bc3b36:8080
+2026-01-27T03:11:53.9250065Z - Network:       http://114fb8bc3b36:8080
+2026-01-27T03:11:53.9257403Z 
+2026-01-27T03:11:53.9338399Z ✓ Starting...
+2026-01-27T03:11:58.3116318Z ✓ Ready in 4.7s
+2026-01-27T03:12:00.7404633Z [Auto-Seed] RAGドキュメントが0件です。シードを実行します...
+2026-01-27T03:12:03.2789141Z [Auto-Seed] 8件のRAGドキュメントをシードしました
+2026-01-27T03:16:35.5365472Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T03:16:35.5366174Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T03:25:18.7937991Z    _____                               
+2026-01-27T03:25:18.8198817Z   /  _  \ __________ _________   ____  
+2026-01-27T03:25:18.8199133Z  /  /_\  \\___   /  |  \_  __ \_/ __ \ 
+2026-01-27T03:25:18.8199159Z /    |    \/    /|  |  /|  | \/\  ___/ 
+2026-01-27T03:25:18.8199181Z \____|__  /_____ \____/ |__|    \___  >
+2026-01-27T03:25:18.8199201Z         \/      \/                  \/ 
+2026-01-27T03:25:18.8199253Z A P P   S E R V I C E   O N   L I N U X
+2026-01-27T03:25:18.8199273Z 
+2026-01-27T03:25:18.8199324Z Documentation    : http://aka.ms/webapp-linux
+2026-01-27T03:25:18.8199349Z NodeJS quickstart: https://aka.ms/node-qs
+2026-01-27T03:25:18.8199374Z NodeJS Version   : v20.19.5
+2026-01-27T03:25:18.8199397Z Instance Name    : lw0sdlwk00013L
+2026-01-27T03:25:18.8199433Z Instance Id      : 5b7811789b1e33b7cc756bce49c73cf44172046100af9c564b5a3ebcd20cab6c
+2026-01-27T03:25:18.8199453Z 
+2026-01-27T03:25:18.8199490Z Note: Any data outside '/home' is not persisted
+2026-01-27T03:25:23.8567646Z Starting OpenBSD Secure Shell server: sshd.
+2026-01-27T03:25:23.8781815Z WEBSITES_INCLUDE_CLOUD_CERTS is not set to true.
+2026-01-27T03:25:23.9457169Z Updating certificates in /etc/ssl/certs...
+2026-01-27T03:26:06.8564036Z rehash: warning: skipping duplicate certificate in azl_SSL.com_TLS_ECC_Root_CA_2022.pem
+2026-01-27T03:26:06.8957853Z rehash: warning: skipping duplicate certificate in azl_SSL.com_TLS_RSA_Root_CA_2022.pem
+2026-01-27T03:26:07.3241690Z rehash: warning: skipping ca-certificates.crt,it does not contain exactly one certificate or CRL
+2026-01-27T03:26:07.4914873Z 4 added, 0 removed; done.
+2026-01-27T03:26:07.5279796Z Running hooks in /etc/ca-certificates/update.d...
+2026-01-27T03:26:07.5797040Z done.
+2026-01-27T03:26:07.7547356Z CA certificates copied and updated successfully.
+2026-01-27T03:26:08.5202864Z Starting periodic command scheduler: cron.
+2026-01-27T03:26:09.2518207Z Found build manifest file at '/home/site/wwwroot/oryx-manifest.toml'. Deserializing it...
+2026-01-27T03:26:09.2704079Z Could not find operation ID in manifest. Generating an operation id...
+2026-01-27T03:26:09.2719706Z Build Operation ID: 054a24a4-5909-4bd7-9461-d1877c610da1
+2026-01-27T03:26:10.5218965Z Environment Variables for Application Insight's IPA Codeless Configuration exists..
+2026-01-27T03:26:10.6818483Z Writing output script to '/opt/startup/startup.sh'
+2026-01-27T03:26:10.9518181Z Running #!/bin/sh
+2026-01-27T03:26:10.9518724Z 
+2026-01-27T03:26:10.9518771Z # Enter the source directory to make sure the script runs where the user expects
+2026-01-27T03:26:10.9518822Z cd "/home/site/wwwroot"
+2026-01-27T03:26:10.9518844Z 
+2026-01-27T03:26:10.9518945Z export NODE_PATH=/usr/local/lib/node_modules:$NODE_PATH
+2026-01-27T03:26:10.9518967Z if [ -z "$PORT" ]; then
+2026-01-27T03:26:10.9518987Z 		export PORT=8080
+2026-01-27T03:26:10.9519007Z fi
+2026-01-27T03:26:10.9519026Z 
+2026-01-27T03:26:10.9519049Z echo Found tar.gz based node_modules.
+2026-01-27T03:26:10.9519073Z extractionCommand="tar -xzf node_modules.tar.gz -C /node_modules"
+2026-01-27T03:26:10.9519115Z echo "Removing existing modules directory from root..."
+2026-01-27T03:26:10.9519137Z rm -fr /node_modules
+2026-01-27T03:26:10.9519157Z mkdir -p /node_modules
+2026-01-27T03:26:10.9519178Z echo Extracting modules...
+2026-01-27T03:26:10.9519198Z $extractionCommand
+2026-01-27T03:26:10.9519250Z export NODE_PATH="/node_modules":$NODE_PATH
+2026-01-27T03:26:10.9519275Z export PATH=/node_modules/.bin:$PATH
+2026-01-27T03:26:10.9519320Z if [ -d node_modules ]; then
+2026-01-27T03:26:10.9519347Z     mv -f node_modules _del_node_modules || true
+2026-01-27T03:26:10.9519368Z fi
+2026-01-27T03:26:10.9519386Z 
+2026-01-27T03:26:10.9519407Z if [ -d /node_modules ]; then
+2026-01-27T03:26:10.9519427Z     ln -sfn /node_modules ./node_modules 
+2026-01-27T03:26:10.9519448Z fi
+2026-01-27T03:26:10.9519483Z 
+2026-01-27T03:26:10.9519505Z echo "Done."
+2026-01-27T03:26:10.9519527Z PATH="$PATH:/home/site/wwwroot" node server.js
+2026-01-27T03:26:10.9538945Z Found tar.gz based node_modules.
+2026-01-27T03:26:10.9629687Z Removing existing modules directory from root...
+2026-01-27T03:26:10.9928323Z Extracting modules...
+2026-01-27T03:26:18.8738457Z Done.
+2026-01-27T03:26:24.2820724Z ▲ Next.js 16.1.4
+2026-01-27T03:26:24.3032403Z - Local:         http://73e53b24e197:8080
+2026-01-27T03:26:24.3033076Z - Network:       http://73e53b24e197:8080
+2026-01-27T03:26:24.3033112Z 
+2026-01-27T03:26:24.3216003Z ✓ Starting...
+2026-01-27T03:26:27.1617771Z ✓ Ready in 3.1s
+2026-01-27T03:26:28.9608570Z [Auto-Seed] RAGドキュメントが0件です。シードを実行します...
+2026-01-27T03:26:30.8079008Z [Auto-Seed] 8件のRAGドキュメントをシードしました
+2026-01-27T03:26:30.8234874Z [Auto-Seed] 探索データが0件です。シードを実行します...
+2026-01-27T03:26:31.1959110Z [Auto-Seed] CompanyProfileをシードしました
+2026-01-27T03:26:31.3829108Z [Auto-Seed] DefaultSwotをシードしました
+2026-01-27T03:26:32.2613252Z [Auto-Seed] 6件のCoreAssetをシードしました
+2026-01-27T03:26:38.9684943Z [Auto-Seed] エラー: Error [PrismaClientUnknownRequestError]: 
+2026-01-27T03:26:38.9685613Z Invalid `prisma.exploration.create()` invocation:
+2026-01-27T03:26:38.9685647Z 
+2026-01-27T03:26:38.9685676Z 
+2026-01-27T03:26:38.9685698Z Error occurred during query execution:
+2026-01-27T03:26:38.9685737Z ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(SqliteError { extended_code: 14, message: Some("unable to open database file") }), transient: false })
+2026-01-27T03:26:38.9685761Z     at lD.handleRequestError (.next/server/chunks/_f8420387._.js:114:8227)
+2026-01-27T03:26:38.9685812Z     at lD.handleAndLogRequestError (.next/server/chunks/_f8420387._.js:114:7100)
+2026-01-27T03:26:38.9685837Z     at lD.request (.next/server/chunks/_f8420387._.js:114:6807)
+2026-01-27T03:26:38.9685860Z     at async a (.next/server/chunks/_f8420387._.js:126:6305)
+2026-01-27T03:26:38.9685885Z     at async Module.t (.next/server/chunks/[root-of-the-server]__d471315f._.js:1:2457) {
+2026-01-27T03:26:38.9685907Z   clientVersion: '6.8.2'
+2026-01-27T03:26:38.9685927Z }
+2026-01-27T03:31:48.9705884Z Warning: TT: undefined function: 21
+2026-01-27T03:31:56.1421007Z (node:2081) [DEP0005] DeprecationWarning: Buffer() is deprecated due to security and usability issues. Please use the Buffer.alloc(), Buffer.allocUnsafe(), or Buffer.from() methods instead.
+2026-01-27T03:31:56.1421408Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-01-27T03:31:56.2274335Z Starting Azure OpenAI request...
+2026-01-27T03:34:17.3330238Z Response finish_reason: stop
+2026-01-27T03:34:17.3330777Z Response tokens: {"completion_tokens":6655,"completion_tokens_details":{"accepted_prediction_tokens":0,"audio_tokens":0,"reasoning_tokens":0,"rejected_prediction_tokens":0},"prompt_tokens":37495,"prompt_tokens_details":{"audio_tokens":0,"cached_tokens":0},"total_tokens":44150}
+2026-01-27T03:34:17.5432165Z Exploration cmkw1i55i000emtltj8nbq3gy completed
+2026-01-27T03:35:16.5414553Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T03:35:16.5415136Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T03:35:29.1501756Z Starting Azure OpenAI request...
+2026-01-27T03:37:23.3090486Z [Auto-Explore] Starting autonomous exploration...
+2026-01-27T03:37:23.5720259Z [Auto-Explore] Generating questions...
+2026-01-27T03:37:33.2304753Z Starting meta-analysis request...
+2026-01-27T03:37:39.7051770Z [Auto-Explore] Generated 5 questions
+2026-01-27T03:37:39.7052140Z [Auto-Explore] Exploring: DP訓練センター（ClassNK認証・年間500名）を核に、MOL船隊400隻の運航データ/ヒヤリハ...
+2026-01-27T03:37:39.7538843Z Starting Azure OpenAI request...
+2026-01-27T03:38:01.8280395Z Response finish_reason: stop
+2026-01-27T03:38:01.8530901Z Response tokens: {"completion_tokens":7584,"completion_tokens_details":{"accepted_prediction_tokens":0,"audio_tokens":0,"reasoning_tokens":0,"rejected_prediction_tokens":0},"prompt_tokens":37504,"prompt_tokens_details":{"audio_tokens":0,"cached_tokens":0},"total_tokens":45088}
+2026-01-27T03:38:02.3500554Z Exploration cmkw1n1ac000fmtlt4l68fz18 completed
+2026-01-27T03:39:01.2041849Z Meta-analysis response received
+2026-01-27T03:39:01.5351194Z Meta-analysis saved with id: cmkw1rl82000nmtltpmcshz6d
+2026-01-27T03:39:32.3356001Z Response finish_reason: stop
+2026-01-27T03:39:32.3356580Z Response tokens: {"completion_tokens":5557,"completion_tokens_details":{"accepted_prediction_tokens":0,"audio_tokens":0,"reasoning_tokens":0,"rejected_prediction_tokens":0},"prompt_tokens":36774,"prompt_tokens_details":{"audio_tokens":0,"cached_tokens":0},"total_tokens":42331}
+2026-01-27T03:39:32.5370246Z [Auto-Explore] Exploring: 操船/DPシミュレータ×Azure OpenAIで、訓練後の実船航海中に『AIコーチ（ブリッジでの意...
+2026-01-27T03:39:32.5615957Z Starting Azure OpenAI request...
+2026-01-27T03:42:05.1625598Z Response finish_reason: stop
+2026-01-27T03:42:05.1627064Z Response tokens: {"completion_tokens":7592,"completion_tokens_details":{"accepted_prediction_tokens":0,"audio_tokens":0,"reasoning_tokens":0,"rejected_prediction_tokens":0},"prompt_tokens":36761,"prompt_tokens_details":{"audio_tokens":0,"cached_tokens":1280},"total_tokens":44353}
+2026-01-27T03:42:06.4539417Z [Auto-Explore] Exploring: 海事専門知識DB（IMO/旗国/P&I/船級/入出港）をAzure AIでプロダクト化し、船社・管理...
+2026-01-27T03:42:06.6373807Z Starting Azure OpenAI request...
+2026-01-27T03:42:55.3085022Z    _____                               
+2026-01-27T03:42:55.3168856Z   /  _  \ __________ _________   ____  
+2026-01-27T03:42:55.3169230Z  /  /_\  \\___   /  |  \_  __ \_/ __ \ 
+2026-01-27T03:42:55.3169259Z /    |    \/    /|  |  /|  | \/\  ___/ 
+2026-01-27T03:42:55.3169285Z \____|__  /_____ \____/ |__|    \___  >
+2026-01-27T03:42:55.3169337Z         \/      \/                  \/ 
+2026-01-27T03:42:55.3169370Z A P P   S E R V I C E   O N   L I N U X
+2026-01-27T03:42:55.3169395Z 
+2026-01-27T03:42:55.3169428Z Documentation    : http://aka.ms/webapp-linux
+2026-01-27T03:42:55.3169480Z NodeJS quickstart: https://aka.ms/node-qs
+2026-01-27T03:42:55.3169508Z NodeJS Version   : v20.19.5
+2026-01-27T03:42:55.3169534Z Instance Name    : lw0sdlwk00013L
+2026-01-27T03:42:55.3169570Z Instance Id      : 5b7811789b1e33b7cc756bce49c73cf44172046100af9c564b5a3ebcd20cab6c
+2026-01-27T03:42:55.3169596Z 
+2026-01-27T03:42:55.3169621Z Note: Any data outside '/home' is not persisted
+2026-01-27T03:43:28.7245318Z Starting OpenBSD Secure Shell server: sshd.
+2026-01-27T03:43:28.9502691Z WEBSITES_INCLUDE_CLOUD_CERTS is not set to true.
+2026-01-27T03:43:29.2658195Z Updating certificates in /etc/ssl/certs...
+2026-01-27T03:44:00.7841536Z Response finish_reason: stop
+2026-01-27T03:44:01.8010290Z Response tokens: {"completion_tokens":5091,"completion_tokens_details":{"accepted_prediction_tokens":0,"audio_tokens":0,"reasoning_tokens":0,"rejected_prediction_tokens":0},"prompt_tokens":36414,"prompt_tokens_details":{"audio_tokens":0,"cached_tokens":0},"total_tokens":41505}
+2026-01-27T03:44:03.3365981Z [Auto-Explore] Exploring: 訓練修了者2,000名の船員ネットワークとフィリピン商船大学連携を活かし、MOLグループの乗組員需給...
+2026-01-27T03:44:03.7780511Z Starting Azure OpenAI request...
+2026-01-27T03:44:24.3514824Z rehash: warning: skipping duplicate certificate in azl_SSL.com_TLS_ECC_Root_CA_2022.pem
+2026-01-27T03:44:24.3609932Z rehash: warning: skipping duplicate certificate in azl_SSL.com_TLS_RSA_Root_CA_2022.pem
+2026-01-27T03:44:25.4689220Z rehash: warning: skipping ca-certificates.crt,it does not contain exactly one certificate or CRL
+2026-01-27T03:44:25.6640320Z 4 added, 0 removed; done.
+2026-01-27T03:44:25.7004158Z Running hooks in /etc/ca-certificates/update.d...
+2026-01-27T03:44:25.7285879Z done.
+2026-01-27T03:44:25.7860464Z CA certificates copied and updated successfully.
+2026-01-27T03:44:27.2811974Z Starting periodic command scheduler: cron.
+2026-01-27T03:44:28.4755967Z Found build manifest file at '/home/site/wwwroot/oryx-manifest.toml'. Deserializing it...
+2026-01-27T03:44:28.5146284Z Could not find operation ID in manifest. Generating an operation id...
+2026-01-27T03:44:28.5264941Z Build Operation ID: 8def5ab8-3836-4caf-ba62-c4aba40e1b9b
+2026-01-27T03:44:30.4839962Z Environment Variables for Application Insight's IPA Codeless Configuration exists..
+2026-01-27T03:44:30.6395988Z Writing output script to '/opt/startup/startup.sh'
+2026-01-27T03:44:30.9315075Z Running #!/bin/sh
+2026-01-27T03:44:30.9315714Z 
+2026-01-27T03:44:30.9315853Z # Enter the source directory to make sure the script runs where the user expects
+2026-01-27T03:44:30.9315891Z cd "/home/site/wwwroot"
+2026-01-27T03:44:30.9315911Z 
+2026-01-27T03:44:30.9315934Z export NODE_PATH=/usr/local/lib/node_modules:$NODE_PATH
+2026-01-27T03:44:30.9315955Z if [ -z "$PORT" ]; then
+2026-01-27T03:44:30.9315975Z 		export PORT=8080
+2026-01-27T03:44:30.9315994Z fi
+2026-01-27T03:44:30.9316030Z 
+2026-01-27T03:44:30.9316057Z echo Found tar.gz based node_modules.
+2026-01-27T03:44:30.9316080Z extractionCommand="tar -xzf node_modules.tar.gz -C /node_modules"
+2026-01-27T03:44:30.9316103Z echo "Removing existing modules directory from root..."
+2026-01-27T03:44:30.9316124Z rm -fr /node_modules
+2026-01-27T03:44:30.9316145Z mkdir -p /node_modules
+2026-01-27T03:44:30.9316165Z echo Extracting modules...
+2026-01-27T03:44:30.9316203Z $extractionCommand
+2026-01-27T03:44:30.9316257Z export NODE_PATH="/node_modules":$NODE_PATH
+2026-01-27T03:44:30.9316281Z export PATH=/node_modules/.bin:$PATH
+2026-01-27T03:44:30.9316302Z if [ -d node_modules ]; then
+2026-01-27T03:44:30.9316324Z     mv -f node_modules _del_node_modules || true
+2026-01-27T03:44:30.9316343Z fi
+2026-01-27T03:44:30.9316361Z 
+2026-01-27T03:44:30.9316398Z if [ -d /node_modules ]; then
+2026-01-27T03:44:30.9316420Z     ln -sfn /node_modules ./node_modules 
+2026-01-27T03:44:30.9316440Z fi
+2026-01-27T03:44:30.9316459Z 
+2026-01-27T03:44:30.9316478Z echo "Done."
+2026-01-27T03:44:30.9599891Z PATH="$PATH:/home/site/wwwroot" node server.js
+2026-01-27T03:44:30.9989391Z Found tar.gz based node_modules.
+2026-01-27T03:44:30.9995619Z Removing existing modules directory from root...
+2026-01-27T03:44:31.1233085Z Extracting modules...
+2026-01-27T03:44:49.2162903Z Done.
+2026-01-27T03:45:14.6043871Z ▲ Next.js 16.1.4
+2026-01-27T03:45:14.6225681Z - Local:         http://8ca82dfcd844:8080
+2026-01-27T03:45:14.6241193Z - Network:       http://8ca82dfcd844:8080
+2026-01-27T03:45:14.6517836Z 
+2026-01-27T03:45:14.6811486Z ✓ Starting...
+2026-01-27T03:45:21.4179567Z ✓ Ready in 7.7s
+2026-01-27T03:45:26.5937408Z [Auto-Seed] RAGドキュメントが0件です。シードを実行します...
+2026-01-27T03:45:28.7152067Z [Auto-Seed] 8件のRAGドキュメントをシードしました
+2026-01-27T03:45:28.7427594Z [Auto-Seed] 探索データが不足しています (Exploration: 0, TopStrategy: 0, StrategyDecision: 0)。シードを実行します...
+2026-01-27T03:45:29.2871022Z [Auto-Seed] CompanyProfileをシードしました
+2026-01-27T03:45:29.5853354Z [Auto-Seed] DefaultSwotをシードしました
+2026-01-27T03:45:30.7077971Z [Auto-Seed] 6件のCoreAssetをシードしました
+2026-01-27T03:45:33.3480049Z [Auto-Seed] エラー: Error [PrismaClientUnknownRequestError]: 
+2026-01-27T03:45:33.3480643Z Invalid `prisma.exploration.create()` invocation:
+2026-01-27T03:45:33.3480679Z 
+2026-01-27T03:45:33.3480708Z 
+2026-01-27T03:45:33.3480730Z Error occurred during query execution:
+2026-01-27T03:45:33.3480769Z ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(SqliteError { extended_code: 5898, message: Some("disk I/O error") }), transient: false })
+2026-01-27T03:45:33.3480793Z     at lD.handleRequestError (.next/server/chunks/_f8420387._.js:114:8227)
+2026-01-27T03:45:33.3480847Z     at lD.handleAndLogRequestError (.next/server/chunks/_f8420387._.js:114:7100)
+2026-01-27T03:45:33.3480871Z     at lD.request (.next/server/chunks/_f8420387._.js:114:6807)
+2026-01-27T03:45:33.3480894Z     at async a (.next/server/chunks/_f8420387._.js:126:6305)
+2026-01-27T03:45:33.3480919Z     at async Module.t (.next/server/chunks/[root-of-the-server]__d471315f._.js:1:2945) {
+2026-01-27T03:45:33.3480946Z   clientVersion: '6.8.2'
+2026-01-27T03:45:33.3480966Z }
+2026-01-27T03:46:40.0452814Z    _____                               
+2026-01-27T03:46:40.0454954Z   /  _  \ __________ _________   ____  
+2026-01-27T03:46:40.0455001Z  /  /_\  \\___   /  |  \_  __ \_/ __ \ 
+2026-01-27T03:46:40.0455023Z /    |    \/    /|  |  /|  | \/\  ___/ 
+2026-01-27T03:46:40.0455045Z \____|__  /_____ \____/ |__|    \___  >
+2026-01-27T03:46:40.0455076Z         \/      \/                  \/ 
+2026-01-27T03:46:40.0455125Z A P P   S E R V I C E   O N   L I N U X
+2026-01-27T03:46:40.0455146Z 
+2026-01-27T03:46:40.0455174Z Documentation    : http://aka.ms/webapp-linux
+2026-01-27T03:46:40.0455201Z NodeJS quickstart: https://aka.ms/node-qs
+2026-01-27T03:46:40.0455223Z NodeJS Version   : v20.19.5
+2026-01-27T03:46:40.0455244Z Instance Name    : lw0sdlwk00013L
+2026-01-27T03:46:40.0455273Z Instance Id      : 5b7811789b1e33b7cc756bce49c73cf44172046100af9c564b5a3ebcd20cab6c
+2026-01-27T03:46:40.0455310Z 
+2026-01-27T03:46:40.0455332Z Note: Any data outside '/home' is not persisted
+2026-01-27T03:46:44.4093372Z Starting OpenBSD Secure Shell server: sshd.
+2026-01-27T03:46:44.4476619Z WEBSITES_INCLUDE_CLOUD_CERTS is not set to true.
+2026-01-27T03:46:44.5348236Z Updating certificates in /etc/ssl/certs...
+2026-01-27T03:47:33.0729845Z rehash: warning: skipping duplicate certificate in azl_SSL.com_TLS_ECC_Root_CA_2022.pem
+2026-01-27T03:47:33.0917947Z rehash: warning: skipping duplicate certificate in azl_SSL.com_TLS_RSA_Root_CA_2022.pem
+2026-01-27T03:47:36.2241132Z rehash: warning: skipping ca-certificates.crt,it does not contain exactly one certificate or CRL
+2026-01-27T03:47:36.7652065Z 4 added, 0 removed; done.
+2026-01-27T03:47:36.7870607Z Running hooks in /etc/ca-certificates/update.d...
+2026-01-27T03:47:36.9052618Z done.
+2026-01-27T03:47:37.1844198Z CA certificates copied and updated successfully.
+2026-01-27T03:47:39.1982061Z Starting periodic command scheduler: cron.
+2026-01-27T03:47:40.9896885Z Found build manifest file at '/home/site/wwwroot/oryx-manifest.toml'. Deserializing it...
+2026-01-27T03:47:40.9897529Z Could not find operation ID in manifest. Generating an operation id...
+2026-01-27T03:47:40.9897573Z Build Operation ID: 4154b3cc-45fb-46a8-b4e1-8dda823e3607
+2026-01-27T03:47:46.7753055Z Environment Variables for Application Insight's IPA Codeless Configuration exists..
+2026-01-27T03:47:46.9012863Z Writing output script to '/opt/startup/startup.sh'
+2026-01-27T03:47:47.4542417Z Running #!/bin/sh
+2026-01-27T03:47:47.4543175Z 
+2026-01-27T03:47:47.4543292Z # Enter the source directory to make sure the script runs where the user expects
+2026-01-27T03:47:47.4543335Z cd "/home/site/wwwroot"
+2026-01-27T03:47:47.4543356Z 
+2026-01-27T03:47:47.4543380Z export NODE_PATH=/usr/local/lib/node_modules:$NODE_PATH
+2026-01-27T03:47:47.4543402Z if [ -z "$PORT" ]; then
+2026-01-27T03:47:47.4543423Z 		export PORT=8080
+2026-01-27T03:47:47.4543444Z fi
+2026-01-27T03:47:47.4543463Z 
+2026-01-27T03:47:47.4543513Z echo Found tar.gz based node_modules.
+2026-01-27T03:47:47.4543538Z extractionCommand="tar -xzf node_modules.tar.gz -C /node_modules"
+2026-01-27T03:47:47.4543562Z echo "Removing existing modules directory from root..."
+2026-01-27T03:47:47.4543583Z rm -fr /node_modules
+2026-01-27T03:47:47.4543604Z mkdir -p /node_modules
+2026-01-27T03:47:47.4543625Z echo Extracting modules...
+2026-01-27T03:47:47.4543645Z $extractionCommand
+2026-01-27T03:47:47.4543726Z export NODE_PATH="/node_modules":$NODE_PATH
+2026-01-27T03:47:47.4543752Z export PATH=/node_modules/.bin:$PATH
+2026-01-27T03:47:47.4543773Z if [ -d node_modules ]; then
+2026-01-27T03:47:47.4543796Z     mv -f node_modules _del_node_modules || true
+2026-01-27T03:47:47.4543821Z fi
+2026-01-27T03:47:47.4543840Z 
+2026-01-27T03:47:47.4543888Z if [ -d /node_modules ]; then
+2026-01-27T03:47:47.4543909Z     ln -sfn /node_modules ./node_modules 
+2026-01-27T03:47:47.4543930Z fi
+2026-01-27T03:47:47.4543949Z 
+2026-01-27T03:47:47.4543972Z echo "Done."
+2026-01-27T03:47:47.4543994Z PATH="$PATH:/home/site/wwwroot" node server.js
+2026-01-27T03:47:47.4906604Z Found tar.gz based node_modules.
+2026-01-27T03:47:47.4907082Z Removing existing modules directory from root...
+2026-01-27T03:47:47.6877854Z Extracting modules...
+2026-01-27T03:48:18.9368230Z Done.
+2026-01-27T03:48:26.4934477Z ▲ Next.js 16.1.4
+2026-01-27T03:48:26.4948376Z - Local:         http://f55729a88d09:8080
+2026-01-27T03:48:26.5030556Z - Network:       http://f55729a88d09:8080
+2026-01-27T03:48:26.5043019Z 
+2026-01-27T03:48:26.5118977Z ✓ Starting...
+2026-01-27T03:48:28.6774579Z ✓ Ready in 2.4s
+2026-01-27T03:48:31.4983754Z [Auto-Seed] RAGドキュメントが8件存在します。シードをスキップします
+2026-01-27T03:48:31.5246827Z [Auto-Seed] 探索データが不足しています (Exploration: 11, TopStrategy: 0, StrategyDecision: 0)。シードを実行します...
+2026-01-27T03:48:31.5263280Z [Auto-Seed] 既存の不完全なデータを削除します...
+2026-01-27T03:48:32.5906594Z [Auto-Seed] CompanyProfileをシードしました
+2026-01-27T03:48:32.7946923Z [Auto-Seed] DefaultSwotをシードしました
+2026-01-27T03:48:33.3852624Z [Auto-Seed] エラー: Error [PrismaClientUnknownRequestError]: 
+2026-01-27T03:48:33.3853377Z Invalid `prisma.coreAsset.create()` invocation:
+2026-01-27T03:48:33.3853414Z 
+2026-01-27T03:48:33.3853442Z 
+2026-01-27T03:48:33.3853465Z Error occurred during query execution:
+2026-01-27T03:48:33.3853505Z ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(SqliteError { extended_code: 14, message: Some("unable to open database file") }), transient: false })
+2026-01-27T03:48:33.3853531Z     at lD.handleRequestError (.next/server/chunks/_f8420387._.js:114:8227)
+2026-01-27T03:48:33.3853589Z     at lD.handleAndLogRequestError (.next/server/chunks/_f8420387._.js:114:7100)
+2026-01-27T03:48:33.3853615Z     at lD.request (.next/server/chunks/_f8420387._.js:114:6807)
+2026-01-27T03:48:33.3853638Z     at async a (.next/server/chunks/_f8420387._.js:126:6305)
+2026-01-27T03:48:33.3853662Z     at async Module.t (.next/server/chunks/[root-of-the-server]__d471315f._.js:1:2423) {
+2026-01-27T03:48:33.3853685Z   clientVersion: '6.8.2'
+2026-01-27T03:48:33.3853705Z }
+2026-01-27T05:06:54.1254981Z Preset questions generation error: Error: No response from AI
+2026-01-27T05:06:54.1255667Z     at u (.next/server/chunks/[root-of-the-server]__903717c2._.js:118:1056)
+2026-01-27T05:06:54.1255693Z     at async s (.next/server/chunks/_a90b4b09._.js:35:128)
+2026-01-27T05:06:54.1255710Z     at async d (.next/server/chunks/_a90b4b09._.js:35:6498)
+2026-01-27T05:06:54.1255727Z     at async u (.next/server/chunks/_a90b4b09._.js:35:7539)
+2026-01-27T05:06:54.1255744Z     at async Module.v (.next/server/chunks/_a90b4b09._.js:35:8617)
+2026-01-27T05:45:56.4655893Z Warning: TT: undefined function: 21
+2026-01-27T05:46:06.4926211Z (node:2082) [DEP0005] DeprecationWarning: Buffer() is deprecated due to security and usability issues. Please use the Buffer.alloc(), Buffer.allocUnsafe(), or Buffer.from() methods instead.
+2026-01-27T05:46:06.4926744Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-01-27T05:46:06.5410910Z Starting Azure OpenAI request...
+2026-01-27T05:48:24.8101196Z Response finish_reason: stop
+2026-01-27T05:48:24.8163668Z Response tokens: {"completion_tokens":7368,"completion_tokens_details":{"accepted_prediction_tokens":0,"audio_tokens":0,"reasoning_tokens":0,"rejected_prediction_tokens":0},"prompt_tokens":37388,"prompt_tokens_details":{"audio_tokens":0,"cached_tokens":0},"total_tokens":44756}
+2026-01-27T05:48:25.0969407Z Exploration cmkw6allt0004n4luipfmfsi7 completed
+2026-01-27T06:39:27.8387780Z Starting Azure OpenAI request...
+2026-01-27T06:41:46.2023140Z Response finish_reason: stop
+2026-01-27T06:41:46.2132196Z Response tokens: {"completion_tokens":7142,"completion_tokens_details":{"accepted_prediction_tokens":0,"audio_tokens":0,"reasoning_tokens":0,"rejected_prediction_tokens":0},"prompt_tokens":37379,"prompt_tokens_details":{"audio_tokens":0,"cached_tokens":0},"total_tokens":44521}
+2026-01-27T06:41:46.4415692Z Exploration cmkw87mr10005n4ludblb80cc completed
+2026-01-27T10:22:34.4817744Z Starting meta-analysis request...
+2026-01-27T10:23:48.5177547Z Meta-analysis response received
+2026-01-27T10:23:48.9606881Z Meta-analysis saved with id: cmkwg85ht000hn4luf1o8vajb
+2026-01-27T10:24:46.4109509Z Generating SWOT analysis with AI...
+2026-01-27T10:46:46.3086059Z    _____                               
+2026-01-27T10:46:46.4338154Z   /  _  \ __________ _________   ____  
+2026-01-27T10:46:46.4338473Z  /  /_\  \\___   /  |  \_  __ \_/ __ \ 
+2026-01-27T10:46:46.4338500Z /    |    \/    /|  |  /|  | \/\  ___/ 
+2026-01-27T10:46:46.4338527Z \____|__  /_____ \____/ |__|    \___  >
+2026-01-27T10:46:46.4338575Z         \/      \/                  \/ 
+2026-01-27T10:46:46.4338675Z A P P   S E R V I C E   O N   L I N U X
+2026-01-27T10:46:46.4338695Z 
+2026-01-27T10:46:46.4338725Z Documentation    : http://aka.ms/webapp-linux
+2026-01-27T10:46:46.4338751Z NodeJS quickstart: https://aka.ms/node-qs
+2026-01-27T10:46:46.4338772Z NodeJS Version   : v20.19.5
+2026-01-27T10:46:46.4338793Z Instance Name    : lw0sdlwk00013L
+2026-01-27T10:46:46.4338844Z Instance Id      : 5b7811789b1e33b7cc756bce49c73cf44172046100af9c564b5a3ebcd20cab6c
+2026-01-27T10:46:46.4338867Z 
+2026-01-27T10:46:46.4338889Z Note: Any data outside '/home' is not persisted
+2026-01-27T10:46:53.7356433Z Starting OpenBSD Secure Shell server: sshd.
+2026-01-27T10:46:53.7680078Z WEBSITES_INCLUDE_CLOUD_CERTS is not set to true.
+2026-01-27T10:46:53.8643149Z Updating certificates in /etc/ssl/certs...
+2026-01-27T10:47:58.3178271Z rehash: warning: skipping duplicate certificate in azl_SSL.com_TLS_ECC_Root_CA_2022.pem
+2026-01-27T10:47:58.3462996Z rehash: warning: skipping duplicate certificate in azl_SSL.com_TLS_RSA_Root_CA_2022.pem
+2026-01-27T10:47:59.3916271Z rehash: warning: skipping ca-certificates.crt,it does not contain exactly one certificate or CRL
+2026-01-27T10:48:00.3840848Z 4 added, 0 removed; done.
+2026-01-27T10:48:00.4215499Z Running hooks in /etc/ca-certificates/update.d...
+2026-01-27T10:48:00.5909365Z done.
+2026-01-27T10:48:00.6111705Z CA certificates copied and updated successfully.
+2026-01-27T10:48:02.9608991Z Starting periodic command scheduler: cron.
+2026-01-27T10:48:05.1173433Z Found build manifest file at '/home/site/wwwroot/oryx-manifest.toml'. Deserializing it...
+2026-01-27T10:48:05.2292740Z Could not find operation ID in manifest. Generating an operation id...
+2026-01-27T10:48:05.2293265Z Build Operation ID: 6fe429a9-f057-42ff-aac0-d116b0194bcb
+2026-01-27T10:48:11.3539875Z Environment Variables for Application Insight's IPA Codeless Configuration exists..
+2026-01-27T10:48:11.4961075Z Writing output script to '/opt/startup/startup.sh'
+2026-01-27T10:48:12.0319816Z Running #!/bin/sh
+2026-01-27T10:48:12.0320171Z 
+2026-01-27T10:48:12.0320209Z # Enter the source directory to make sure the script runs where the user expects
+2026-01-27T10:48:12.0320236Z cd "/home/site/wwwroot"
+2026-01-27T10:48:12.0320256Z 
+2026-01-27T10:48:12.0320279Z export NODE_PATH=/usr/local/lib/node_modules:$NODE_PATH
+2026-01-27T10:48:12.0320300Z if [ -z "$PORT" ]; then
+2026-01-27T10:48:12.0320322Z 		export PORT=8080
+2026-01-27T10:48:12.0320359Z fi
+2026-01-27T10:48:12.0320380Z 
+2026-01-27T10:48:12.0320402Z echo Found tar.gz based node_modules.
+2026-01-27T10:48:12.0320426Z extractionCommand="tar -xzf node_modules.tar.gz -C /node_modules"
+2026-01-27T10:48:12.0320448Z echo "Removing existing modules directory from root..."
+2026-01-27T10:48:12.0320469Z rm -fr /node_modules
+2026-01-27T10:48:12.0320490Z mkdir -p /node_modules
+2026-01-27T10:48:12.0320527Z echo Extracting modules...
+2026-01-27T10:48:12.0320548Z $extractionCommand
+2026-01-27T10:48:12.0320583Z export NODE_PATH="/node_modules":$NODE_PATH
+2026-01-27T10:48:12.0320607Z export PATH=/node_modules/.bin:$PATH
+2026-01-27T10:48:12.0320628Z if [ -d node_modules ]; then
+2026-01-27T10:48:12.0320650Z     mv -f node_modules _del_node_modules || true
+2026-01-27T10:48:12.0320670Z fi
+2026-01-27T10:48:12.0320708Z 
+2026-01-27T10:48:12.0320730Z if [ -d /node_modules ]; then
+2026-01-27T10:48:12.0320752Z     ln -sfn /node_modules ./node_modules 
+2026-01-27T10:48:12.0320772Z fi
+2026-01-27T10:48:12.0320791Z 
+2026-01-27T10:48:12.0320811Z echo "Done."
+2026-01-27T10:48:12.0320832Z PATH="$PATH:/home/site/wwwroot" node server.js
+2026-01-27T10:48:12.0607798Z Found tar.gz based node_modules.
+2026-01-27T10:48:12.0608216Z Removing existing modules directory from root...
+2026-01-27T10:48:12.3356760Z Extracting modules...
+2026-01-27T10:48:23.8118523Z Done.
+2026-01-27T10:48:28.1379045Z ▲ Next.js 16.1.4
+2026-01-27T10:48:28.1872282Z - Local:         http://ecda1f28ccf4:8080
+2026-01-27T10:48:28.1948397Z - Network:       http://ecda1f28ccf4:8080
+2026-01-27T10:48:28.1959750Z 
+2026-01-27T10:48:28.1970561Z ✓ Starting...
+2026-01-27T10:48:29.6785575Z ✓ Ready in 1697ms
+2026-01-27T10:48:30.9443265Z [Auto-Seed] RAGドキュメントが0件です。シードを実行します...
+2026-01-27T10:48:32.7093638Z [Auto-Seed] 8件のRAGドキュメントをシードしました
+2026-01-27T10:48:32.7224576Z [Auto-Seed] 探索データが不足しています (Exploration: 0, TopStrategy: 0, StrategyDecision: 0)。シードを実行します...
+2026-01-27T10:48:33.0351233Z [Auto-Seed] CompanyProfileをシードしました
+2026-01-27T10:48:33.2683088Z [Auto-Seed] DefaultSwotをシードしました
+2026-01-27T10:48:34.0897271Z [Auto-Seed] 6件のCoreAssetをシードしました
+2026-01-27T10:48:46.8375610Z [Auto-Seed] エラー: Error [PrismaClientUnknownRequestError]: 
+2026-01-27T10:48:46.8376339Z Invalid `prisma.exploration.create()` invocation:
+2026-01-27T10:48:46.8376372Z 
+2026-01-27T10:48:46.8376402Z 
+2026-01-27T10:48:46.8376425Z Error occurred during query execution:
+2026-01-27T10:48:46.8376464Z ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(SqliteError { extended_code: 14, message: Some("unable to open database file") }), transient: false })
+2026-01-27T10:48:46.8376490Z     at lD.handleRequestError (.next/server/chunks/_f8420387._.js:114:8227)
+2026-01-27T10:48:46.8376538Z     at lD.handleAndLogRequestError (.next/server/chunks/_f8420387._.js:114:7100)
+2026-01-27T10:48:46.8376563Z     at lD.request (.next/server/chunks/_f8420387._.js:114:6807)
+2026-01-27T10:48:46.8376586Z     at async a (.next/server/chunks/_f8420387._.js:126:6305)
+2026-01-27T10:48:46.8376610Z     at async Module.t (.next/server/chunks/[root-of-the-server]__d471315f._.js:1:2945) {
+2026-01-27T10:48:46.8376633Z   clientVersion: '6.8.2'
+2026-01-27T10:48:46.8376654Z }
+2026-01-27T10:54:56.3083043Z Generating SWOT analysis with AI...
+2026-01-27T10:56:12.5875401Z Preset questions generation error: Error: No response from AI
+2026-01-27T10:56:12.5876097Z     at u (.next/server/chunks/[root-of-the-server]__903717c2._.js:118:1056)
+2026-01-27T10:56:12.5876126Z     at async s (.next/server/chunks/_a90b4b09._.js:35:128)
+2026-01-27T10:56:12.5876143Z     at async d (.next/server/chunks/_a90b4b09._.js:35:6498)
+2026-01-27T10:56:12.5876159Z     at async u (.next/server/chunks/_a90b4b09._.js:35:7539)
+2026-01-27T10:56:12.5876177Z     at async Module.v (.next/server/chunks/_a90b4b09._.js:35:8617)
+2026-01-27T10:56:30.2763152Z Warning: TT: undefined function: 21
+2026-01-27T10:56:38.7909001Z (node:2081) [DEP0005] DeprecationWarning: Buffer() is deprecated due to security and usability issues. Please use the Buffer.alloc(), Buffer.allocUnsafe(), or Buffer.from() methods instead.
+2026-01-27T10:56:38.7909564Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-01-27T10:56:39.1732471Z Starting Azure OpenAI request...
+2026-01-27T10:57:20.2238718Z [Evolve] Starting Azure OpenAI request...
+2026-01-27T10:57:20.2525686Z [Evolve] Strategies count: 5
+2026-01-27T10:57:23.6651060Z [Auto-Explore] Starting autonomous exploration...
+2026-01-27T10:57:23.8648039Z [Auto-Explore] Generating questions...
+2026-01-27T10:57:38.8844819Z [Auto-Explore] Generated 5 questions
+2026-01-27T10:57:38.8845386Z [Auto-Explore] Exploring: DP訓練センター（ClassNK認証・年間500名）を活用し、MOLグループ船隊400隻の運航データ...
+2026-01-27T10:57:39.1255221Z Starting Azure OpenAI request...
+2026-01-27T10:57:45.0845245Z Starting meta-analysis request...
+2026-01-27T10:59:01.9995184Z Response finish_reason: stop
+2026-01-27T10:59:01.9995734Z Response tokens: {"completion_tokens":6380,"completion_tokens_details":{"accepted_prediction_tokens":0,"audio_tokens":0,"reasoning_tokens":0,"rejected_prediction_tokens":0},"prompt_tokens":38383,"prompt_tokens_details":{"audio_tokens":0,"cached_tokens":0},"total_tokens":44763}
+2026-01-27T10:59:02.1824070Z Exploration cmkwhe0m5000ktalt0a7a2ea9 completed
+2026-01-27T10:59:06.7312196Z Response finish_reason: stop
+2026-01-27T10:59:06.7350372Z Response tokens: {"completion_tokens":4761,"completion_tokens_details":{"accepted_prediction_tokens":0,"audio_tokens":0,"reasoning_tokens":0,"rejected_prediction_tokens":0},"prompt_tokens":37615,"prompt_tokens_details":{"audio_tokens":0,"cached_tokens":0},"total_tokens":42376}
+2026-01-27T10:59:06.9235751Z [Auto-Explore] Exploring: 操船・DPシミュレータの訓練ログ（操船操作、判断、エラー）をAzure AIで解析し、個人/船隊の技...
+2026-01-27T10:59:06.9587328Z [Evolve] Response received
+2026-01-27T10:59:06.9592183Z [Evolve] Finish reason: stop
+2026-01-27T10:59:06.9593323Z [Evolve] Usage: {"completion_tokens":5809,"completion_tokens_details":{"accepted_prediction_tokens":0,"audio_tokens":0,"reasoning_tokens":0,"rejected_prediction_tokens":0},"prompt_tokens":2828,"prompt_tokens_details":{"audio_tokens":0,"cached_tokens":0},"total_tokens":8637}
+2026-01-27T10:59:06.9594641Z [Evolve] Content filter results: {"hate":{"filtered":false,"severity":"safe"},"protected_material_code":{"filtered":false,"detected":false},"protected_material_text":{"filtered":false,"detected":false},"self_harm":{"filtered":false,"severity":"safe"},"sexual":{"filtered":false,"severity":"safe"},"violence":{"filtered":false,"severity":"safe"}}
+2026-01-27T10:59:06.9596397Z [Evolve] Content length: 9527
+2026-01-27T10:59:07.3031045Z Starting Azure OpenAI request...
+2026-01-27T10:59:07.5224768Z [Evolve] Archived 1 high-score strategies to ranking
+2026-01-27T10:59:17.0324703Z Meta-analysis response received
+2026-01-27T10:59:17.2178040Z Meta-analysis saved with id: cmkwhhrqq000vtaltqqovg5ut
+2026-01-27T11:00:57.9986942Z Response finish_reason: stop
+2026-01-27T11:00:57.9987319Z Response tokens: {"completion_tokens":6392,"completion_tokens_details":{"accepted_prediction_tokens":0,"audio_tokens":0,"reasoning_tokens":0,"rejected_prediction_tokens":0},"prompt_tokens":37587,"prompt_tokens_details":{"audio_tokens":0,"cached_tokens":0},"total_tokens":43979}
+2026-01-27T11:00:58.3362590Z [Auto-Explore] Exploring: 海事専門知識ベース（IMO/旗国/船級/P&I/入出港）×Azure AIで、船社の実務に直結する『...
+2026-01-27T11:00:58.4991937Z Starting Azure OpenAI request...
+2026-01-27T11:02:48.6569927Z Response finish_reason: stop
+2026-01-27T11:02:48.6570333Z Response tokens: {"completion_tokens":5593,"completion_tokens_details":{"accepted_prediction_tokens":0,"audio_tokens":0,"reasoning_tokens":0,"rejected_prediction_tokens":0},"prompt_tokens":37597,"prompt_tokens_details":{"audio_tokens":0,"cached_tokens":0},"total_tokens":43190}
+2026-01-27T11:02:48.8414555Z [Auto-Explore] Exploring: 3社シナジー（MOLの船隊・運航現場＋訓練センター＋Azure AI）で、実船の運航・気象・機器デー...
+2026-01-27T11:02:48.9991783Z Starting Azure OpenAI request...
+2026-01-27T11:04:36.5367648Z Response finish_reason: stop
+2026-01-27T11:04:36.5375174Z Response tokens: {"completion_tokens":5766,"completion_tokens_details":{"accepted_prediction_tokens":0,"audio_tokens":0,"reasoning_tokens":0,"rejected_prediction_tokens":0},"prompt_tokens":37604,"prompt_tokens_details":{"audio_tokens":0,"cached_tokens":1280},"total_tokens":43370}
+2026-01-27T11:04:36.8413899Z [Auto-Explore] Exploring: 訓練修了者2,000名の船員ネットワークとフィリピン商船大学連携を活用し、船社向けに『DP有資格者の...
+2026-01-27T11:04:37.0789803Z Starting Azure OpenAI request...
+2026-01-27T11:06:07.0539391Z    _____                               
+2026-01-27T11:06:07.1982457Z   /  _  \ __________ _________   ____  
+2026-01-27T11:06:07.1982792Z  /  /_\  \\___   /  |  \_  __ \_/ __ \ 
+2026-01-27T11:06:07.1982828Z /    |    \/    /|  |  /|  | \/\  ___/ 
+2026-01-27T11:06:07.1982849Z \____|__  /_____ \____/ |__|    \___  >
+2026-01-27T11:06:07.1982867Z         \/      \/                  \/ 
+2026-01-27T11:06:07.1982922Z A P P   S E R V I C E   O N   L I N U X
+2026-01-27T11:06:07.1983003Z 
+2026-01-27T11:06:07.1983039Z Documentation    : http://aka.ms/webapp-linux
+2026-01-27T11:06:07.1983059Z NodeJS quickstart: https://aka.ms/node-qs
+2026-01-27T11:06:07.1983082Z NodeJS Version   : v20.19.5
+2026-01-27T11:06:07.1983102Z Instance Name    : lw0sdlwk00013L
+2026-01-27T11:06:07.1983132Z Instance Id      : 5b7811789b1e33b7cc756bce49c73cf44172046100af9c564b5a3ebcd20cab6c
+2026-01-27T11:06:07.1983166Z 
+2026-01-27T11:06:07.1983186Z Note: Any data outside '/home' is not persisted
+2026-01-27T11:06:10.4627844Z Starting OpenBSD Secure Shell server: sshd.
+2026-01-27T11:06:10.4843165Z WEBSITES_INCLUDE_CLOUD_CERTS is not set to true.
+2026-01-27T11:06:10.5833098Z Updating certificates in /etc/ssl/certs...
+2026-01-27T11:06:28.4818866Z Response finish_reason: stop
+2026-01-27T11:06:28.4824146Z Response tokens: {"completion_tokens":7281,"completion_tokens_details":{"accepted_prediction_tokens":0,"audio_tokens":0,"reasoning_tokens":0,"rejected_prediction_tokens":0},"prompt_tokens":37605,"prompt_tokens_details":{"audio_tokens":0,"cached_tokens":1280},"total_tokens":44886}
+2026-01-27T11:06:30.2237723Z [Auto-Explore] Completed in 546s. Top score: 4.50
+2026-01-27T11:06:31.8372694Z [Auto-Explore] Archived 3 top strategies
+2026-01-27T11:06:32.3283493Z [Auto-Explore] Fatal error: Error [PrismaClientKnownRequestError]: 
+2026-01-27T11:06:32.3284086Z Invalid `prisma.autoExploreRun.update()` invocation:
+2026-01-27T11:06:32.3284111Z 
+2026-01-27T11:06:32.3284126Z 
+2026-01-27T11:06:32.3284147Z An operation failed because it depends on one or more records that were required but not found. No record was found for an update.
+2026-01-27T11:06:32.3284165Z     at lD.handleRequestError (.next/server/chunks/_01d17062._.js:114:8040)
+2026-01-27T11:06:32.3284183Z     at lD.handleAndLogRequestError (.next/server/chunks/_01d17062._.js:114:7100)
+2026-01-27T11:06:32.3284200Z     at lD.request (.next/server/chunks/_01d17062._.js:114:6807)
+2026-01-27T11:06:32.3284218Z     at async a (.next/server/chunks/_01d17062._.js:126:6305)
+2026-01-27T11:06:32.3284234Z     at async d (.next/server/chunks/_35689cbd._.js:16:2769)
+2026-01-27T11:06:32.3284250Z     at async c (.next/server/chunks/_35689cbd._.js:16:8513)
+2026-01-27T11:06:32.3284305Z     at async u (.next/server/chunks/_35689cbd._.js:16:9554)
+2026-01-27T11:06:32.3284323Z     at async Module.v (.next/server/chunks/_35689cbd._.js:16:10632) {
+2026-01-27T11:06:32.3284339Z   code: 'P2025',
+2026-01-27T11:06:32.3284355Z   meta: [Object],
+2026-01-27T11:06:32.3284370Z   clientVersion: '6.8.2'
+2026-01-27T11:06:32.3284385Z }
+2026-01-27T11:06:32.5377119Z ⨯ Error [PrismaClientKnownRequestError]: 
+2026-01-27T11:06:32.5377789Z Invalid `prisma.autoExploreRun.update()` invocation:
+2026-01-27T11:06:32.5377818Z 
+2026-01-27T11:06:32.5377836Z 
+2026-01-27T11:06:32.5377859Z An operation failed because it depends on one or more records that were required but not found. No record was found for an update.
+2026-01-27T11:06:32.5377987Z     at lD.handleRequestError (.next/server/chunks/_01d17062._.js:114:8040)
+2026-01-27T11:06:32.5378009Z     at lD.handleAndLogRequestError (.next/server/chunks/_01d17062._.js:114:7100)
+2026-01-27T11:06:32.5378028Z     at lD.request (.next/server/chunks/_01d17062._.js:114:6807)
+2026-01-27T11:06:32.5378045Z     at async a (.next/server/chunks/_01d17062._.js:126:6305)
+2026-01-27T11:06:32.5378063Z     at async d (.next/server/chunks/_35689cbd._.js:16:3393)
+2026-01-27T11:06:32.5378082Z     at async c (.next/server/chunks/_35689cbd._.js:16:8513)
+2026-01-27T11:06:32.5378100Z     at async u (.next/server/chunks/_35689cbd._.js:16:9554)
+2026-01-27T11:06:32.5378119Z     at async Module.v (.next/server/chunks/_35689cbd._.js:16:10632) {
+2026-01-27T11:06:32.5378136Z   code: 'P2025',
+2026-01-27T11:06:32.5378153Z   meta: [Object],
+2026-01-27T11:06:32.5378171Z   clientVersion: '6.8.2'
+2026-01-27T11:06:32.5378215Z }
+2026-01-27T11:06:36.8193409Z rehash: warning: skipping duplicate certificate in azl_SSL.com_TLS_ECC_Root_CA_2022.pem
+2026-01-27T11:06:36.8199799Z rehash: warning: skipping duplicate certificate in azl_SSL.com_TLS_RSA_Root_CA_2022.pem
+2026-01-27T11:06:37.1188732Z rehash: warning: skipping ca-certificates.crt,it does not contain exactly one certificate or CRL
+2026-01-27T11:06:37.2238896Z 4 added, 0 removed; done.
+2026-01-27T11:06:37.2243983Z Running hooks in /etc/ca-certificates/update.d...
+2026-01-27T11:06:37.2345823Z done.
+2026-01-27T11:06:37.2548411Z CA certificates copied and updated successfully.
+2026-01-27T11:06:37.4630730Z Starting periodic command scheduler: cron.
+2026-01-27T11:06:37.7962534Z Found build manifest file at '/home/site/wwwroot/oryx-manifest.toml'. Deserializing it...
+2026-01-27T11:06:37.8278727Z Could not find operation ID in manifest. Generating an operation id...
+2026-01-27T11:06:37.8283696Z Build Operation ID: f803b709-b460-4124-93df-228a0c314121
+2026-01-27T11:06:38.8390357Z Environment Variables for Application Insight's IPA Codeless Configuration exists..
+2026-01-27T11:06:38.9459981Z Writing output script to '/opt/startup/startup.sh'
+2026-01-27T11:06:39.1419694Z Running #!/bin/sh
+2026-01-27T11:06:39.1425254Z 
+2026-01-27T11:06:39.1425456Z # Enter the source directory to make sure the script runs where the user expects
+2026-01-27T11:06:39.1425483Z cd "/home/site/wwwroot"
+2026-01-27T11:06:39.1425503Z 
+2026-01-27T11:06:39.1425525Z export NODE_PATH=/usr/local/lib/node_modules:$NODE_PATH
+2026-01-27T11:06:39.1425547Z if [ -z "$PORT" ]; then
+2026-01-27T11:06:39.1425568Z 		export PORT=8080
+2026-01-27T11:06:39.1425589Z fi
+2026-01-27T11:06:39.1425630Z 
+2026-01-27T11:06:39.1425653Z echo Found tar.gz based node_modules.
+2026-01-27T11:06:39.1425676Z extractionCommand="tar -xzf node_modules.tar.gz -C /node_modules"
+2026-01-27T11:06:39.1425698Z echo "Removing existing modules directory from root..."
+2026-01-27T11:06:39.1425719Z rm -fr /node_modules
+2026-01-27T11:06:39.1425740Z mkdir -p /node_modules
+2026-01-27T11:06:39.1425761Z echo Extracting modules...
+2026-01-27T11:06:39.1425798Z $extractionCommand
+2026-01-27T11:06:39.1425852Z export NODE_PATH="/node_modules":$NODE_PATH
+2026-01-27T11:06:39.1425876Z export PATH=/node_modules/.bin:$PATH
+2026-01-27T11:06:39.1425897Z if [ -d node_modules ]; then
+2026-01-27T11:06:39.1425919Z     mv -f node_modules _del_node_modules || true
+2026-01-27T11:06:39.1425939Z fi
+2026-01-27T11:06:39.1425979Z 
+2026-01-27T11:06:39.1426001Z if [ -d /node_modules ]; then
+2026-01-27T11:06:39.1426023Z     ln -sfn /node_modules ./node_modules 
+2026-01-27T11:06:39.1426042Z fi
+2026-01-27T11:06:39.1426061Z 
+2026-01-27T11:06:39.1426084Z echo "Done."
+2026-01-27T11:06:39.1612487Z PATH="$PATH:/home/site/wwwroot" node server.js
+2026-01-27T11:06:39.1613006Z Found tar.gz based node_modules.
+2026-01-27T11:06:39.1613132Z Removing existing modules directory from root...
+2026-01-27T11:06:39.3115409Z Extracting modules...
+2026-01-27T11:06:47.7778922Z Done.
+2026-01-27T11:06:52.6924700Z ▲ Next.js 16.1.4
+2026-01-27T11:06:52.7014636Z - Local:         http://3526b197b576:8080
+2026-01-27T11:06:52.7032023Z - Network:       http://3526b197b576:8080
+2026-01-27T11:06:52.7032511Z 
+2026-01-27T11:06:52.7032562Z ✓ Starting...
+2026-01-27T11:06:53.9877217Z ✓ Ready in 1728ms
+2026-01-27T11:06:56.0496448Z [Auto-Seed] RAGドキュメントが0件です。シードを実行します...
+2026-01-27T11:06:57.2486833Z [Auto-Seed] エラー: Error [PrismaClientUnknownRequestError]: 
+2026-01-27T11:06:57.2487470Z Invalid `prisma.rAGDocument.create()` invocation:
+2026-01-27T11:06:57.2487502Z 
+2026-01-27T11:06:57.2487534Z 
+2026-01-27T11:06:57.2487556Z Error occurred during query execution:
+2026-01-27T11:06:57.2487603Z ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(SqliteError { extended_code: 14, message: Some("unable to open database file") }), transient: false })
+2026-01-27T11:06:57.2487628Z     at lD.handleRequestError (.next/server/chunks/_f8420387._.js:114:8227)
+2026-01-27T11:06:57.2487687Z     at lD.handleAndLogRequestError (.next/server/chunks/_f8420387._.js:114:7100)
+2026-01-27T11:06:57.2487709Z     at lD.request (.next/server/chunks/_f8420387._.js:114:6807)
+2026-01-27T11:06:57.2487732Z     at async a (.next/server/chunks/_f8420387._.js:126:6305)
+2026-01-27T11:06:57.2487756Z     at async Module.t (.next/server/chunks/[root-of-the-server]__d471315f._.js:1:391) {
+2026-01-27T11:06:57.2487777Z   clientVersion: '6.8.2'
+2026-01-27T11:06:57.2487799Z }
+2026-01-27T13:31:20.9312984Z    _____                               
+2026-01-27T13:31:20.9324563Z   /  _  \ __________ _________   ____  
+2026-01-27T13:31:20.9324706Z  /  /_\  \\___   /  |  \_  __ \_/ __ \ 
+2026-01-27T13:31:20.9324777Z /    |    \/    /|  |  /|  | \/\  ___/ 
+2026-01-27T13:31:20.9324802Z \____|__  /_____ \____/ |__|    \___  >
+2026-01-27T13:31:20.9324835Z         \/      \/                  \/ 
+2026-01-27T13:31:20.9324856Z A P P   S E R V I C E   O N   L I N U X
+2026-01-27T13:31:20.9324876Z 
+2026-01-27T13:31:20.9324904Z Documentation    : http://aka.ms/webapp-linux
+2026-01-27T13:31:20.9324930Z NodeJS quickstart: https://aka.ms/node-qs
+2026-01-27T13:31:20.9324970Z NodeJS Version   : v20.19.5
+2026-01-27T13:31:20.9324992Z Instance Name    : lw0sdlwk00013L
+2026-01-27T13:31:20.9325020Z Instance Id      : 5b7811789b1e33b7cc756bce49c73cf44172046100af9c564b5a3ebcd20cab6c
+2026-01-27T13:31:20.9325040Z 
+2026-01-27T13:31:20.9325062Z Note: Any data outside '/home' is not persisted
+2026-01-27T13:31:24.8017393Z Starting OpenBSD Secure Shell server: sshd.
+2026-01-27T13:31:24.8297740Z WEBSITES_INCLUDE_CLOUD_CERTS is not set to true.
+2026-01-27T13:31:24.9098569Z Updating certificates in /etc/ssl/certs...
+2026-01-27T13:31:52.2013839Z rehash: warning: skipping duplicate certificate in azl_SSL.com_TLS_ECC_Root_CA_2022.pem
+2026-01-27T13:31:52.2700501Z rehash: warning: skipping duplicate certificate in azl_SSL.com_TLS_RSA_Root_CA_2022.pem
+2026-01-27T13:31:52.7008674Z rehash: warning: skipping ca-certificates.crt,it does not contain exactly one certificate or CRL
+2026-01-27T13:31:52.7915707Z 4 added, 0 removed; done.
+2026-01-27T13:31:52.7927650Z Running hooks in /etc/ca-certificates/update.d...
+2026-01-27T13:31:52.8322622Z done.
+2026-01-27T13:31:52.8616517Z CA certificates copied and updated successfully.
+2026-01-27T13:31:53.0327074Z Starting periodic command scheduler: cron.
+2026-01-27T13:31:53.4454113Z Found build manifest file at '/home/site/wwwroot/oryx-manifest.toml'. Deserializing it...
+2026-01-27T13:31:53.5412632Z Could not find operation ID in manifest. Generating an operation id...
+2026-01-27T13:31:53.5423742Z Build Operation ID: 18e6e387-87f4-4ee8-81f1-9d892a0c23e7
+2026-01-27T13:31:54.3866425Z Environment Variables for Application Insight's IPA Codeless Configuration exists..
+2026-01-27T13:31:54.4987658Z Writing output script to '/opt/startup/startup.sh'
+2026-01-27T13:31:54.6797540Z Running #!/bin/sh
+2026-01-27T13:31:54.6798201Z 
+2026-01-27T13:31:54.6798319Z # Enter the source directory to make sure the script runs where the user expects
+2026-01-27T13:31:54.6798360Z cd "/home/site/wwwroot"
+2026-01-27T13:31:54.6798380Z 
+2026-01-27T13:31:54.6798401Z export NODE_PATH=/usr/local/lib/node_modules:$NODE_PATH
+2026-01-27T13:31:54.6798424Z if [ -z "$PORT" ]; then
+2026-01-27T13:31:54.6798444Z 		export PORT=8080
+2026-01-27T13:31:54.6798464Z fi
+2026-01-27T13:31:54.6798499Z 
+2026-01-27T13:31:54.6798521Z echo Found tar.gz based node_modules.
+2026-01-27T13:31:54.6798545Z extractionCommand="tar -xzf node_modules.tar.gz -C /node_modules"
+2026-01-27T13:31:54.6798568Z echo "Removing existing modules directory from root..."
+2026-01-27T13:31:54.6798589Z rm -fr /node_modules
+2026-01-27T13:31:54.6798609Z mkdir -p /node_modules
+2026-01-27T13:31:54.6798630Z echo Extracting modules...
+2026-01-27T13:31:54.6798667Z $extractionCommand
+2026-01-27T13:31:54.6798719Z export NODE_PATH="/node_modules":$NODE_PATH
+2026-01-27T13:31:54.6798742Z export PATH=/node_modules/.bin:$PATH
+2026-01-27T13:31:54.6798763Z if [ -d node_modules ]; then
+2026-01-27T13:31:54.6798785Z     mv -f node_modules _del_node_modules || true
+2026-01-27T13:31:54.6798805Z fi
+2026-01-27T13:31:54.6798825Z 
+2026-01-27T13:31:54.6798860Z if [ -d /node_modules ]; then
+2026-01-27T13:31:54.6798882Z     ln -sfn /node_modules ./node_modules 
+2026-01-27T13:31:54.6798902Z fi
+2026-01-27T13:31:54.6798921Z 
+2026-01-27T13:31:54.6798941Z echo "Done."
+2026-01-27T13:31:54.6801986Z PATH="$PATH:/home/site/wwwroot" node server.js
+2026-01-27T13:31:54.7083313Z Found tar.gz based node_modules.
+2026-01-27T13:31:54.7096974Z Removing existing modules directory from root...
+2026-01-27T13:31:54.7608365Z Extracting modules...
+2026-01-27T13:32:08.7722850Z Done.
+2026-01-27T13:32:18.2122823Z ▲ Next.js 16.1.4
+2026-01-27T13:32:18.2220787Z - Local:         http://c8cd8d344cd4:8080
+2026-01-27T13:32:18.2231719Z - Network:       http://c8cd8d344cd4:8080
+2026-01-27T13:32:18.2320393Z 
+2026-01-27T13:32:18.2327864Z ✓ Starting...
+2026-01-27T13:32:20.6220308Z ✓ Ready in 2.8s
+2026-01-27T13:32:24.9724940Z [Auto-Seed] RAGドキュメントが0件です。シードを実行します...
+2026-01-27T13:32:29.0373884Z [Auto-Seed] 8件のRAGドキュメントをシードしました
+2026-01-27T13:32:29.2439225Z [Auto-Seed] 探索データが不足しています (Exploration: 0, TopStrategy: 0, StrategyDecision: 0)。シードを実行します...
+2026-01-27T13:32:29.9992835Z [Auto-Seed] CompanyProfileをシードしました
+2026-01-27T13:32:30.3874219Z [Auto-Seed] DefaultSwotをシードしました
+2026-01-27T13:32:31.8608601Z [Auto-Seed] 6件のCoreAssetをシードしました
+2026-01-27T13:32:48.3208587Z [Auto-Seed] エラー: Error [PrismaClientUnknownRequestError]: 
+2026-01-27T13:32:48.3209312Z Invalid `prisma.exploration.create()` invocation:
+2026-01-27T13:32:48.3209345Z 
+2026-01-27T13:32:48.3209379Z 
+2026-01-27T13:32:48.3209402Z Error occurred during query execution:
+2026-01-27T13:32:48.3209441Z ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(SqliteError { extended_code: 14, message: Some("unable to open database file") }), transient: false })
+2026-01-27T13:32:48.3209466Z     at lN.handleRequestError (.next/server/chunks/_f8420387._.js:114:8227)
+2026-01-27T13:32:48.3209514Z     at lN.handleAndLogRequestError (.next/server/chunks/_f8420387._.js:114:7100)
+2026-01-27T13:32:48.3209539Z     at lN.request (.next/server/chunks/_f8420387._.js:114:6807)
+2026-01-27T13:32:48.3209563Z     at async a (.next/server/chunks/_f8420387._.js:126:6305)
+2026-01-27T13:32:48.3209586Z     at async Module.t (.next/server/chunks/[root-of-the-server]__d471315f._.js:1:2945) {
+2026-01-27T13:32:48.3209609Z   clientVersion: '6.8.2'
+2026-01-27T13:32:48.3209629Z }
+2026-01-27T13:48:45.9557818Z    _____                               
+2026-01-27T13:48:45.9574563Z   /  _  \ __________ _________   ____  
+2026-01-27T13:48:45.9574699Z  /  /_\  \\___   /  |  \_  __ \_/ __ \ 
+2026-01-27T13:48:45.9574724Z /    |    \/    /|  |  /|  | \/\  ___/ 
+2026-01-27T13:48:45.9574747Z \____|__  /_____ \____/ |__|    \___  >
+2026-01-27T13:48:45.9574768Z         \/      \/                  \/ 
+2026-01-27T13:48:45.9574831Z A P P   S E R V I C E   O N   L I N U X
+2026-01-27T13:48:45.9574853Z 
+2026-01-27T13:48:45.9574878Z Documentation    : http://aka.ms/webapp-linux
+2026-01-27T13:48:45.9574901Z NodeJS quickstart: https://aka.ms/node-qs
+2026-01-27T13:48:45.9574926Z NodeJS Version   : v20.19.5
+2026-01-27T13:48:45.9574948Z Instance Name    : lw0sdlwk00013L
+2026-01-27T13:48:45.9574994Z Instance Id      : 5b7811789b1e33b7cc756bce49c73cf44172046100af9c564b5a3ebcd20cab6c
+2026-01-27T13:48:45.9575016Z 
+2026-01-27T13:48:45.9575038Z Note: Any data outside '/home' is not persisted
+2026-01-27T13:48:50.4215827Z Starting OpenBSD Secure Shell server: sshd.
+2026-01-27T13:48:50.4809085Z WEBSITES_INCLUDE_CLOUD_CERTS is not set to true.
+2026-01-27T13:48:50.5893625Z Updating certificates in /etc/ssl/certs...
+2026-01-27T13:49:18.3629146Z rehash: warning: skipping duplicate certificate in azl_SSL.com_TLS_ECC_Root_CA_2022.pem
+2026-01-27T13:49:18.3635989Z rehash: warning: skipping duplicate certificate in azl_SSL.com_TLS_RSA_Root_CA_2022.pem
+2026-01-27T13:49:18.9411550Z rehash: warning: skipping ca-certificates.crt,it does not contain exactly one certificate or CRL
+2026-01-27T13:49:19.1983581Z 4 added, 0 removed; done.
+2026-01-27T13:49:19.1984018Z Running hooks in /etc/ca-certificates/update.d...
+2026-01-27T13:49:19.2496513Z done.
+2026-01-27T13:49:19.2993256Z CA certificates copied and updated successfully.
+2026-01-27T13:49:19.8948739Z Starting periodic command scheduler: cron.
+2026-01-27T13:49:22.8530050Z Found build manifest file at '/home/site/wwwroot/oryx-manifest.toml'. Deserializing it...
+2026-01-27T13:49:22.8737845Z Could not find operation ID in manifest. Generating an operation id...
+2026-01-27T13:49:22.8738230Z Build Operation ID: 63a20bfc-c3d4-49ae-a498-ca69085aec1c
+2026-01-27T13:49:24.8673134Z Environment Variables for Application Insight's IPA Codeless Configuration exists..
+2026-01-27T13:49:25.5668979Z Writing output script to '/opt/startup/startup.sh'
+2026-01-27T13:49:25.5669296Z Running #!/bin/sh
+2026-01-27T13:49:25.5669323Z 
+2026-01-27T13:49:25.5669349Z # Enter the source directory to make sure the script runs where the user expects
+2026-01-27T13:49:25.5669372Z cd "/home/site/wwwroot"
+2026-01-27T13:49:25.5669391Z 
+2026-01-27T13:49:25.5669413Z export NODE_PATH=/usr/local/lib/node_modules:$NODE_PATH
+2026-01-27T13:49:25.5669435Z if [ -z "$PORT" ]; then
+2026-01-27T13:49:25.5669474Z 		export PORT=8080
+2026-01-27T13:49:25.5669496Z fi
+2026-01-27T13:49:25.5669515Z 
+2026-01-27T13:49:25.5669537Z echo Found tar.gz based node_modules.
+2026-01-27T13:49:25.5669560Z extractionCommand="tar -xzf node_modules.tar.gz -C /node_modules"
+2026-01-27T13:49:25.5669583Z echo "Removing existing modules directory from root..."
+2026-01-27T13:49:25.5669603Z rm -fr /node_modules
+2026-01-27T13:49:25.5669641Z mkdir -p /node_modules
+2026-01-27T13:49:25.5669663Z echo Extracting modules...
+2026-01-27T13:49:25.5669714Z $extractionCommand
+2026-01-27T13:49:25.5669737Z export NODE_PATH="/node_modules":$NODE_PATH
+2026-01-27T13:49:25.5669760Z export PATH=/node_modules/.bin:$PATH
+2026-01-27T13:49:25.5669782Z if [ -d node_modules ]; then
+2026-01-27T13:49:25.5669803Z     mv -f node_modules _del_node_modules || true
+2026-01-27T13:49:25.5669844Z fi
+2026-01-27T13:49:25.5669863Z 
+2026-01-27T13:49:25.5669884Z if [ -d /node_modules ]; then
+2026-01-27T13:49:25.5669906Z     ln -sfn /node_modules ./node_modules 
+2026-01-27T13:49:25.5669926Z fi
+2026-01-27T13:49:25.5669945Z 
+2026-01-27T13:49:25.5669964Z echo "Done."
+2026-01-27T13:49:25.5670000Z PATH="$PATH:/home/site/wwwroot" node server.js
+2026-01-27T13:49:25.5670022Z Found tar.gz based node_modules.
+2026-01-27T13:49:25.5670043Z Removing existing modules directory from root...
+2026-01-27T13:49:25.5752691Z Extracting modules...
+2026-01-27T13:49:33.1346466Z Done.
+2026-01-27T13:49:38.0152300Z ▲ Next.js 16.1.4
+2026-01-27T13:49:38.0161360Z - Local:         http://84a83cd50edf:8080
+2026-01-27T13:49:38.0227809Z - Network:       http://84a83cd50edf:8080
+2026-01-27T13:49:38.0231716Z 
+2026-01-27T13:49:38.0234911Z ✓ Starting...
+2026-01-27T13:49:38.6817070Z ✓ Ready in 873ms
+2026-01-27T13:50:10.1589381Z [Auto-Seed] RAGドキュメントが0件です。シードを実行します...
+2026-01-27T13:50:11.7096527Z [Auto-Seed] 8件のRAGドキュメントをシードしました
+2026-01-27T13:50:11.7234610Z [Auto-Seed] 探索データが不足しています (Exploration: 0, TopStrategy: 0, StrategyDecision: 0)。シードを実行します...
+2026-01-27T13:50:11.9998900Z [Auto-Seed] CompanyProfileをシードしました
+2026-01-27T13:50:12.1529702Z [Auto-Seed] DefaultSwotをシードしました
+2026-01-27T13:50:13.1739209Z [Auto-Seed] 6件のCoreAssetをシードしました
+2026-01-27T13:50:22.5547374Z [Auto-Seed] エラー: Error [PrismaClientUnknownRequestError]: 
+2026-01-27T13:50:22.5548037Z Invalid `prisma.exploration.create()` invocation:
+2026-01-27T13:50:22.5548072Z 
+2026-01-27T13:50:22.5548103Z 
+2026-01-27T13:50:22.5548124Z Error occurred during query execution:
+2026-01-27T13:50:22.5548163Z ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(SqliteError { extended_code: 14, message: Some("unable to open database file") }), transient: false })
+2026-01-27T13:50:22.5548188Z     at lN.handleRequestError (.next/server/chunks/_f8420387._.js:114:8227)
+2026-01-27T13:50:22.5548237Z     at lN.handleAndLogRequestError (.next/server/chunks/_f8420387._.js:114:7100)
+2026-01-27T13:50:22.5548265Z     at lN.request (.next/server/chunks/_f8420387._.js:114:6807)
+2026-01-27T13:50:22.5548289Z     at async a (.next/server/chunks/_f8420387._.js:126:6305)
+2026-01-27T13:50:22.5548312Z     at async Module.t (.next/server/chunks/[root-of-the-server]__d471315f._.js:1:2945) {
+2026-01-27T13:50:22.5548334Z   clientVersion: '6.8.2'
+2026-01-27T13:50:22.5548354Z }
+2026-01-27T14:58:08.7841352Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T14:58:08.7842320Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T14:58:09.9409301Z Preset questions generation error: Error: No response from AI
+2026-01-27T14:58:09.9409920Z     at u (.next/server/chunks/[root-of-the-server]__903717c2._.js:118:1056)
+2026-01-27T14:58:09.9409952Z     at async s (.next/server/chunks/_a90b4b09._.js:35:128)
+2026-01-27T14:58:09.9409970Z     at async d (.next/server/chunks/_a90b4b09._.js:35:6498)
+2026-01-27T14:58:09.9409987Z     at async u (.next/server/chunks/_a90b4b09._.js:35:7539)
+2026-01-27T14:58:09.9410004Z     at async Module.v (.next/server/chunks/_a90b4b09._.js:35:8617)
+2026-01-27T14:58:47.9238601Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T14:58:47.9239154Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:00:54.2643357Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:00:54.2643994Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:03:55.3516403Z Generating SWOT analysis with AI...
+2026-01-27T15:04:03.5825854Z Preset questions generation error: Error: No response from AI
+2026-01-27T15:04:03.5826923Z     at u (.next/server/chunks/[root-of-the-server]__903717c2._.js:118:1056)
+2026-01-27T15:04:03.5826963Z     at async s (.next/server/chunks/_a90b4b09._.js:35:128)
+2026-01-27T15:04:03.5826988Z     at async d (.next/server/chunks/_a90b4b09._.js:35:6498)
+2026-01-27T15:04:03.5827005Z     at async u (.next/server/chunks/_a90b4b09._.js:35:7539)
+2026-01-27T15:04:03.5827022Z     at async Module.v (.next/server/chunks/_a90b4b09._.js:35:8617)
+2026-01-27T15:04:11.2407026Z Preset questions generation error: Error: No response from AI
+2026-01-27T15:04:11.2407544Z     at u (.next/server/chunks/[root-of-the-server]__903717c2._.js:118:1056)
+2026-01-27T15:04:11.2407572Z     at async s (.next/server/chunks/_a90b4b09._.js:35:128)
+2026-01-27T15:04:11.2407594Z     at async d (.next/server/chunks/_a90b4b09._.js:35:6498)
+2026-01-27T15:04:11.2407687Z     at async u (.next/server/chunks/_a90b4b09._.js:35:7539)
+2026-01-27T15:04:11.2407707Z     at async Module.v (.next/server/chunks/_a90b4b09._.js:35:8617)
+2026-01-27T15:04:14.0022317Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:04:14.0022973Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:05:02.3467519Z Preset questions generation error: Error: No response from AI
+2026-01-27T15:05:02.3468116Z     at u (.next/server/chunks/[root-of-the-server]__903717c2._.js:118:1056)
+2026-01-27T15:05:02.3468142Z     at async s (.next/server/chunks/_a90b4b09._.js:35:128)
+2026-01-27T15:05:02.3468159Z     at async d (.next/server/chunks/_a90b4b09._.js:35:6498)
+2026-01-27T15:05:02.3468175Z     at async u (.next/server/chunks/_a90b4b09._.js:35:7539)
+2026-01-27T15:05:02.3468192Z     at async Module.v (.next/server/chunks/_a90b4b09._.js:35:8617)
+2026-01-27T15:10:55.5113998Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:10:55.5114295Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:14:30.8294696Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:14:30.8295190Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:14:38.5720416Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:14:38.5720932Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:27:01.1106618Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:27:01.1107282Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:27:04.6822607Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:27:04.6823294Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:27:11.9233882Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:27:11.9234515Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:27:12.1193116Z Preset questions generation error: Error: No response from AI
+2026-01-27T15:27:12.1193577Z     at u (.next/server/chunks/[root-of-the-server]__903717c2._.js:118:1056)
+2026-01-27T15:27:12.1199249Z     at async s (.next/server/chunks/_a90b4b09._.js:35:128)
+2026-01-27T15:27:12.1199283Z     at async d (.next/server/chunks/_a90b4b09._.js:35:6498)
+2026-01-27T15:27:12.1199436Z     at async u (.next/server/chunks/_a90b4b09._.js:35:7539)
+2026-01-27T15:27:12.1199456Z     at async Module.v (.next/server/chunks/_a90b4b09._.js:35:8617)
+2026-01-27T15:27:14.3931717Z Preset questions generation error: Error: No response from AI
+2026-01-27T15:27:14.3932171Z     at u (.next/server/chunks/[root-of-the-server]__903717c2._.js:118:1056)
+2026-01-27T15:27:14.3932197Z     at async s (.next/server/chunks/_a90b4b09._.js:35:128)
+2026-01-27T15:27:14.3932215Z     at async d (.next/server/chunks/_a90b4b09._.js:35:6498)
+2026-01-27T15:27:14.3932231Z     at async u (.next/server/chunks/_a90b4b09._.js:35:7539)
+2026-01-27T15:27:14.3932251Z     at async Module.v (.next/server/chunks/_a90b4b09._.js:35:8617)
+2026-01-27T15:27:19.1482070Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:27:19.1482772Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:27:28.1920611Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:27:28.1921301Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:27:32.1716453Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:27:32.1717003Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:27:35.3614052Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:27:35.3614397Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:27:42.9685077Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:27:42.9685518Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:27:47.8796761Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:27:47.8797198Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:27:52.5188100Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:27:52.5188457Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:28:25.8738756Z Generating SWOT analysis with AI...
+2026-01-27T15:28:46.8283728Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:28:46.8284291Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:28:50.3787406Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:28:50.3787948Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:29:21.4427857Z Generating SWOT analysis with AI...
+2026-01-27T15:30:24.9775980Z Generating SWOT analysis with AI...
+2026-01-27T15:31:18.0035013Z Generating SWOT analysis with AI...
+2026-01-27T15:32:27.0562310Z Generating SWOT analysis with AI...
+2026-01-27T15:33:21.1508224Z Generating SWOT analysis with AI...
+2026-01-27T15:34:16.0961523Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:34:16.0962011Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:34:19.5061664Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:34:19.5062140Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:34:27.8342712Z Generating SWOT analysis with AI...
+2026-01-27T15:34:27.8633964Z Generating SWOT analysis with AI...
+2026-01-27T15:34:36.7926283Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:34:36.7926583Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:34:42.7388976Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:34:42.7391370Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:34:50.8449313Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:34:50.8449823Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:35:57.2687300Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:35:57.2687615Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:35:59.9323428Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:35:59.9323915Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:36:18.8011756Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:36:18.8012189Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:37:22.1533432Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:37:22.1533956Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:37:28.5652496Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:37:28.5653021Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:37:40.7677978Z Generating SWOT analysis with AI...
+2026-01-27T15:37:57.4871895Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:37:57.4872240Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:38:00.9521837Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:38:00.9522181Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:38:17.7747118Z Generating SWOT analysis with AI...
+2026-01-27T15:39:21.4171197Z Generating SWOT analysis with AI...
+2026-01-27T15:39:44.0806677Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:39:44.0807214Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:40:28.9848425Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:40:28.9848944Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:40:49.5645353Z Preset questions generation error: Error: No response from AI
+2026-01-27T15:40:49.5645854Z     at u (.next/server/chunks/[root-of-the-server]__903717c2._.js:118:1056)
+2026-01-27T15:40:49.5645885Z     at async s (.next/server/chunks/_a90b4b09._.js:35:128)
+2026-01-27T15:40:49.5645902Z     at async d (.next/server/chunks/_a90b4b09._.js:35:6498)
+2026-01-27T15:40:49.5645920Z     at async u (.next/server/chunks/_a90b4b09._.js:35:7539)
+2026-01-27T15:40:49.5645938Z     at async Module.v (.next/server/chunks/_a90b4b09._.js:35:8617)
+2026-01-27T15:40:50.1065362Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:40:50.1065885Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:40:51.3099369Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:40:51.3100403Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:40:52.0003494Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:40:52.0003938Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:40:52.9805126Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:40:52.9806379Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:40:53.9386059Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:40:53.9386669Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:40:54.8772910Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:40:54.8773512Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:40:56.8423266Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:40:56.8423679Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:40:57.7987896Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:40:57.7988612Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:40:58.7823089Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:40:58.7823572Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:40:59.1437253Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:40:59.1437801Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:41:01.7206633Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:41:01.7207113Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:41:02.6215791Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:41:02.6216262Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:41:03.5630515Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:41:03.5631806Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:41:04.5423508Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:41:04.5424138Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:41:05.4623791Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:41:05.4624470Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:41:08.3861874Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:41:08.3862437Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:41:09.2755816Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:41:09.2756345Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:41:10.2775668Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:41:10.2776190Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:41:11.2003380Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:41:11.2003945Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:41:12.1226435Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:41:12.1227008Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:41:14.0543316Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:41:14.0543936Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:44:59.5607537Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:44:59.5608071Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:49:36.3687757Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:49:36.3688320Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:49:40.5918975Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T15:49:40.5919477Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T15:56:04.5949217Z Generating SWOT analysis with AI...
+2026-01-27T16:04:32.1660041Z Generating SWOT analysis with AI...
+2026-01-27T16:04:43.2866506Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T16:04:43.2867030Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T16:04:44.2884264Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T16:04:44.2884804Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T16:04:46.0849661Z Preset questions generation error: Error: No response from AI
+2026-01-27T16:04:46.0850355Z     at u (.next/server/chunks/[root-of-the-server]__903717c2._.js:118:1056)
+2026-01-27T16:04:46.0850381Z     at async s (.next/server/chunks/_a90b4b09._.js:35:128)
+2026-01-27T16:04:46.0850399Z     at async d (.next/server/chunks/_a90b4b09._.js:35:6498)
+2026-01-27T16:04:46.0850416Z     at async u (.next/server/chunks/_a90b4b09._.js:35:7539)
+2026-01-27T16:04:46.0850433Z     at async Module.v (.next/server/chunks/_a90b4b09._.js:35:8617)
+2026-01-27T16:04:46.3971433Z Preset questions generation error: Error: No response from AI
+2026-01-27T16:04:46.3972154Z     at u (.next/server/chunks/[root-of-the-server]__903717c2._.js:118:1056)
+2026-01-27T16:04:46.3972183Z     at async s (.next/server/chunks/_a90b4b09._.js:35:128)
+2026-01-27T16:04:46.3972203Z     at async d (.next/server/chunks/_a90b4b09._.js:35:6498)
+2026-01-27T16:04:46.3972219Z     at async u (.next/server/chunks/_a90b4b09._.js:35:7539)
+2026-01-27T16:04:46.3972239Z     at async Module.v (.next/server/chunks/_a90b4b09._.js:35:8617)
+2026-01-27T16:04:47.5654966Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T16:04:47.5655521Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T16:04:47.6811129Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T16:04:47.6811875Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T16:04:47.7618149Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T16:04:47.7618815Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T16:04:48.4099986Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T16:04:48.4100575Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T16:04:48.6785394Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T16:04:48.6786039Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T16:04:50.2442044Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T16:04:50.2442504Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T16:04:50.5623319Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T16:04:50.5623840Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T16:04:51.7887529Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T16:04:51.7888065Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T16:04:53.3322334Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T16:04:53.3322688Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T16:04:53.3511845Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T16:04:53.3512236Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T16:04:53.5141175Z Preset questions generation error: Error: No response from AI
+2026-01-27T16:04:53.5141786Z     at u (.next/server/chunks/[root-of-the-server]__903717c2._.js:118:1056)
+2026-01-27T16:04:53.5141808Z     at async s (.next/server/chunks/_a90b4b09._.js:35:128)
+2026-01-27T16:04:53.5141825Z     at async d (.next/server/chunks/_a90b4b09._.js:35:6498)
+2026-01-27T16:04:53.5141843Z     at async u (.next/server/chunks/_a90b4b09._.js:35:7539)
+2026-01-27T16:04:53.5141860Z     at async Module.v (.next/server/chunks/_a90b4b09._.js:35:8617)
+2026-01-27T16:04:53.8604150Z Preset questions generation error: Error: No response from AI
+2026-01-27T16:04:53.8604461Z     at u (.next/server/chunks/[root-of-the-server]__903717c2._.js:118:1056)
+2026-01-27T16:04:53.8604485Z     at async s (.next/server/chunks/_a90b4b09._.js:35:128)
+2026-01-27T16:04:53.8604505Z     at async d (.next/server/chunks/_a90b4b09._.js:35:6498)
+2026-01-27T16:04:53.8604521Z     at async u (.next/server/chunks/_a90b4b09._.js:35:7539)
+2026-01-27T16:04:53.8604634Z     at async Module.v (.next/server/chunks/_a90b4b09._.js:35:8617)
+2026-01-27T16:04:53.9089091Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T16:04:53.9089420Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T16:04:54.4528110Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T16:04:54.4528434Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T16:04:54.6025745Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T16:04:54.6026045Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T16:04:56.4297963Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T16:04:56.4298474Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T16:04:56.6603305Z Preset questions generation error: Error: No response from AI
+2026-01-27T16:04:56.6603614Z     at u (.next/server/chunks/[root-of-the-server]__903717c2._.js:118:1056)
+2026-01-27T16:04:56.6603637Z     at async s (.next/server/chunks/_a90b4b09._.js:35:128)
+2026-01-27T16:04:56.6603653Z     at async d (.next/server/chunks/_a90b4b09._.js:35:6498)
+2026-01-27T16:04:56.6603673Z     at async u (.next/server/chunks/_a90b4b09._.js:35:7539)
+2026-01-27T16:04:56.6603691Z     at async Module.v (.next/server/chunks/_a90b4b09._.js:35:8617)
+2026-01-27T16:04:57.6222148Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T16:04:57.6222409Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T16:04:58.8247126Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T16:04:58.8247580Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T16:05:01.5553554Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T16:05:01.5554278Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T16:05:01.6449892Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T16:05:01.6450434Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T16:05:02.2162459Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T16:05:02.2163096Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T16:05:04.7629925Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T16:05:04.7630489Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T16:05:08.7007644Z Preset questions generation error: Error: AI呼び出しがタイムアウトしました
+2026-01-27T16:05:08.7008331Z     at Timeout._onTimeout (.next/server/chunks/_a90b4b09._.js:35:91)
+2026-01-27T16:13:41.3221511Z Generating SWOT analysis with AI...
+2026-01-27T16:14:44.8226308Z Generating SWOT analysis with AI...
+2026-01-27T16:15:40.5015539Z Generating SWOT analysis with AI...
+2026-01-27T16:16:38.1385715Z Generating SWOT analysis with AI...
+2026-01-27T16:17:38.2358833Z Generating SWOT analysis with AI...
+2026-01-27T16:18:30.2326867Z Generating SWOT analysis with AI...

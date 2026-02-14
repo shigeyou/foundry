@@ -1,15 +1,19 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { useApp, defaultWeights, scoreLabels, ScoreWeights } from "@/contexts/AppContext";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { useApp } from "@/contexts/AppContext";
 import { Button } from "@/components/ui/button";
+import { getFinderSettings, getDefaultWeights, type ScoreConfig } from "@/config/finder-config";
 
-// 各評価軸の詳細説明
-const scoreDescriptions: Record<keyof ScoreWeights, {
+// 各評価軸の詳細説明（ファインダーごと）
+interface ScoreDescription {
   subtitle: string;
   question: string;
   levels: { score: number; description: string }[];
-}> = {
+}
+
+// 勝ち筋ファインダー用
+const winningStrategyDescriptions: Record<string, ScoreDescription> = {
   revenuePotential: {
     subtitle: "儲かる大きさ",
     question: "この勝ち筋が成功した場合、どれだけの収益が見込めるか？",
@@ -66,22 +70,162 @@ const scoreDescriptions: Record<keyof ScoreWeights, {
   },
 };
 
+// 自社開発AIアプリファインダー用
+const defensiveDxDescriptions: Record<string, ScoreDescription> = {
+  costReduction: {
+    subtitle: "どれだけコストを削減できるか",
+    question: "この施策によって年間どれだけのコスト削減が見込めるか？",
+    levels: [
+      { score: 5, description: "年間1000万円以上の削減効果" },
+      { score: 3, description: "年間100〜500万円程度の削減効果" },
+      { score: 1, description: "削減効果は限定的（100万円未満）" },
+    ],
+  },
+  implementationEase: {
+    subtitle: "内製で実装できるか",
+    question: "内製開発チームでどれだけ容易に実装できるか？",
+    levels: [
+      { score: 5, description: "既存スキルで1〜2ヶ月で実装可能" },
+      { score: 3, description: "一部学習が必要だが、半年以内に実装可能" },
+      { score: 1, description: "外部委託や長期開発が必要" },
+    ],
+  },
+  riskMitigation: {
+    subtitle: "リスクをどれだけ減らせるか",
+    question: "業務リスクや障害リスクをどれだけ軽減できるか？",
+    levels: [
+      { score: 5, description: "重大インシデントを防止できる" },
+      { score: 3, description: "中程度のリスクを軽減できる" },
+      { score: 1, description: "リスク軽減効果は限定的" },
+    ],
+  },
+  efficiencyGain: {
+    subtitle: "業務をどれだけ効率化できるか",
+    question: "工数削減や処理速度向上にどれだけ貢献するか？",
+    levels: [
+      { score: 5, description: "工数を50%以上削減、または処理時間を大幅短縮" },
+      { score: 3, description: "工数を20〜50%削減" },
+      { score: 1, description: "効率化効果は限定的" },
+    ],
+  },
+  employeeSatisfaction: {
+    subtitle: "従業員の満足度への貢献",
+    question: "従業員の働きやすさにどれだけ貢献するか？",
+    levels: [
+      { score: 5, description: "煩雑作業の大幅削減、ストレス軽減" },
+      { score: 3, description: "一定の改善効果あり" },
+      { score: 1, description: "満足度への影響は限定的" },
+    ],
+  },
+  scalability: {
+    subtitle: "他部門への展開可能性",
+    question: "他部門や他業務にも展開できるか？",
+    levels: [
+      { score: 5, description: "全社展開可能、汎用性が高い" },
+      { score: 3, description: "一部の部門で横展開可能" },
+      { score: 1, description: "特定業務に限定される" },
+    ],
+  },
+};
+
+// 人材ファインダー用
+const talentDescriptions: Record<string, ScoreDescription> = {
+  skillMatch: {
+    subtitle: "必要スキルとの適合度",
+    question: "求めるスキルセットとどれだけマッチしているか？",
+    levels: [
+      { score: 5, description: "必須スキルを全て保有し、追加スキルもある" },
+      { score: 3, description: "必須スキルの大半を保有" },
+      { score: 1, description: "スキルギャップが大きい" },
+    ],
+  },
+  growthPotential: {
+    subtitle: "成長の伸びしろ",
+    question: "育成によってどれだけ成長が期待できるか？",
+    levels: [
+      { score: 5, description: "高い学習意欲と吸収力、急成長が期待できる" },
+      { score: 3, description: "一定の成長が期待できる" },
+      { score: 1, description: "成長余地が限定的" },
+    ],
+  },
+  cultureFit: {
+    subtitle: "企業文化との相性",
+    question: "組織文化や価値観とどれだけ合うか？",
+    levels: [
+      { score: 5, description: "価値観が一致し、チームに良い影響を与える" },
+      { score: 3, description: "大きな問題はなく適応できる" },
+      { score: 1, description: "文化的な不一致が懸念される" },
+    ],
+  },
+  futureValue: {
+    subtitle: "中長期的な価値",
+    question: "将来的にどれだけの価値を創出できるか？",
+    levels: [
+      { score: 5, description: "将来のリーダー候補、組織を牽引できる" },
+      { score: 3, description: "安定した貢献が期待できる" },
+      { score: 1, description: "短期的な貢献に留まる可能性" },
+    ],
+  },
+  immediateImpact: {
+    subtitle: "入社後すぐに貢献できるか",
+    question: "即戦力としてどれだけ期待できるか？",
+    levels: [
+      { score: 5, description: "入社初月から成果を出せる" },
+      { score: 3, description: "3〜6ヶ月で戦力化" },
+      { score: 1, description: "戦力化まで1年以上必要" },
+    ],
+  },
+  costEfficiency: {
+    subtitle: "採用・育成コスト対効果",
+    question: "採用コストに対してどれだけのリターンが期待できるか？",
+    levels: [
+      { score: 5, description: "コスト対効果が非常に高い" },
+      { score: 3, description: "標準的なコスト対効果" },
+      { score: 1, description: "コストに見合う効果が不透明" },
+    ],
+  },
+};
+
+// ファインダーIDから詳細説明を取得
+function getScoreDescriptions(finderId: string | null): Record<string, ScoreDescription> {
+  switch (finderId) {
+    case "defensive-dx":
+      return defensiveDxDescriptions;
+    case "talent":
+      return talentDescriptions;
+    default:
+      return winningStrategyDescriptions;
+  }
+}
+
 export function ScoreSettingsTab() {
-  const { weights, setWeights, adjustWeight } = useApp();
-  const [expandedAxis, setExpandedAxis] = useState<keyof ScoreWeights | null>(null);
+  const { weights, setWeights, adjustWeight, finderId } = useApp();
+  const [expandedAxis, setExpandedAxis] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [saveStatus, setSaveStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [isDefault, setIsDefault] = useState(true);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [savedWeights, setSavedWeights] = useState<ScoreWeights | null>(null);
+  const [savedWeights, setSavedWeights] = useState<Record<string, number> | null>(null);
+
+  // ファインダー設定を取得
+  const finderSettings = useMemo(() => getFinderSettings(finderId), [finderId]);
+  const defaultWeights = useMemo(() => getDefaultWeights(finderId), [finderId]);
+  const scoreDescriptions = useMemo(() => getScoreDescriptions(finderId), [finderId]);
+  const scoreLabels = useMemo(() => {
+    const labels: Record<string, string> = {};
+    finderSettings.scoreConfig.forEach((config) => {
+      labels[config.key] = config.label;
+    });
+    return labels;
+  }, [finderSettings]);
 
   const totalWeight = Object.values(weights).reduce((a, b) => a + b, 0);
 
   // 保存済み設定を読み込む
   const loadSavedConfig = useCallback(async () => {
     try {
-      const res = await fetch("/api/score-config");
+      const res = await fetch(`/api/score-config${finderId ? `?finderId=${finderId}` : ""}`);
       if (res.ok) {
         const data = await res.json();
         if (!data.isDefault && data.weights) {
@@ -89,27 +233,24 @@ export function ScoreSettingsTab() {
           setSavedWeights(data.weights);
           setIsDefault(false);
         } else {
-          // デフォルト時もweightsをデフォルト値に設定
           setWeights(defaultWeights);
           setSavedWeights(defaultWeights);
           setIsDefault(true);
         }
       } else {
-        // APIエラー時もデフォルト値に設定
         setWeights(defaultWeights);
         setSavedWeights(defaultWeights);
         setIsDefault(true);
       }
     } catch (error) {
       console.error("Failed to load score config:", error);
-      // エラー時もデフォルト値に設定
       setWeights(defaultWeights);
       setSavedWeights(defaultWeights);
       setIsDefault(true);
     } finally {
       setIsLoading(false);
     }
-  }, [setWeights]);
+  }, [setWeights, defaultWeights, finderId]);
 
   // 初回読み込み
   useEffect(() => {
@@ -120,7 +261,7 @@ export function ScoreSettingsTab() {
   useEffect(() => {
     if (savedWeights) {
       const hasChanges = Object.keys(weights).some(
-        (key) => weights[key as keyof ScoreWeights] !== savedWeights[key as keyof ScoreWeights]
+        (key) => weights[key as keyof typeof weights] !== savedWeights[key as keyof typeof savedWeights]
       );
       setHasUnsavedChanges(hasChanges);
     }
@@ -131,24 +272,21 @@ export function ScoreSettingsTab() {
     setIsSaving(true);
     setSaveStatus(null);
 
-    // デフォルト値と同じかチェック
     const isDefaultValues = Object.keys(defaultWeights).every(
-      (key) => weights[key as keyof ScoreWeights] === defaultWeights[key as keyof ScoreWeights]
+      (key) => weights[key as keyof typeof weights] === defaultWeights[key as keyof typeof defaultWeights]
     );
 
     try {
       if (isDefaultValues) {
-        // デフォルト値の場合はサーバーから削除
-        await fetch("/api/score-config", { method: "DELETE" });
+        await fetch(`/api/score-config${finderId ? `?finderId=${finderId}` : ""}`, { method: "DELETE" });
         setSaveStatus({ type: "success", message: "デフォルト設定で保存しました" });
         setSavedWeights({ ...defaultWeights });
         setIsDefault(true);
       } else {
-        // カスタム値の場合は保存
         const res = await fetch("/api/score-config", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(weights),
+          body: JSON.stringify({ ...weights, finderId }),
         });
 
         if (res.ok) {
@@ -171,15 +309,14 @@ export function ScoreSettingsTab() {
     }
   };
 
-  // デフォルトに戻す（UIのみ変更、保存は別途必要）
+  // デフォルトに戻す
   const handleResetToDefault = () => {
     setWeights(defaultWeights);
-    // savedWeightsは変更しない → useEffectで変更検知され、hasUnsavedChangesがtrueになる
     setSaveStatus({ type: "success", message: "デフォルト値に設定しました。保存ボタンで確定してください。" });
     setTimeout(() => setSaveStatus(null), 5000);
   };
 
-  // 正規化後の比率を計算（合計100%になるよう換算）
+  // 正規化後の比率を計算
   const getNormalizedPercentage = (value: number) => {
     if (totalWeight === 0) return 0;
     return Math.round((value / totalWeight) * 100);
@@ -215,7 +352,7 @@ export function ScoreSettingsTab() {
             )}
           </h1>
           <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
-            各評価軸の重みを設定。設定値は<strong>比率</strong>として計算時に正規化されます。
+            {finderSettings.resultLabel}の評価軸の重みを設定。設定値は<strong>比率</strong>として計算時に正規化されます。
           </p>
         </div>
       </div>
@@ -258,34 +395,39 @@ export function ScoreSettingsTab() {
             </div>
           </div>
           <div className="space-y-3">
-            {(Object.keys(weights) as (keyof ScoreWeights)[]).map((key) => {
-              const desc = scoreDescriptions[key];
-              const isExpanded = expandedAxis === key;
-              const normalizedPct = getNormalizedPercentage(weights[key]);
+            {finderSettings.scoreConfig.map((config) => {
+              const desc = scoreDescriptions[config.key];
+              const isExpanded = expandedAxis === config.key;
+              const value = weights[config.key] ?? config.defaultWeight;
+              const normalizedPct = getNormalizedPercentage(value);
 
               return (
-                <div key={key} className="space-y-1">
+                <div key={config.key} className="space-y-1">
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                          {scoreLabels[key]}
+                          {config.label}
                         </span>
-                        <button
-                          onClick={() => setExpandedAxis(isExpanded ? null : key)}
-                          className="text-xs text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
-                          title="詳細を表示"
-                        >
-                          {isExpanded ? "▼" : "▶"}
-                        </button>
+                        {desc && (
+                          <button
+                            onClick={() => setExpandedAxis(isExpanded ? null : config.key)}
+                            className="text-xs text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                            title="詳細を表示"
+                          >
+                            {isExpanded ? "▼" : "▶"}
+                          </button>
+                        )}
                       </div>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
-                        {desc.subtitle}
-                      </p>
+                      {desc && (
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                          {desc.subtitle}
+                        </p>
+                      )}
                     </div>
                     <div className="text-right">
                       <span className="text-sm font-bold text-blue-600 dark:text-blue-400">
-                        {weights[key]}
+                        {value}
                       </span>
                       <span className="text-xs text-slate-400 dark:text-slate-500 ml-1">
                         → {normalizedPct}%
@@ -294,7 +436,7 @@ export function ScoreSettingsTab() {
                   </div>
 
                   {/* 詳細説明（展開時） */}
-                  {isExpanded && (
+                  {isExpanded && desc && (
                     <div className="bg-slate-50 dark:bg-slate-700/50 rounded p-2 text-xs space-y-1.5">
                       <p className="text-slate-600 dark:text-slate-300 font-medium">
                         {desc.question}
@@ -321,8 +463,8 @@ export function ScoreSettingsTab() {
                     type="range"
                     min="0"
                     max="100"
-                    value={weights[key]}
-                    onChange={(e) => adjustWeight(key, parseInt(e.target.value))}
+                    value={value}
+                    onChange={(e) => adjustWeight(config.key as keyof typeof weights, parseInt(e.target.value))}
                     className="w-full h-2 bg-slate-200 dark:bg-slate-600 rounded-lg appearance-none cursor-pointer accent-blue-600"
                   />
                 </div>
@@ -339,14 +481,14 @@ export function ScoreSettingsTab() {
               デフォルト値
             </h3>
             <div className="grid grid-cols-2 gap-1.5 text-xs">
-              {(Object.keys(defaultWeights) as (keyof ScoreWeights)[]).map((key) => (
+              {finderSettings.scoreConfig.map((config) => (
                 <div
-                  key={key}
+                  key={config.key}
                   className="flex justify-between p-1.5 bg-slate-50 dark:bg-slate-700 rounded"
                 >
-                  <span className="text-slate-600 dark:text-slate-400">{scoreLabels[key]}</span>
+                  <span className="text-slate-600 dark:text-slate-400">{config.label}</span>
                   <span className="text-slate-800 dark:text-slate-200 font-medium">
-                    {defaultWeights[key]}%
+                    {config.defaultWeight}%
                   </span>
                 </div>
               ))}
@@ -359,13 +501,8 @@ export function ScoreSettingsTab() {
               重み係数（デフォルト値）の考え方
             </h3>
             <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-              本スコア設定では、初期評価に必要な観点を整理した結果、6つの指標を設定している。これらは、事業としての成立性、実行の現実性、全社的な意味合いという三つの軸を分解し、初期段階で過不足なく案件を整理することを目的としている。
-            </p>
-            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mt-2">
-              収益性や事業規模、実行可能性に関する指標は、まず取り組む価値があるか、現実的に進められるかを確認するための基本的な観点である。一方で、本社貢献や合併シナジーといった指標は、戦略的な位置づけを評価するための観点として設けているが、初期評価では解釈の幅が出やすいため、比重を抑えている。
-            </p>
-            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mt-2">
-              この6指標は役割が重複しないよう整理しており、いずれかが欠けると評価に偏りが生じる。一方で、これ以上細分化すると初期評価としては複雑になりすぎるため、比較と整理を行ううえで適切な粒度として、この構成としている。
+              本スコア設定では、{finderSettings.resultLabel}の初期評価に必要な観点を整理した結果、{finderSettings.scoreConfig.length}つの指標を設定しています。
+              これらは、{finderSettings.name}の目的に沿って、過不足なく{finderSettings.resultLabel}を整理することを目的としています。
             </p>
           </div>
 
@@ -376,7 +513,7 @@ export function ScoreSettingsTab() {
             </h3>
             <div className="space-y-2 text-xs text-blue-900 dark:text-blue-100">
               <p className="text-blue-700 dark:text-blue-300">
-                AIが各勝ち筋を6軸で <strong>1〜5点</strong> で評価し、重み（比率）を掛けて合計します。
+                AIが各{finderSettings.resultLabel}を{finderSettings.scoreConfig.length}軸で <strong>1〜5点</strong> で評価し、重み（比率）を掛けて合計します。
               </p>
               <div className="bg-white/50 dark:bg-slate-800/50 rounded p-2 font-mono text-xs">
                 <p>総合スコア = Σ（各軸スコア × 正規化比率）</p>

@@ -1,0 +1,38 @@
+<step title="BackgroundTrace" date="2026-01-28T06:44:40.931" instance="5b7811" url="/api/publish" method="POST" >
+  <step title="Cleanup Xml Logs" date="2026-01-28T06:44:40.961" >
+    <step title="Cleanup Infos" date="2026-01-28T06:44:41.020" totalFiles="529" totalCleanup="369" /><!-- duration: 20ms -->
+  </step><!-- duration: 96ms -->
+  <step title="Creating temporary deployment - FetchDeploymentManager" date="2026-01-28T06:44:41.551" /><!-- duration: 2ms -->
+  <step title="Creating temporary deployment" date="2026-01-28T06:44:41.567" /><!-- duration: 88ms -->
+  <step title="Performing fetch based deployment" date="2026-01-28T06:44:41.719" >
+    <step title="Cleaning up temp folders from previous zip deployments and extracting pushed zip file /tmp/zipdeploy/eac0a239-7a30-4bea-b29c-5b4ca65e593a.zip (44.71 MB) to /tmp/zipdeploy/extracted" date="2026-01-28T06:44:42.935" >
+      <step title="ChmodRecursive Process exited with total time taken in ms: 164" date="2026-01-28T06:44:49.386" /><!-- duration: 10ms -->
+    </step><!-- duration: 6471ms -->
+    <step title="Deployment timer started" date="2026-01-28T06:44:51.434" >
+      <step title="DeploymentManager.Deploy(id:70f7b4fc-e9a7-4ec4-b4e6-01936bb9c493)" date="2026-01-28T06:44:51.451" >
+        <step title="Collecting changeset information" date="2026-01-28T06:44:51.522" /><!-- duration: 496ms -->
+        <step title="Updating submodules" date="2026-01-28T06:44:52.023" /><!-- duration: 1136ms -->
+        <step title="Determining deployment builder" date="2026-01-28T06:44:53.544" >
+          <step title="Builder is OneDeployBuilder" date="2026-01-28T06:44:53.570" /><!-- duration: 5ms -->
+        </step><!-- duration: 34ms -->
+        <step title="PreDeployment: context.CleanOutputPath False" date="2026-01-28T06:44:53.648" >
+          <step title="PreDeployment: context.OutputPath /home/site/wwwroot" date="2026-01-28T06:44:53.796" >
+            <step title="Building" date="2026-01-28T06:44:54.032" >
+              <step title="Executing external process" date="2026-01-28T06:44:55.555" type="process" path="starter.sh" arguments="/opt/Kudu/Scripts/absoluteTar.sh /tmp/zipdeploy/extracted/node_modules /tmp/zipdeploy/extracted/node_modules.tar.gz" /><!-- duration: 27618ms -->
+              <step title="Executing external process" date="2026-01-28T06:45:23.563" type="process" path="starter.sh" arguments="/opt/Kudu/Scripts/parallel_rsync.sh /tmp/zipdeploy/extracted /home/site/wwwroot 8 /tmp/ True False node_modules " /><!-- duration: 26924ms -->
+              <step title="Modified file to trigger a restart of the app container." date="2026-01-28T06:45:51.601" /><!-- duration: 2ms -->
+              <step title="Skip function trigger and logicapp sync because function is not enabled." date="2026-01-28T06:45:51.629" /><!-- duration: 4ms -->
+              <step title="Purge deployment items" date="2026-01-28T06:45:53.443" >
+                <step title="Remove temp-f496, Pending, received at 01/28/2026 06:44:41" date="2026-01-28T06:45:53.507" /><!-- duration: 2ms -->
+                <step title="Remove bb226d9c-, Success, received at 01/27/2026 03:43:15" date="2026-01-28T06:45:53.572" /><!-- duration: 2ms -->
+              </step><!-- duration: 133ms -->
+            </step><!-- duration: 59627ms -->
+          </step><!-- duration: 59866ms -->
+          <step title="Cleaning up temp files" date="2026-01-28T06:45:53.664" /><!-- duration: 3ms -->
+          <step title="Cleaning up temp files" date="2026-01-28T06:45:53.669" /><!-- duration: 520ms -->
+          <step title="Reloading status file with latest updates" date="2026-01-28T06:45:54.258" >
+            <step title="WebHooksManager.PublishEventAsync: PostDeployment" date="2026-01-28T06:45:54.263" /><!-- duration: 47ms -->
+          </step><!-- duration: 53ms -->
+          <step title="Cleaning up temporary deployment - fetch deployment was successful" date="2026-01-28T06:45:54.329" /><!-- duration: 2ms -->
+        </step><!-- duration: 60746ms -->
+      </step><!-- duration: 62956ms -->

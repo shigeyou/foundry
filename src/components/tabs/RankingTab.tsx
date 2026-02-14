@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useApp } from "@/contexts/AppContext";
 import { Button } from "@/components/ui/button";
+import { getFinderSettings } from "@/config/finder-config";
 
 interface Strategy {
   id?: string;
@@ -14,6 +15,7 @@ interface Strategy {
   question: string;
   createdAt?: string;
   explorationId?: string;
+  tags?: string[];
 }
 
 interface Decision {
@@ -24,7 +26,8 @@ interface Decision {
 }
 
 export function RankingTab() {
-  const { setActiveTab } = useApp();
+  const { setActiveTab, finderId } = useApp();
+  const finderSettings = getFinderSettings(finderId);
   const [rankingStrategies, setRankingStrategies] = useState<Strategy[]>([]);
   const [loading, setLoading] = useState(true);
   const [allDecisions, setAllDecisions] = useState<Record<string, Decision>>({});
@@ -233,11 +236,21 @@ export function RankingTab() {
                       </span>
                     </td>
                     <td className="py-3 px-3">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className={`text-xs transition-transform ${isExpanded ? "rotate-90" : ""}`}>▶</span>
                         <span className="text-sm text-slate-900 dark:text-slate-100">
                           {strategy.name}
                         </span>
+                        {finderSettings.departmentBadgeEnabled && strategy.tags?.[0] && (
+                          <span className="px-2 py-0.5 bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 rounded-full text-xs font-medium">
+                            {strategy.tags[0]}
+                          </span>
+                        )}
+                        {finderSettings.fixedBadge && (
+                          <span className="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 rounded-full text-xs font-medium">
+                            {finderSettings.fixedBadge}
+                          </span>
+                        )}
                       </div>
                       {/* 展開時の詳細表示 */}
                       {isExpanded && (

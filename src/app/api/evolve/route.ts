@@ -34,8 +34,8 @@ interface EvolveResult {
   thinkingProcess: string;
 }
 
-// 採用された戦略を取得（ユーザー別）
-async function getAdoptedStrategies(userId: string, limit: number = 10): Promise<
+// 採用された戦略を取得（ユーザー別・ファインダー別）
+async function getAdoptedStrategies(userId: string, finderId: string | null, limit: number = 10): Promise<
   {
     name: string;
     reason: string;
@@ -44,17 +44,20 @@ async function getAdoptedStrategies(userId: string, limit: number = 10): Promise
     scores?: string;
   }[]
 > {
-  // StrategyDecisionから採用された戦略を取得（自分のデータのみ）
+  // finderIdがnullのデータも含める（後方互換性）
+  const finderIdFilter = finderId ? { OR: [{ finderId }, { finderId: null }] } : {};
+
+  // StrategyDecisionから採用された戦略を取得（自分のデータ・ファインダー別）
   const decisions = await prisma.strategyDecision.findMany({
-    where: { userId, decision: "adopt" },
+    where: { userId, ...finderIdFilter, decision: "adopt" },
     orderBy: { createdAt: "desc" },
     take: limit * 2, // 重複を考慮して多めに取得
   });
 
   if (decisions.length === 0) {
-    // TopStrategyから高スコア戦略を取得（フォールバック、自分のデータのみ）
+    // TopStrategyから高スコア戦略を取得（フォールバック、自分のデータ・ファインダー別）
     const topStrategies = await prisma.topStrategy.findMany({
-      where: { userId },
+      where: { userId, ...finderIdFilter },
       orderBy: { totalScore: "desc" },
       take: limit,
     });
@@ -85,9 +88,9 @@ async function getAdoptedStrategies(userId: string, limit: number = 10): Promise
   if (rankingDecisions.length > 0) {
     const strategyNames = new Set(rankingDecisions.map((d) => d.strategyName));
 
-    // 完了した探索から戦略を検索
+    // 完了した探索から戦略を検索（ファインダー別）
     const explorations = await prisma.exploration.findMany({
-      where: { status: "completed", userId },
+      where: { status: "completed", userId, ...finderIdFilter },
       orderBy: { createdAt: "desc" },
     });
 
@@ -326,46 +329,26 @@ ${modeInstructions[mode]}
   }
 }
 
-// スコアから加重平均を計算
-function calculateTotalScore(scores: {
-  revenuePotential: number;
-  timeToRevenue: number;
-  competitiveAdvantage: number;
-  executionFeasibility: number;
-  hqContribution: number;
-  mergerSynergy: number;
-}): number {
-  // デフォルトの重み（均等）
-  const weights = {
-    revenuePotential: 1,
-    timeToRevenue: 1,
-    competitiveAdvantage: 1,
-    executionFeasibility: 1,
-    hqContribution: 1,
-    mergerSynergy: 1,
-  };
-  const totalWeight = Object.values(weights).reduce((a, b) => a + b, 0);
-  const weightedSum =
-    scores.revenuePotential * weights.revenuePotential +
-    scores.timeToRevenue * weights.timeToRevenue +
-    scores.competitiveAdvantage * weights.competitiveAdvantage +
-    scores.executionFeasibility * weights.executionFeasibility +
-    scores.hqContribution * weights.hqContribution +
-    scores.mergerSynergy * weights.mergerSynergy;
-  return weightedSum / totalWeight;
+// スコアから平均を計算（動的キー対応）
+function calculateTotalScore(scores: Record<string, number>): number {
+  const keys = Object.keys(scores).filter((k) => typeof scores[k] === "number");
+  if (keys.length === 0) return 0;
+  const sum = keys.reduce((acc, key) => acc + (scores[key] || 0), 0);
+  return sum / keys.length;
 }
 
-// POST: 進化生成を実行（ユーザー別）
+// POST: 進化生成を実行（ユーザー別・ファインダー別）
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const mode: EvolveMode = body.mode || "all";
     const limit = body.limit || 5;
+    const finderId: string | null = body.finderId || null;
 
     const user = await getCurrentUser();
 
-    // 採用された戦略を取得（自分のデータのみ）
-    const strategies = await getAdoptedStrategies(user.id, limit);
+    // 採用された戦略を取得（自分のデータ・ファインダー別）
+    const strategies = await getAdoptedStrategies(user.id, finderId, limit);
 
     if (strategies.length === 0) {
       return NextResponse.json(
@@ -400,15 +383,17 @@ export async function POST(request: NextRequest) {
       return s;
     });
 
-    // 探索として保存（ユーザー情報付き）
+    // 探索として保存（ユーザー情報・ファインダー情報付き）
     const exploration = await prisma.exploration.create({
       data: {
+        id: `exp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
         question: `[進化生成] ${mode}モード - ${strategies.slice(0, 3).map((s) => s.name).join(", ")}から`,
         context: `[進化生成] 元戦略: ${strategies.map((s) => s.name).join(", ")}`,
         constraints: "[]",
         status: "completed",
         userId: user.id,
         userName: user.name,
+        finderId,
         result: JSON.stringify({
           strategies: strategiesWithScores.map((s) => ({
             name: s.name,
@@ -429,18 +414,19 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // 高スコア（4.0以上）の戦略をランキング（TopStrategy）に自動登録（ユーザー別）
+    // 高スコア（4.0以上）の戦略をランキング（TopStrategy）に自動登録（ユーザー別・ファインダー別）
     let archivedCount = 0;
     for (const strategy of strategiesWithScores) {
       if (strategy.totalScore && strategy.totalScore >= 4.0 && strategy.scores) {
-        // 既存チェック（自分のデータのみ）
+        // 既存チェック（自分のデータ・ファインダー別）
         const existing = await prisma.topStrategy.findFirst({
-          where: { userId: user.id, name: strategy.name },
+          where: { userId: user.id, finderId, name: strategy.name },
         });
 
         if (!existing) {
           await prisma.topStrategy.create({
             data: {
+              id: `top-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
               explorationId: exploration.id,
               name: strategy.name,
               reason: strategy.reason,
@@ -451,6 +437,7 @@ export async function POST(request: NextRequest) {
               judgment: "",
               userId: user.id,
               userName: user.name,
+              finderId,
             },
           });
           archivedCount++;
@@ -479,25 +466,31 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET: 進化生成の情報を取得（ユーザー別）
-export async function GET() {
+// GET: 進化生成の情報を取得（ユーザー別・ファインダー別）
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    const finderId = searchParams.get("finderId") || null;
     const user = await getCurrentUser();
 
-    // 採用された戦略数を取得（自分のデータのみ）
+    // finderIdがnullのデータも含める（後方互換性）
+    const finderIdFilter = finderId ? { OR: [{ finderId }, { finderId: null }] } : {};
+
+    // 採用された戦略数を取得（自分のデータ・ファインダー別）
     const adoptedCount = await prisma.strategyDecision.count({
-      where: { userId: user.id, decision: "adopt" },
+      where: { userId: user.id, ...finderIdFilter, decision: "adopt" },
     });
 
-    // TopStrategy数を取得（自分のデータのみ）
+    // TopStrategy数を取得（自分のデータ・ファインダー別）
     const topStrategyCount = await prisma.topStrategy.count({
-      where: { userId: user.id },
+      where: { userId: user.id, ...finderIdFilter },
     });
 
-    // 最近の進化生成を取得（戦略情報も含む、自分のデータのみ）
+    // 最近の進化生成を取得（戦略情報も含む、自分のデータ・ファインダー別）
     const recentEvolutionsRaw = await prisma.exploration.findMany({
       where: {
         userId: user.id,
+        ...finderIdFilter,
         question: { startsWith: "[進化生成]" },
       },
       orderBy: { createdAt: "desc" },

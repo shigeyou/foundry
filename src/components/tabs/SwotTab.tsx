@@ -132,28 +132,19 @@ export function SwotTab() {
     const expectedDuration = 150000; // 150秒想定（20%速度）
     let maxProgress = 0;
 
-    // イージング関数: 中盤ゆっくり→終盤加速→停滞感なし
+    // easeInCubic: 前半ゆっくり→後半尻上がりに加速→97%まで自然に到達
     const calculateProgress = () => {
       const elapsed = Date.now() - startTime;
       const t = elapsed / expectedDuration;
 
       let progress: number;
-      if (t <= 0.3) {
-        // 序盤: 0-20%
-        progress = (t / 0.3) * 20;
-      } else if (t <= 0.6) {
-        // 中盤: 20-45% (ゆっくり)
-        progress = 20 + ((t - 0.3) / 0.3) * 25;
-      } else if (t <= 1.0) {
-        // 終盤: 45-92% (加速)
-        const endT = (t - 0.6) / 0.4;
-        progress = 45 + Math.pow(endT, 0.7) * 47;
+      if (t <= 1) {
+        progress = t * t * t * 92;
       } else {
-        // 超過: 92-99% (少しずつ)
-        const overT = t - 1.0;
-        progress = 92 + Math.min(overT * 14, 7);
+        const overtime = t - 1;
+        progress = 92 + 5 * (1 - Math.exp(-overtime * 0.8));
       }
-      return Math.min(progress, 99);
+      return Math.min(progress, 97);
     };
 
     progressIntervalRef.current = setInterval(() => {
@@ -250,6 +241,23 @@ export function SwotTab() {
           >
             {isAnalyzing ? "分析中..." : "再分析"}
           </Button>
+          {isAnalyzing && (
+            <button
+              onClick={() => {
+                if (abortControllerRef.current) {
+                  abortControllerRef.current.abort();
+                  abortControllerRef.current = null;
+                }
+                cleanup();
+                setIsAnalyzing(false);
+                setSwotProgress(0);
+                isAnalyzingRef.current = false;
+              }}
+              className="px-3 py-1 text-sm bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-md font-medium transition-colors"
+            >
+              キャンセル
+            </button>
+          )}
         </div>
       </div>
       <p className="text-sm text-slate-600 dark:text-slate-400 mb-2 flex-shrink-0">

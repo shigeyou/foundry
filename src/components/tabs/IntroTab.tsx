@@ -1,109 +1,31 @@
 "use client";
 
-import { useState } from "react";
 import { useApp } from "@/contexts/AppContext";
+import { getFinderSettings } from "@/config/finder-config";
 
 export function IntroTab() {
-  const { setActiveTab } = useApp();
-  const [seedStatus, setSeedStatus] = useState<string | null>(null);
-  const [isSeeding, setIsSeeding] = useState(false);
-  const [clearStatus, setClearStatus] = useState<string | null>(null);
-  const [isClearing, setIsClearing] = useState(false);
-  const [myClearStatus, setMyClearStatus] = useState<string | null>(null);
-  const [isMyClear, setIsMyClear] = useState(false);
-
-  const handleForceSeed = async () => {
-    if (!confirm("強制シードを実行すると、現在の探索データが初期データに置き換わります。続行しますか？")) {
-      return;
-    }
-    setIsSeeding(true);
-    setSeedStatus("シード中...");
-    try {
-      const res = await fetch("/api/seed?type=exploration&force=true", { method: "POST" });
-      const data = await res.json();
-      if (data.success) {
-        const counts = data.results?.exploration?.seeded || {};
-        setSeedStatus(`完了: Exploration ${counts.explorations || 0}件, TopStrategy ${counts.topStrategies || 0}件, StrategyDecision ${counts.strategyDecisions || 0}件`);
-      } else {
-        setSeedStatus(`エラー: ${data.error || "不明なエラー"}`);
-      }
-    } catch (e) {
-      setSeedStatus(`エラー: ${e instanceof Error ? e.message : "通信エラー"}`);
-    } finally {
-      setIsSeeding(false);
-    }
-  };
-
-  const handleClearMyData = async () => {
-    if (!confirm("あなたの探索データをすべて削除します。会社情報・RAG・SWOTは残ります。続行しますか？")) {
-      return;
-    }
-    setIsMyClear(true);
-    setMyClearStatus("削除中...");
-    try {
-      const res = await fetch("/api/seed?user-only=true", { method: "DELETE" });
-      const data = await res.json();
-      if (data.success) {
-        const d = data.deleted || {};
-        setMyClearStatus(`削除完了: 探索${d.explorations || 0}件, ランキング${d.topStrategies || 0}件, 採否${d.strategyDecisions || 0}件, 学習${d.learningMemories || 0}件`);
-      } else {
-        setMyClearStatus(`エラー: ${data.error || "不明なエラー"}`);
-      }
-    } catch (e) {
-      setMyClearStatus(`エラー: ${e instanceof Error ? e.message : "通信エラー"}`);
-    } finally {
-      setIsMyClear(false);
-    }
-  };
-
-  const handleClearExplorations = async () => {
-    if (!confirm("【管理者】全ユーザーの探索データをすべて削除します。会社情報やRAGドキュメントは残ります。続行しますか？")) {
-      return;
-    }
-    setIsClearing(true);
-    setClearStatus("削除中...");
-    try {
-      const res = await fetch("/api/seed", { method: "DELETE" });
-      const data = await res.json();
-      if (data.success) {
-        const d = data.deleted || {};
-        setClearStatus(`削除完了: Exploration ${d.explorations || 0}件, TopStrategy ${d.topStrategies || 0}件, StrategyDecision ${d.strategyDecisions || 0}件, LearningMemory ${d.learningMemories || 0}件`);
-      } else {
-        setClearStatus(`エラー: ${data.error || "不明なエラー"}`);
-      }
-    } catch (e) {
-      setClearStatus(`エラー: ${e instanceof Error ? e.message : "通信エラー"}`);
-    } finally {
-      setIsClearing(false);
-    }
-  };
+  const { finderId } = useApp();
+  const finderSettings = getFinderSettings(finderId);
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-4xl">
       <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">はじめに</h1>
       <p className="text-slate-600 dark:text-slate-400 mb-8">
-        勝ち筋ファインダーの概要と基本的な使い方をご紹介します。
+        {finderSettings.name}の概要と基本的な使い方をご紹介します。
       </p>
 
       {/* アプリの概要 */}
       <section className="mb-8">
         <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2">
           <span className="w-1 h-6 bg-blue-500 rounded"></span>
-          勝ち筋ファインダーとは
+          {finderSettings.name}とは
         </h2>
         <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-5">
-          <p className="text-slate-700 dark:text-slate-300 leading-relaxed mb-4">
-            勝ち筋ファインダーは、<strong>AIの力を借りて企業の「勝ち筋」を探索するツール</strong>です。
-          </p>
-          <p className="text-slate-700 dark:text-slate-300 leading-relaxed mb-4">
-            外部データを検索・参照する<strong>RAG（Retrieval-Augmented Generation）</strong>の仕組みと、
-            大規模言語モデル（LLM）が保持する広範な知識を組み合わせることで、
-            自社の強みを活かした戦略オプションを多角的に提案します。
-          </p>
-          <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
-            単なるアイデア出しにとどまらず、提案された勝ち筋を評価・選別し、
-            その判断履歴からAIが学習することで、より的確な提案へと進化していく仕組みを備えています。
-          </p>
+          {finderSettings.introDescription.split('\n').map((paragraph, i) => (
+            <p key={i} className="text-slate-700 dark:text-slate-300 leading-relaxed mb-4 last:mb-0">
+              {paragraph}
+            </p>
+          ))}
         </div>
       </section>
 
@@ -162,15 +84,15 @@ export function IntroTab() {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-blue-400">•</span>
-                  <span><strong>勝ち筋探索</strong> - 探索の実行</span>
+                  <span><strong>{finderSettings.exploreLabel}</strong> - 探索の実行</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-blue-400">•</span>
-                  <span><strong>ランキング</strong> - 戦略の評価・採否</span>
+                  <span><strong>ランキング</strong> - {finderSettings.resultLabel}の評価・採否</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-blue-400">•</span>
-                  <span><strong>シン・勝ち筋の探求</strong> - 戦略の進化</span>
+                  <span><strong>シン・{finderSettings.resultLabel}の探求</strong> - {finderSettings.resultLabel}の進化</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-blue-400">•</span>
@@ -209,16 +131,16 @@ export function IntroTab() {
               <div>
                 <p className="font-medium text-slate-800 dark:text-slate-200">スコア設定（任意）</p>
                 <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                  勝ち筋の評価基準をカスタマイズできます。デフォルト設定でも十分使えます。
+                  {finderSettings.resultLabel}の評価基準をカスタマイズできます。デフォルト設定でも十分使えます。
                 </p>
               </div>
             </li>
             <li className="flex gap-3">
               <span className="flex-shrink-0 w-7 h-7 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full flex items-center justify-center text-sm font-bold">2</span>
               <div>
-                <p className="font-medium text-slate-800 dark:text-slate-200">勝ち筋探索</p>
+                <p className="font-medium text-slate-800 dark:text-slate-200">{finderSettings.exploreLabel}</p>
                 <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                  「問い」を入力して探索を実行すると、AIが複数の勝ち筋を提案します。
+                  「問い」を入力して探索を実行すると、AIが複数の{finderSettings.resultLabel}を提案します。
                 </p>
               </div>
             </li>
@@ -227,16 +149,16 @@ export function IntroTab() {
               <div>
                 <p className="font-medium text-slate-800 dark:text-slate-200">ランキングで採否判断</p>
                 <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                  提案された勝ち筋を「採用」「却下」で評価。この判断履歴がAIの学習に使われます。
+                  提案された{finderSettings.resultLabel}を「採用」「却下」で評価。この判断履歴がAIの学習に使われます。
                 </p>
               </div>
             </li>
             <li className="flex gap-3">
               <span className="flex-shrink-0 w-7 h-7 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full flex items-center justify-center text-sm font-bold">4</span>
               <div>
-                <p className="font-medium text-slate-800 dark:text-slate-200">シン・勝ち筋の探求</p>
+                <p className="font-medium text-slate-800 dark:text-slate-200">シン・{finderSettings.resultLabel}の探求</p>
                 <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                  採用した勝ち筋をベースに、AIがさらに進化した勝ち筋を自動生成します。
+                  採用した{finderSettings.resultLabel}をベースに、AIがさらに進化した{finderSettings.resultLabel}を自動生成します。
                 </p>
               </div>
             </li>
@@ -348,94 +270,7 @@ export function IntroTab() {
         </div>
       </section>
 
-      {/* 始めるボタン */}
-      <div className="text-center mb-12">
-        <button
-          onClick={() => setActiveTab("company")}
-          className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
-        >
-          対象企業の設定から始める
-        </button>
-      </div>
 
-      {/* データ管理 */}
-      <section className="mb-8">
-        <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2">
-          <span className="w-1 h-6 bg-orange-500 rounded"></span>
-          データ管理
-        </h2>
-        <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-5">
-          <p className="text-slate-600 dark:text-slate-400 text-sm mb-3">
-            RAGデータが更新された場合など、自分の探索データをリセットしたい場合に使用します。
-            会社情報・RAG・SWOTは共有データのため残ります。
-          </p>
-          <div className="flex items-center gap-4">
-            <button
-              onClick={handleClearMyData}
-              disabled={isMyClear}
-              className="px-4 py-2 bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400 text-white font-medium rounded-lg transition-colors text-sm"
-            >
-              {isMyClear ? "削除中..." : "自分のデータをクリア"}
-            </button>
-            {myClearStatus && (
-              <span className={`text-sm ${myClearStatus.startsWith("エラー") ? "text-red-600" : "text-green-600"}`}>
-                {myClearStatus}
-              </span>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* 管理者向け */}
-      <section className="mb-8">
-        <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2">
-          <span className="w-1 h-6 bg-slate-500 rounded"></span>
-          管理者向け
-        </h2>
-        <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-5 space-y-4">
-          {/* 探索データクリア */}
-          <div>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">
-              探索データのみ削除します（会社情報・RAGは残ります）。
-            </p>
-            <div className="flex items-center gap-4">
-              <button
-                onClick={handleClearExplorations}
-                disabled={isClearing}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white font-medium rounded-lg transition-colors text-sm"
-              >
-                {isClearing ? "削除中..." : "探索データをクリア"}
-              </button>
-              {clearStatus && (
-                <span className={`text-sm ${clearStatus.startsWith("エラー") ? "text-red-600" : "text-green-600"}`}>
-                  {clearStatus}
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* 強制シード */}
-          <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
-            <p className="text-slate-600 dark:text-slate-400 text-sm mb-2">
-              デプロイ後にデータが不足している場合、初期データを強制的に読み込みます。
-            </p>
-            <div className="flex items-center gap-4">
-              <button
-                onClick={handleForceSeed}
-                disabled={isSeeding}
-                className="px-4 py-2 bg-slate-600 hover:bg-slate-700 disabled:bg-slate-400 text-white font-medium rounded-lg transition-colors text-sm"
-              >
-                {isSeeding ? "シード中..." : "強制シード実行"}
-              </button>
-              {seedStatus && (
-                <span className={`text-sm ${seedStatus.startsWith("エラー") ? "text-red-600" : "text-green-600"}`}>
-                  {seedStatus}
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-      </section>
     </div>
   );
 }

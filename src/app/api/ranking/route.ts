@@ -2,20 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentUserId } from "@/lib/auth";
 
-interface StrategyScores {
-  revenuePotential: number;
-  timeToRevenue: number;
-  competitiveAdvantage: number;
-  executionFeasibility: number;
-  hqContribution: number;
-  mergerSynergy: number;
-}
+type StrategyScores = Record<string, number>;
 
 interface Strategy {
   name: string;
   reason: string;
   howToObtain: string;
   scores?: StrategyScores;
+  tags?: string[];
 }
 
 interface RankedStrategy {
@@ -27,38 +21,24 @@ interface RankedStrategy {
   question: string;
   explorationDate: Date;
   judgment: string;
+  tags?: string[];
 }
 
-// Default weights for scoring
-const defaultWeights = {
-  revenuePotential: 30,
-  timeToRevenue: 20,
-  competitiveAdvantage: 20,
-  executionFeasibility: 15,
-  hqContribution: 10,
-  mergerSynergy: 5,
-};
-
-function calculateTotalScore(scores: StrategyScores, weights = defaultWeights): number {
-  const totalWeight = Object.values(weights).reduce((a, b) => a + b, 0);
-  if (totalWeight === 0) return 0;
-
-  const weightedSum =
-    scores.revenuePotential * weights.revenuePotential +
-    scores.timeToRevenue * weights.timeToRevenue +
-    scores.competitiveAdvantage * weights.competitiveAdvantage +
-    scores.executionFeasibility * weights.executionFeasibility +
-    scores.hqContribution * weights.hqContribution +
-    scores.mergerSynergy * weights.mergerSynergy;
-
-  return weightedSum / totalWeight;
+function calculateTotalScore(scores: StrategyScores): number {
+  const keys = Object.keys(scores).filter((k) => typeof scores[k] === "number");
+  if (keys.length === 0) return 0;
+  let weightedSum = 0;
+  let totalWeight = 0;
+  keys.forEach((key) => {
+    weightedSum += (scores[key] || 0);
+    totalWeight += 1;
+  });
+  return totalWeight > 0 ? weightedSum / totalWeight : 0;
 }
 
 function getJudgment(scores: StrategyScores): string {
-  // Gate conditions
-  if (scores.revenuePotential <= 2) return "見送り";
-  if (scores.competitiveAdvantage <= 2) return "見送り";
-  if (scores.executionFeasibility === 1) return "見送り";
+  const values = Object.values(scores).filter((v) => typeof v === "number");
+  if (values.some((v) => v <= 1)) return "見送り";
 
   const totalScore = calculateTotalScore(scores);
   if (totalScore >= 4.0) return "優先投資";
@@ -110,6 +90,7 @@ export async function GET(request: NextRequest) {
             question: exploration.question,
             explorationDate: exploration.createdAt,
             judgment: strategyJudgment,
+            tags: strategy.tags,
           });
         }
       } catch (e) {

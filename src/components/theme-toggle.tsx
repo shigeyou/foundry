@@ -43,7 +43,7 @@ export function ThemeToggle() {
       variant="ghost"
       size="sm"
       onClick={toggleTheme}
-      className="w-9 h-9 p-0"
+      className="w-9 h-9 p-0 hover:bg-white/20"
       title={isDark ? "ライトモードに切替" : "ダークモードに切替"}
     >
       {isDark ? (
@@ -55,7 +55,7 @@ export function ThemeToggle() {
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className="h-5 w-5"
+          className="h-5 w-5 text-yellow-300"
         >
           <circle cx="12" cy="12" r="4" />
           <path d="M12 2v2" />
@@ -76,7 +76,7 @@ export function ThemeToggle() {
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className="h-5 w-5"
+          className="h-5 w-5 text-slate-700"
         >
           <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
         </svg>

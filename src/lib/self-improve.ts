@@ -1,17 +1,10 @@
 import { prisma } from "@/lib/db";
 
-// 6軸スコアの型
-interface StrategyScores {
-  revenuePotential: number;
-  timeToRevenue: number;
-  competitiveAdvantage: number;
-  executionFeasibility: number;
-  hqContribution: number;
-  mergerSynergy: number;
-}
+// スコアの型（finder毎にキーが異なるため動的）
+type StrategyScores = Record<string, number>;
 
-// デフォルトの重み
-const defaultWeights = {
+// デフォルトの重み（均等: scores のキーに基づいて動的に計算）
+const defaultWeights: Record<string, number> = {
   revenuePotential: 30,
   timeToRevenue: 20,
   competitiveAdvantage: 20,
@@ -20,25 +13,30 @@ const defaultWeights = {
   mergerSynergy: 5,
 };
 
-// 加重平均スコアを計算
+// 加重平均スコアを計算（動的キー対応）
 export function calculateTotalScore(scores: StrategyScores): number {
-  const totalWeight = Object.values(defaultWeights).reduce((a, b) => a + b, 0);
-  const weightedSum =
-    scores.revenuePotential * defaultWeights.revenuePotential +
-    scores.timeToRevenue * defaultWeights.timeToRevenue +
-    scores.competitiveAdvantage * defaultWeights.competitiveAdvantage +
-    scores.executionFeasibility * defaultWeights.executionFeasibility +
-    scores.hqContribution * defaultWeights.hqContribution +
-    scores.mergerSynergy * defaultWeights.mergerSynergy;
+  // scoresのキーに基づいて重みを取得（未定義の場合は均等重み）
+  const keys = Object.keys(scores).filter((k) => typeof scores[k] === "number");
+  if (keys.length === 0) return 0;
+
+  // defaultWeightsにマッチするキーがあればそれを使用、なければ均等重み
+  const hasDefaultWeights = keys.some((k) => k in defaultWeights);
+  let weightedSum = 0;
+  let totalWeight = 0;
+  keys.forEach((key) => {
+    const w = hasDefaultWeights ? (defaultWeights[key] || 0) : 1;
+    weightedSum += (scores[key] || 0) * w;
+    totalWeight += w;
+  });
+  if (totalWeight === 0) return 0;
   return weightedSum / totalWeight;
 }
 
-// 判定を取得
+// 判定を取得（動的キー対応）
 export function getJudgment(scores: StrategyScores): string {
-  // ゲート条件
-  if (scores.revenuePotential <= 2) return "見送り";
-  if (scores.competitiveAdvantage <= 2) return "見送り";
-  if (scores.executionFeasibility === 1) return "見送り";
+  const values = Object.values(scores).filter((v) => typeof v === "number");
+  // いずれかのスコアが1点なら見送り
+  if (values.some((v) => v <= 1)) return "見送り";
 
   const totalScore = calculateTotalScore(scores);
   if (totalScore >= 4.0) return "優先投資";
@@ -46,8 +44,8 @@ export function getJudgment(scores: StrategyScores): string {
   return "見送り";
 }
 
-// 全戦略のスコアを取得（ユーザー別）
-export async function getAllStrategiesWithScores(userId?: string): Promise<
+// 全戦略のスコアを取得（ユーザー別・ファインダー別）
+export async function getAllStrategiesWithScores(userId?: string, finderId?: string | null): Promise<
   {
     explorationId: string;
     name: string;
@@ -63,6 +61,7 @@ export async function getAllStrategiesWithScores(userId?: string): Promise<
     where: {
       status: "completed",
       ...(userId ? { userId } : {}),
+      ...(finderId !== undefined ? { finderId } : {}),
     },
     select: {
       id: true,
@@ -154,17 +153,21 @@ export async function recordBaseline(runId?: string) {
   return baseline;
 }
 
-// 高スコア戦略をアーカイブ（重複チェック付き、ユーザー別）
+// 高スコア戦略をアーカイブ（重複チェック付き、ユーザー別・ファインダー別）
 export async function archiveTopStrategies(
   minScore: number = 4.0,
   userId?: string,
-  userName?: string
+  userName?: string,
+  finderId?: string | null
 ) {
-  const allStrategies = await getAllStrategiesWithScores(userId);
+  const allStrategies = await getAllStrategiesWithScores(userId, finderId);
 
-  // 既存のアーカイブを取得（重複チェック用、ユーザー別）
+  // 既存のアーカイブを取得（重複チェック用、ユーザー別・ファインダー別）
   const existingArchives = await prisma.topStrategy.findMany({
-    where: userId ? { userId } : {},
+    where: {
+      ...(userId ? { userId } : {}),
+      ...(finderId !== undefined ? { finderId } : {}),
+    },
     select: {
       explorationId: true,
       name: true,
@@ -189,7 +192,7 @@ export async function archiveTopStrategies(
     return { archived: 0, total: highScoreStrategies.length };
   }
 
-  // バッチ作成（ユーザー情報付き）
+  // バッチ作成（ユーザー情報・ファインダー情報付き）
   await prisma.topStrategy.createMany({
     data: newStrategies.map((s) => ({
       explorationId: s.explorationId,
@@ -202,6 +205,7 @@ export async function archiveTopStrategies(
       judgment: s.judgment,
       userId,
       userName,
+      finderId: finderId ?? null,
     })),
   });
 
@@ -223,10 +227,13 @@ export async function getBaselineHistory(limit: number = 30) {
   });
 }
 
-// 高スコア戦略を取得（ユーザー別）
-export async function getTopStrategies(limit: number = 50, userId?: string) {
+// 高スコア戦略を取得（ユーザー別・ファインダー別）
+export async function getTopStrategies(limit: number = 50, userId?: string, finderId?: string | null) {
   return prisma.topStrategy.findMany({
-    where: userId ? { userId } : {},
+    where: {
+      ...(userId ? { userId } : {}),
+      ...(finderId !== undefined ? { finderId } : {}),
+    },
     orderBy: { totalScore: "desc" },
     take: limit,
   });

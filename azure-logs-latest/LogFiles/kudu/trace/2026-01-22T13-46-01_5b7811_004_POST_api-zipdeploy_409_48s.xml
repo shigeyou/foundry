@@ -1,0 +1,19 @@
+<step title="Incoming Request" date="2026-01-22T13:46:01.937" instance="5b7811" url="/api/zipdeploy?isAsync=true" method="POST" type="request" pid="833,1,18" Accept="*/*" Host="kachisuji-finder.scm.azurewebsites.net" User-Agent="AZURECLI/2.81.0 (DEB)" Accept-Encoding="gzip, deflate" Authorization="Bea..." Cache-Control="no-cache" Content-Type="application/octet-stream" Content-Length="242393516" x-ms-client-request-id="ac8b47f8-f798-11f0-b2c9-7c1e522c01d9" x-ms-artifact-checksum="1fa97516af4b87ce20a6047b17794579d0b8af69408af625ae1d0975c5db470f" X-ARR-LOG-ID="ac8b47f8-f798-11f0-b2c9-7c1e522c01d9" CLIENT-IP="64.236.140.167:2880" X-SITE-DEPLOYMENT-ID="kachisuji-finder" WAS-DEFAULT-HOSTNAME="kachisuji-finder.scm.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/api/zipdeploy?isAsync=true" X-Client-IP="64.236.140.167" X-Client-Port="2880" >
+  <step title="Cleanup Xml Logs" date="2026-01-22T13:46:02.055" /><!-- duration: 115ms -->
+  <step title="ZipPushDeploy" date="2026-01-22T13:46:02.862" >
+    <step title="ZipDeploy. Extract zip. Remote build." date="2026-01-22T13:46:02.949" /><!-- duration: 19ms -->
+    <step title="None repository commit" date="2026-01-22T13:46:03.018" >
+      <step title="Commit id: c123f890-6d4c-42f5-afdc-9d7c67a02f87" date="2026-01-22T13:46:03.037" Message="N/A" AuthorName="N/A" AuthorEmail="N/A" /><!-- duration: 19ms -->
+    </step><!-- duration: 95ms -->
+    <step title="Starting PushDeployAsync" date="2026-01-22T13:46:03.147" /><!-- duration: 2ms -->
+    <step title="Writing artifact to /tmp/zipdeploy/acf8b86d-306c-470a-9eeb-16a3da87bd3d.zip" date="2026-01-22T13:46:03.918" >
+      <step title="Writing multipart request body to /tmp/zipdeploy/acf8b86d-306c-470a-9eeb-16a3da87bd3d.zip" date="2026-01-22T13:46:04.004" /><!-- duration: 54ms -->
+    </step><!-- duration: 42011ms -->
+    <step title="Start deployment in the background" date="2026-01-22T13:46:46.330" >
+      <step title="Acquiring Deployment Lock" date="2026-01-22T13:46:47.395" /><!-- duration: 39ms -->
+      <step title="Cannot Acquire Deployment Lock already held" date="2026-01-22T13:46:47.581" /><!-- duration: 21ms -->
+    </step><!-- duration: 2038ms -->
+    <step title="There is a deployment currently in progress. Please try again when it completes." date="2026-01-22T13:46:48.493" /><!-- duration: 23ms -->
+  </step><!-- duration: 45787ms -->
+  <step title="Outgoing response" date="2026-01-22T13:46:49.485" type="response" statusCode="409" statusText="Conflict" /><!-- duration: 18ms -->
+</step><!-- duration: 47599ms -->

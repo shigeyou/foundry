@@ -97,17 +97,20 @@ ${rejectedStrategies.map((s, i) => `${i + 1}. ${s.name}
   }
 }
 
-// POST: パターン抽出を実行（ユーザー別）
+// POST: パターン抽出を実行（ユーザー別・ファインダー別）
 export async function POST(request: NextRequest) {
   try {
-    await request.json().catch(() => ({}));
+    const body = await request.json().catch(() => ({}));
+    const finderId: string | null = body.finderId || null;
 
     const userId = await getCurrentUserId();
 
-    // 採否ログを取得（自分のデータのみ）
+    // 採否ログを取得（自分のデータ・ファインダー別、finderIdがnullのデータも含める）
+    const finderIdFilter = finderId ? { OR: [{ finderId }, { finderId: null }] } : {};
     const decisions = await prisma.strategyDecision.findMany({
       where: {
         userId,
+        ...finderIdFilter,
         decision: { in: ["adopt", "reject"] },
       },
       orderBy: { createdAt: "desc" },
@@ -129,21 +132,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 関連する探索結果を取得（自分のデータのみ）
+    // 関連する探索結果を取得（自分のデータ・ファインダー別）
     const explorationIds = [...new Set(decisions.map((d) => d.explorationId))];
     const realExplorationIds = explorationIds.filter((id) => !id.startsWith("ranking-"));
     const explorations = await prisma.exploration.findMany({
-      where: { id: { in: realExplorationIds }, userId },
+      where: { id: { in: realExplorationIds }, userId, finderId },
     });
 
     const explorationMap = new Map(explorations.map((e) => [e.id, e]));
 
-    // ランキングからの決定用にTopStrategyテーブルも取得（自分のデータのみ）
+    // ランキングからの決定用にTopStrategyテーブルも取得（自分のデータ・ファインダー別）
     const rankingStrategyNames = decisions
       .filter((d) => d.explorationId.startsWith("ranking-"))
       .map((d) => d.strategyName);
     const topStrategies = await prisma.topStrategy.findMany({
-      where: { name: { in: rankingStrategyNames }, userId },
+      where: { name: { in: rankingStrategyNames }, userId, finderId },
     });
     const topStrategyMap = new Map(topStrategies.map((s) => [s.name, s]));
 
@@ -216,15 +219,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // LearningMemoryに保存（重複チェック付き、ユーザー別）
+    // LearningMemoryに保存（重複チェック付き、ユーザー別・ファインダー別）
     let savedCount = 0;
     let updatedCount = 0;
 
     for (const pattern of patterns) {
-      // 類似パターンを検索（自分のデータのみ）
+      // 類似パターンを検索（自分のデータ・ファインダー別）
       const existing = await prisma.learningMemory.findFirst({
         where: {
           userId,
+          finderId,
           type: pattern.type,
           category: pattern.category,
           pattern: { contains: pattern.pattern.substring(0, 20) },
@@ -246,7 +250,7 @@ export async function POST(request: NextRequest) {
         });
         updatedCount++;
       } else {
-        // 新規パターンを作成（ユーザー情報付き）
+        // 新規パターンを作成（ユーザー情報・ファインダー情報付き）
         await prisma.learningMemory.create({
           data: {
             type: pattern.type,
@@ -257,6 +261,7 @@ export async function POST(request: NextRequest) {
             confidence: pattern.confidence,
             isActive: true,
             userId,
+            finderId,
           },
         });
         savedCount++;
@@ -284,7 +289,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET: 学習パターンを取得（ユーザー別）
+// GET: 学習パターンを取得（ユーザー別・ファインダー別）
 export async function GET(request: NextRequest) {
   // 各ステップを個別にtry-catchして、どこで失敗するか特定
   let step = "init";
@@ -294,11 +299,12 @@ export async function GET(request: NextRequest) {
     const type = searchParams.get("type"); // success_pattern | failure_pattern
     const activeOnly = searchParams.get("active") !== "false";
     const limit = parseInt(searchParams.get("limit") || "50");
+    const finderId = searchParams.get("finderId") || null;
 
     step = "get-userId";
     const userId = await getCurrentUserId();
 
-    const where: Record<string, unknown> = { userId };
+    const where: Record<string, unknown> = { userId, finderId };
     if (type) where.type = type;
     if (activeOnly) where.isActive = true;
 
@@ -321,8 +327,8 @@ export async function GET(request: NextRequest) {
     let failurePatternCount = 0;
     try {
       [successPatternCount, failurePatternCount] = await Promise.all([
-        prisma.learningMemory.count({ where: { userId, isActive: true, type: "success_pattern" } }),
-        prisma.learningMemory.count({ where: { userId, isActive: true, type: "failure_pattern" } }),
+        prisma.learningMemory.count({ where: { userId, finderId, isActive: true, type: "success_pattern" } }),
+        prisma.learningMemory.count({ where: { userId, finderId, isActive: true, type: "failure_pattern" } }),
       ]);
     } catch (e) {
       console.error(`Learning GET: count patterns failed (${String(e)})`);
@@ -332,9 +338,11 @@ export async function GET(request: NextRequest) {
     let adoptCount = 0;
     let rejectCount = 0;
     try {
+      // finderIdがnullのデータも含める（後方互換性）
+      const finderIdFilter = finderId ? { OR: [{ finderId }, { finderId: null }] } : {};
       [adoptCount, rejectCount] = await Promise.all([
-        prisma.strategyDecision.count({ where: { userId, decision: "adopt" } }),
-        prisma.strategyDecision.count({ where: { userId, decision: "reject" } }),
+        prisma.strategyDecision.count({ where: { userId, ...finderIdFilter, decision: "adopt" } }),
+        prisma.strategyDecision.count({ where: { userId, ...finderIdFilter, decision: "reject" } }),
       ]);
     } catch (e) {
       console.error(`Learning GET: count decisions failed (${String(e)})`);

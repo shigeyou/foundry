@@ -1,0 +1,17 @@
+<step title="Incoming Request" date="2026-01-28T06:14:29.860" instance="5b7811" url="/api/publish?type=zip&amp;async=True&amp;restart=True&amp;clean=True" method="POST" type="request" pid="835,1,16" Accept="*/*" Host="kachisuji-finder.scm.azurewebsites.net" User-Agent="AZURECLI/2.82.0 (DEB)" Accept-Encoding="gzip, deflate" Authorization="Bea..." Cache-Control="no-cache" Content-Type="application/octet-stream" Cookie="ARRAffinity=5b7811789b1e33b7cc756bce49c73cf44172046100af9c564b5a3ebcd20cab6c; ARRAffinitySameSite=5b7811789b1e33b7cc756bce49c73cf44172046100af9c564b5a3ebcd20cab6c" Content-Length="46875978" x-ms-client-request-id="95a88f74-fc10-11f0-a095-6045bd4c442c" X-ARR-LOG-ID="95a88f74-fc10-11f0-a095-6045bd4c442c" CLIENT-IP="172.183.131.64:56321" X-SITE-DEPLOYMENT-ID="kachisuji-finder" WAS-DEFAULT-HOSTNAME="kachisuji-finder.scm.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/api/publish?type=zip&amp;async=True&amp;restart=True&amp;clean=True" X-Client-IP="172.183.131.64" X-Client-Port="56321" >
+  <step title="OneDeploy" date="2026-01-28T06:14:30.016" >
+    <step title="None repository commit" date="2026-01-28T06:14:30.048" >
+      <step title="Commit id: 58e79fd0-cc6d-497e-8781-cb6bbe3a595e" date="2026-01-28T06:14:30.050" Message="N/A" AuthorName="N/A" AuthorEmail="N/A" /><!-- duration: 2ms -->
+    </step><!-- duration: 8ms -->
+    <step title="Starting PushDeployAsync" date="2026-01-28T06:14:30.058" /><!-- duration: 3ms -->
+    <step title="Removing node_modules symlink" date="2026-01-28T06:14:30.087" >
+      <step title="Writing artifact to /tmp/zipdeploy/8898cfb1-3071-4544-b3fb-c391b5634969.zip" date="2026-01-28T06:14:30.510" >
+        <step title="Writing multipart request body to /tmp/zipdeploy/8898cfb1-3071-4544-b3fb-c391b5634969.zip" date="2026-01-28T06:14:30.521" /><!-- duration: 93ms -->
+      </step><!-- duration: 4210ms -->
+      <step title="Start deployment in the background" date="2026-01-28T06:14:34.737" >
+        <step title="Acquiring Deployment Lock" date="2026-01-28T06:14:34.791" /><!-- duration: 17ms -->
+        <step title="Acquired Deployment Lock" date="2026-01-28T06:14:34.886" /><!-- duration: 17ms -->
+      </step><!-- duration: 484ms -->
+    </step><!-- duration: 5149ms -->
+    <step title="Outgoing response" date="2026-01-28T06:14:35.258" type="response" statusCode="202" statusText="Accepted" /><!-- duration: 10ms -->
+  </step><!-- duration: 5259ms -->

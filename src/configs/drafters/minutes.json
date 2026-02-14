@@ -1,0 +1,52 @@
+{
+  "id": "minutes",
+  "name": "議事録ドラフター",
+  "description": "会議の文字起こしや要点から、構造化された議事録を自動生成するツール",
+  "systemPrompt": "あなたは「議事録ドラフター」のAIアシスタントです。\n\n## あなたの役割\n会議の文字起こしや要点メモから、ビジネス文書として適切な議事録を生成します。\n\n## 重要な原則\n1. 事実に基づいて正確に記録する\n2. 決定事項とアクションアイテムを明確に抽出する\n3. 参加者の発言は客観的に要約する\n4. 次回のアクションにつながる形式で整理する\n\n## 出力ガイドライン\n- 見出しと箇条書きを活用して読みやすく\n- 決定事項は太字で強調\n- アクションアイテムには担当者と期限を明記\n- 不明瞭な部分は[要確認]と記載",
+  "template": "# 議事録\n\n## 基本情報\n- **会議名**: {{meetingTitle}}\n- **日時**: {{dateTime}}\n- **参加者**: {{participants}}\n- **場所/方法**: {{location}}\n\n## 議題\n{{agenda}}\n\n## 議事内容\n{{discussions}}\n\n## 決定事項\n{{decisions}}\n\n## アクションアイテム\n| 担当者 | タスク | 期限 |\n|--------|--------|------|\n{{actionItems}}\n\n## 次回予定\n{{nextMeeting}}\n\n---\n*この議事録はAIアシスタントにより生成されました。内容に誤りがある場合は修正してください。*",
+  "inputFields": [
+    {
+      "id": "meetingTitle",
+      "name": "会議名",
+      "type": "text",
+      "required": true,
+      "placeholder": "例: 週次定例会議、プロジェクトキックオフ"
+    },
+    {
+      "id": "dateTime",
+      "name": "日時",
+      "type": "text",
+      "required": true,
+      "placeholder": "例: 2024年1月15日 10:00-11:00"
+    },
+    {
+      "id": "participants",
+      "name": "参加者",
+      "type": "text",
+      "required": true,
+      "placeholder": "例: 田中、山田、佐藤"
+    },
+    {
+      "id": "location",
+      "name": "場所/方法",
+      "type": "text",
+      "required": false,
+      "placeholder": "例: 会議室A、Teams会議"
+    },
+    {
+      "id": "transcript",
+      "name": "文字起こし・要点メモ",
+      "type": "textarea",
+      "required": true,
+      "placeholder": "会議の文字起こしまたは要点メモを入力してください..."
+    },
+    {
+      "id": "outputStyle",
+      "name": "出力スタイル",
+      "type": "select",
+      "required": false,
+      "options": ["標準", "詳細", "簡潔"]
+    }
+  ],
+  "outputFormat": "markdown"
+}

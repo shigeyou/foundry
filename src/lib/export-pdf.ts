@@ -206,7 +206,7 @@ export async function exportSummaryPdf(data: SummaryData): Promise<void> {
 
     <div style="margin-top: 32px; padding-top: 16px; border-top: 1px solid #e2e8f0; text-align: center;">
       <p style="font-size: 11px; color: #94a3b8; margin: 0;">
-        勝ち筋ファインダー Ver.0.7 | Powered by AI
+        勝ち筋ファインダー | Powered by AI
       </p>
     </div>
   `;
@@ -256,6 +256,255 @@ export async function exportSummaryPdf(data: SummaryData): Promise<void> {
     const now = new Date();
     const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
     pdf.save(`${dateStr}_勝ち筋探索まとめ.pdf`);
+  } finally {
+    document.body.removeChild(container);
+  }
+}
+
+// メタファインダー結果レポートPDF出力
+interface MetaFinderBatchSummary {
+  batch: {
+    id: string;
+    status: string;
+    totalPatterns: number;
+    completedPatterns: number;
+    totalIdeas: number;
+    startedAt: string;
+    completedAt?: string;
+  };
+  stats: {
+    totalIdeas: number;
+    avgScore: string;
+    avgFinancial: string;
+    avgCustomer: string;
+    avgProcess: string;
+    avgGrowth: string;
+    maxScore: number;
+  };
+  scoreDistribution: {
+    excellent: number;
+    good: number;
+    average: number;
+    low: number;
+  };
+  topIdeas: MetaFinderIdeaItem[];
+  themeBest: MetaFinderIdeaItem[];
+  deptBest: MetaFinderIdeaItem[];
+}
+
+interface MetaFinderIdeaItem {
+  id: string;
+  themeId: string;
+  themeName: string;
+  deptId: string;
+  deptName: string;
+  name: string;
+  description: string;
+  reason: string;
+  financial: number;
+  customer: number;
+  process: number;
+  growth: number;
+  score: number;
+}
+
+export async function exportMetaFinderPdf(data: MetaFinderBatchSummary): Promise<void> {
+  const container = document.createElement("div");
+  container.style.cssText = `
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    width: 794px;
+    padding: 40px;
+    background: white;
+    font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
+    color: #1a1a1a;
+    line-height: 1.5;
+  `;
+
+  const startedAt = new Date(data.batch.startedAt).toLocaleString("ja-JP");
+  const completedAt = data.batch.completedAt
+    ? new Date(data.batch.completedAt).toLocaleString("ja-JP")
+    : "―";
+  const generatedAt = new Date().toLocaleString("ja-JP");
+
+  const scoreColor = (score: number) => {
+    if (score >= 4) return "#059669";
+    if (score >= 3) return "#2563eb";
+    if (score >= 2) return "#d97706";
+    return "#dc2626";
+  };
+
+  const renderIdea = (idea: MetaFinderIdeaItem, index: number) => `
+    <div style="margin-bottom: 10px; padding: 10px; background: #f8fafc; border-radius: 6px; border-left: 4px solid ${scoreColor(idea.score)}; page-break-inside: avoid;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;">
+        <strong style="font-size: 13px; color: #1e293b;">${index + 1}. ${escapeHtml(idea.name)}</strong>
+        <span style="font-size: 13px; font-weight: bold; color: ${scoreColor(idea.score)}; white-space: nowrap; margin-left: 8px;">${idea.score.toFixed(1)}</span>
+      </div>
+      <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">
+        <span style="background: #ede9fe; color: #6d28d9; padding: 1px 6px; border-radius: 4px; margin-right: 4px;">${escapeHtml(idea.themeName)}</span>
+        <span style="background: #e0e7ff; color: #4338ca; padding: 1px 6px; border-radius: 4px;">${escapeHtml(idea.deptName)}</span>
+      </div>
+      <p style="font-size: 11px; color: #334155; margin: 4px 0 2px 0;">${escapeHtml(idea.description)}</p>
+      <p style="font-size: 10px; color: #64748b; margin: 2px 0;">理由: ${escapeHtml(idea.reason)}</p>
+      <div style="font-size: 10px; color: #64748b; margin-top: 4px;">
+        💰${idea.financial}/5 &nbsp; 👥${idea.customer}/5 &nbsp; ⚙️${idea.process}/5 &nbsp; 🌱${idea.growth}/5
+      </div>
+    </div>
+  `;
+
+  container.innerHTML = `
+    <!-- ヘッダー -->
+    <div style="border-bottom: 3px solid #7c3aed; padding-bottom: 16px; margin-bottom: 20px;">
+      <h1 style="font-size: 22px; font-weight: bold; margin: 0 0 8px 0; color: #1e293b;">
+        🌱 メタファインダー 結果レポート
+      </h1>
+      <p style="font-size: 11px; color: #64748b; margin: 0;">
+        レポート生成: ${escapeHtml(generatedAt)} ｜ 探索期間: ${escapeHtml(startedAt)} → ${escapeHtml(completedAt)}
+      </p>
+    </div>
+
+    <!-- 統計サマリー -->
+    <div style="display: flex; gap: 12px; margin-bottom: 20px;">
+      <div style="flex: 1; background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 8px; padding: 12px; text-align: center;">
+        <div style="font-size: 24px; font-weight: bold; color: #7c3aed;">${data.stats.totalIdeas}</div>
+        <div style="font-size: 11px; color: #6b7280;">総アイデア数</div>
+      </div>
+      <div style="flex: 1; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px; text-align: center;">
+        <div style="font-size: 24px; font-weight: bold; color: #059669;">${data.stats.avgScore}</div>
+        <div style="font-size: 11px; color: #6b7280;">平均スコア</div>
+      </div>
+      <div style="flex: 1; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 12px; text-align: center;">
+        <div style="font-size: 24px; font-weight: bold; color: #2563eb;">${data.scoreDistribution.excellent}</div>
+        <div style="font-size: 11px; color: #6b7280;">高スコア (4+)</div>
+      </div>
+      <div style="flex: 1; background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 8px; padding: 12px; text-align: center;">
+        <div style="font-size: 24px; font-weight: bold; color: #4f46e5;">${data.stats.maxScore?.toFixed(1) || "―"}</div>
+        <div style="font-size: 11px; color: #6b7280;">最高スコア</div>
+      </div>
+    </div>
+
+    <!-- BSC 4視点平均 -->
+    <div style="display: flex; gap: 12px; margin-bottom: 24px;">
+      <div style="flex: 1; background: #f0fdf4; border-radius: 6px; padding: 8px; text-align: center; border: 1px solid #d1fae5;">
+        <div style="font-size: 16px; font-weight: bold; color: #059669;">💰 ${data.stats.avgFinancial}</div>
+        <div style="font-size: 10px; color: #6b7280;">財務視点</div>
+      </div>
+      <div style="flex: 1; background: #eff6ff; border-radius: 6px; padding: 8px; text-align: center; border: 1px solid #bfdbfe;">
+        <div style="font-size: 16px; font-weight: bold; color: #2563eb;">👥 ${data.stats.avgCustomer}</div>
+        <div style="font-size: 10px; color: #6b7280;">顧客視点</div>
+      </div>
+      <div style="flex: 1; background: #faf5ff; border-radius: 6px; padding: 8px; text-align: center; border: 1px solid #e9d5ff;">
+        <div style="font-size: 16px; font-weight: bold; color: #7c3aed;">⚙️ ${data.stats.avgProcess}</div>
+        <div style="font-size: 10px; color: #6b7280;">業務プロセス視点</div>
+      </div>
+      <div style="flex: 1; background: #fff7ed; border-radius: 6px; padding: 8px; text-align: center; border: 1px solid #fed7aa;">
+        <div style="font-size: 16px; font-weight: bold; color: #ea580c;">🌱 ${data.stats.avgGrowth}</div>
+        <div style="font-size: 10px; color: #6b7280;">学習と成長視点</div>
+      </div>
+    </div>
+
+    <!-- スコア分布 -->
+    <div style="margin-bottom: 24px; padding: 12px; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb;">
+      <h3 style="font-size: 13px; font-weight: bold; color: #374151; margin: 0 0 8px 0;">スコア分布</h3>
+      <div style="display: flex; gap: 16px; font-size: 12px;">
+        <span style="color: #059669;">■ 優秀 (4+): ${data.scoreDistribution.excellent}件</span>
+        <span style="color: #2563eb;">■ 良好 (3-4): ${data.scoreDistribution.good}件</span>
+        <span style="color: #d97706;">■ 普通 (2-3): ${data.scoreDistribution.average}件</span>
+        <span style="color: #dc2626;">■ 低 (2未満): ${data.scoreDistribution.low}件</span>
+      </div>
+    </div>
+
+    <!-- 全体トップ20 -->
+    <div style="margin-bottom: 24px;">
+      <h2 style="font-size: 16px; font-weight: bold; color: #7c3aed; margin: 0 0 12px 0; border-bottom: 2px solid #e9d5ff; padding-bottom: 6px;">
+        🏆 全体トップ20
+      </h2>
+      ${data.topIdeas.map((idea, i) => renderIdea(idea, i)).join("")}
+    </div>
+
+    <!-- テーマ別ベスト -->
+    <div style="margin-bottom: 24px;">
+      <h2 style="font-size: 16px; font-weight: bold; color: #2563eb; margin: 0 0 12px 0; border-bottom: 2px solid #bfdbfe; padding-bottom: 6px;">
+        📊 テーマ別ベスト
+      </h2>
+      ${data.themeBest.map((idea, i) => renderIdea(idea, i)).join("")}
+    </div>
+
+    <!-- 部門別ベスト -->
+    <div style="margin-bottom: 24px;">
+      <h2 style="font-size: 16px; font-weight: bold; color: #059669; margin: 0 0 12px 0; border-bottom: 2px solid #bbf7d0; padding-bottom: 6px;">
+        🏢 部門別ベスト
+      </h2>
+      ${data.deptBest.map((idea, i) => renderIdea(idea, i)).join("")}
+    </div>
+
+    <!-- フッター -->
+    <div style="margin-top: 24px; padding-top: 12px; border-top: 1px solid #e2e8f0; text-align: center;">
+      <p style="font-size: 10px; color: #94a3b8; margin: 0;">
+        メタファインダー | Powered by AI | ${escapeHtml(generatedAt)}
+      </p>
+    </div>
+  `;
+
+  document.body.appendChild(container);
+
+  try {
+    const canvas = await html2canvas(container, {
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      backgroundColor: "#ffffff",
+    });
+
+    const imgData = canvas.toDataURL("image/png");
+    const pdf = new jsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: "a4",
+    });
+
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const margin = 20;
+    const contentWidth = pageWidth - margin * 2;
+    const usableHeight = pageHeight - margin * 2;
+
+    // 1ページあたりのキャンバス上のピクセル高さ
+    const pxPerMm = canvas.width / contentWidth;
+    const pageHeightPx = Math.floor(usableHeight * pxPerMm);
+
+    let srcY = 0;
+    let pageIndex = 0;
+
+    while (srcY < canvas.height) {
+      if (pageIndex > 0) pdf.addPage();
+
+      const sliceHeight = Math.min(pageHeightPx, canvas.height - srcY);
+
+      // キャンバスからページ分だけ切り出す
+      const pageCanvas = document.createElement("canvas");
+      pageCanvas.width = canvas.width;
+      pageCanvas.height = sliceHeight;
+      const ctx = pageCanvas.getContext("2d")!;
+      ctx.drawImage(
+        canvas,
+        0, srcY, canvas.width, sliceHeight,
+        0, 0, canvas.width, sliceHeight
+      );
+
+      const pageImgData = pageCanvas.toDataURL("image/png");
+      const sliceHeightMm = sliceHeight / pxPerMm;
+
+      pdf.addImage(pageImgData, "PNG", margin, margin, contentWidth, sliceHeightMm);
+
+      srcY += pageHeightPx;
+      pageIndex++;
+    }
+
+    const now = new Date();
+    const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
+    pdf.save(`${dateStr}_メタファインダー結果レポート.pdf`);
   } finally {
     document.body.removeChild(container);
   }

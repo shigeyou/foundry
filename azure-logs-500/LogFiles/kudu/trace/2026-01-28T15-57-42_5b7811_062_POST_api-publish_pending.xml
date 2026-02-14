@@ -1,0 +1,17 @@
+<step title="Incoming Request" date="2026-01-28T15:57:42.851" instance="5b7811" url="/api/publish?type=zip&amp;async=True&amp;restart=True&amp;clean=True" method="POST" type="request" pid="835,1,22" Accept="*/*" Host="kachisuji-finder.scm.azurewebsites.net" User-Agent="AZURECLI/2.82.0 (DEB)" Accept-Encoding="gzip, deflate" Authorization="Bea..." Cache-Control="no-cache" Content-Type="application/octet-stream" Cookie="ARRAffinity=5b7811789b1e33b7cc756bce49c73cf44172046100af9c564b5a3ebcd20cab6c; ARRAffinitySameSite=5b7811789b1e33b7cc756bce49c73cf44172046100af9c564b5a3ebcd20cab6c" Content-Length="83906466" x-ms-client-request-id="0e566ea4-fc62-11f0-a095-0022485e9e73" X-ARR-LOG-ID="0e566ea4-fc62-11f0-a095-0022485e9e73" CLIENT-IP="172.215.210.54:6185" X-SITE-DEPLOYMENT-ID="kachisuji-finder" WAS-DEFAULT-HOSTNAME="kachisuji-finder.scm.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/api/publish?type=zip&amp;async=True&amp;restart=True&amp;clean=True" X-Client-IP="172.215.210.54" X-Client-Port="6185" >
+  <step title="Cleanup Xml Logs" date="2026-01-28T15:57:42.860" >
+    <step title="Cleanup Infos" date="2026-01-28T15:57:42.948" totalFiles="1007" totalCleanup="847" /><!-- duration: 23ms -->
+  </step><!-- duration: 159ms -->
+  <step title="OneDeploy" date="2026-01-28T15:57:43.583" >
+    <step title="Starting PushDeployAsync" date="2026-01-28T15:57:43.703" /><!-- duration: 10ms -->
+    <step title="Removing node_modules symlink" date="2026-01-28T15:57:43.874" >
+      <step title="Writing artifact to /tmp/zipdeploy/f9a6bc11-4f9e-4cff-a3b3-e5f137d24433.zip" date="2026-01-28T15:57:44.179" >
+        <step title="Writing multipart request body to /tmp/zipdeploy/f9a6bc11-4f9e-4cff-a3b3-e5f137d24433.zip" date="2026-01-28T15:57:44.190" /><!-- duration: 20ms -->
+      </step><!-- duration: 4894ms -->
+      <step title="Start deployment in the background" date="2026-01-28T15:57:49.150" >
+        <step title="Acquiring Deployment Lock" date="2026-01-28T15:57:50.812" /><!-- duration: 38ms -->
+        <step title="Acquired Deployment Lock" date="2026-01-28T15:57:50.980" /><!-- duration: 20ms -->
+      </step><!-- duration: 2250ms -->
+    </step><!-- duration: 7617ms -->
+    <step title="Outgoing response" date="2026-01-28T15:57:51.503" type="response" statusCode="202" statusText="Accepted" /><!-- duration: 27ms -->
+  </step><!-- duration: 7968ms -->

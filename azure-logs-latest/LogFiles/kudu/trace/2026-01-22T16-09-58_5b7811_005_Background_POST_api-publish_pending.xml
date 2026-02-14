@@ -1,0 +1,38 @@
+<step title="BackgroundTrace" date="2026-01-22T16:09:58.992" instance="5b7811" url="/api/publish" method="POST" >
+  <step title="Cleanup Xml Logs" date="2026-01-22T16:09:59.002" /><!-- duration: 40ms -->
+  <step title="Creating temporary deployment - FetchDeploymentManager" date="2026-01-22T16:09:59.403" /><!-- duration: 12ms -->
+  <step title="Creating temporary deployment" date="2026-01-22T16:09:59.434" /><!-- duration: 174ms -->
+  <step title="Performing fetch based deployment" date="2026-01-22T16:09:59.767" >
+    <step title="Cleaning up temp folders from previous zip deployments and extracting pushed zip file /tmp/zipdeploy/1b10312b-244b-4245-8d7b-ed9142b84dd5.zip (47.93 MB) to /tmp/zipdeploy/extracted" date="2026-01-22T16:10:01.004" >
+      <step title="ChmodRecursive Process exited with total time taken in ms: 131" date="2026-01-22T16:10:10.960" /><!-- duration: 7ms -->
+    </step><!-- duration: 9974ms -->
+    <step title="Deployment timer started" date="2026-01-22T16:10:13.000" >
+      <step title="DeploymentManager.Deploy(id:a2b5da31-dc3e-4f25-8dab-81369207d37a)" date="2026-01-22T16:10:13.006" >
+        <step title="Collecting changeset information" date="2026-01-22T16:10:13.030" /><!-- duration: 104ms -->
+        <step title="Updating submodules" date="2026-01-22T16:10:13.141" /><!-- duration: 1136ms -->
+        <step title="Determining deployment builder" date="2026-01-22T16:10:14.527" >
+          <step title="Builder is OneDeployBuilder" date="2026-01-22T16:10:14.556" /><!-- duration: 2ms -->
+        </step><!-- duration: 38ms -->
+        <step title="PreDeployment: context.CleanOutputPath False" date="2026-01-22T16:10:14.651" >
+          <step title="PreDeployment: context.OutputPath /home/site/wwwroot" date="2026-01-22T16:10:14.773" >
+            <step title="Building" date="2026-01-22T16:10:14.923" >
+              <step title="Executing external process" date="2026-01-22T16:10:16.024" type="process" path="starter.sh" arguments="/opt/Kudu/Scripts/absoluteTar.sh /tmp/zipdeploy/extracted/node_modules /tmp/zipdeploy/extracted/node_modules.tar.gz" /><!-- duration: 26714ms -->
+              <step title="Executing external process" date="2026-01-22T16:10:43.207" type="process" path="starter.sh" arguments="/opt/Kudu/Scripts/parallel_rsync.sh /tmp/zipdeploy/extracted /home/site/wwwroot 8 /tmp/ True False node_modules " /><!-- duration: 26286ms -->
+              <step title="Modified file to trigger a restart of the app container." date="2026-01-22T16:11:10.471" /><!-- duration: 2ms -->
+              <step title="Skip function trigger and logicapp sync because function is not enabled." date="2026-01-22T16:11:10.492" /><!-- duration: 11ms -->
+              <step title="Purge deployment items" date="2026-01-22T16:11:11.768" >
+                <step title="Remove 4d3f8bed-, Failed, received at 01/22/2026 16:06:34" date="2026-01-22T16:11:11.834" /><!-- duration: 2ms -->
+                <step title="Remove temp-f1b9, Failed, received at 01/22/2026 16:05:21" date="2026-01-22T16:11:11.889" /><!-- duration: 2ms -->
+                <step title="Remove 9303070f-, Failed, received at 01/22/2026 15:59:03" date="2026-01-22T16:11:11.951" /><!-- duration: 2ms -->
+                <step title="Remove temp-0324, Failed, received at 01/22/2026 15:57:55" date="2026-01-22T16:11:12.008" /><!-- duration: 2ms -->
+              </step><!-- duration: 244ms -->
+            </step><!-- duration: 57179ms -->
+          </step><!-- duration: 57331ms -->
+          <step title="Cleaning up temp files" date="2026-01-22T16:11:12.106" /><!-- duration: 5ms -->
+          <step title="Cleaning up temp files" date="2026-01-22T16:11:12.120" /><!-- duration: 515ms -->
+          <step title="Reloading status file with latest updates" date="2026-01-22T16:11:12.661" >
+            <step title="WebHooksManager.PublishEventAsync: PostDeployment" date="2026-01-22T16:11:12.665" /><!-- duration: 129ms -->
+          </step><!-- duration: 137ms -->
+          <step title="Cleaning up temporary deployment - fetch deployment was successful" date="2026-01-22T16:11:12.804" /><!-- duration: 1ms -->
+        </step><!-- duration: 58224ms -->
+      </step><!-- duration: 59881ms -->

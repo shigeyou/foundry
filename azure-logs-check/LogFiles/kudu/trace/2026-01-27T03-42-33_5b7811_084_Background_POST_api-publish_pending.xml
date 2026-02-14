@@ -1,0 +1,37 @@
+<step title="BackgroundTrace" date="2026-01-27T03:42:33.326" instance="5b7811" url="/api/publish" method="POST" >
+  <step title="Creating temporary deployment - FetchDeploymentManager" date="2026-01-27T03:42:33.599" /><!-- duration: 8ms -->
+  <step title="Creating temporary deployment" date="2026-01-27T03:42:33.609" /><!-- duration: 242ms -->
+  <step title="Performing fetch based deployment" date="2026-01-27T03:42:34.375" >
+    <step title="Cleaning up temp folders from previous zip deployments and extracting pushed zip file /tmp/zipdeploy/32f8cb37-8cdb-439a-9c54-65a3f47acbe0.zip (44.66 MB) to /tmp/zipdeploy/extracted" date="2026-01-27T03:42:36.444" >
+      <step title="ChmodRecursive Process exited with total time taken in ms: 871" date="2026-01-27T03:43:13.370" /><!-- duration: 17ms -->
+    </step><!-- duration: 36956ms -->
+    <step title="Deployment timer started" date="2026-01-27T03:43:15.501" >
+      <step title="DeploymentManager.Deploy(id:bb226d9c-0e91-4cc0-a49f-9c914f097287)" date="2026-01-27T03:43:15.523" >
+        <step title="Collecting changeset information" date="2026-01-27T03:43:15.601" /><!-- duration: 360ms -->
+        <step title="Updating submodules" date="2026-01-27T03:43:16.078" /><!-- duration: 2447ms -->
+        <step title="Determining deployment builder" date="2026-01-27T03:43:19.057" >
+          <step title="Builder is OneDeployBuilder" date="2026-01-27T03:43:19.204" /><!-- duration: 38ms -->
+        </step><!-- duration: 224ms -->
+        <step title="PreDeployment: context.CleanOutputPath False" date="2026-01-27T03:43:19.369" >
+          <step title="PreDeployment: context.OutputPath /home/site/wwwroot" date="2026-01-27T03:43:19.767" >
+            <step title="Building" date="2026-01-27T03:43:20.208" >
+              <step title="Executing external process" date="2026-01-27T03:43:23.069" type="process" path="starter.sh" arguments="/opt/Kudu/Scripts/absoluteTar.sh /tmp/zipdeploy/extracted/node_modules /tmp/zipdeploy/extracted/node_modules.tar.gz" >
+                <step title="Cpu: gzip(13673,11.980s)+sh(13672,0.000s)+tar(13671,0.670s)+absoluteTar.sh(13670,0.010s)=total(12.650s)" date="2026-01-27T03:44:25.643" /><!-- duration: 114ms -->
+                <step title="starter.sh: no io activity for 60s, prev-cpu=-1.000s, current-cpu=12.650s" date="2026-01-27T03:44:25.796" /><!-- duration: 138ms -->
+              </step><!-- duration: 82880ms -->
+              <step title="Executing external process" date="2026-01-27T03:44:47.262" type="process" path="starter.sh" arguments="/opt/Kudu/Scripts/parallel_rsync.sh /tmp/zipdeploy/extracted /home/site/wwwroot 8 /tmp/ True False node_modules " /><!-- duration: 47290ms -->
+              <step title="Modified file to trigger a restart of the app container." date="2026-01-27T03:45:36.289" /><!-- duration: 12ms -->
+              <step title="Skip function trigger and logicapp sync because function is not enabled." date="2026-01-27T03:45:36.320" /><!-- duration: 9ms -->
+              <step title="Purge deployment items" date="2026-01-27T03:45:38.097" >
+                <step title="Remove 9d2982be-, Success, received at 01/23/2026 16:20:39" date="2026-01-27T03:45:38.260" /><!-- duration: 2ms -->
+              </step><!-- duration: 185ms -->
+            </step><!-- duration: 138181ms -->
+          </step><!-- duration: 138633ms -->
+          <step title="Cleaning up temp files" date="2026-01-27T03:45:38.408" /><!-- duration: 39ms -->
+          <step title="Cleaning up temp files" date="2026-01-27T03:45:38.466" /><!-- duration: 515ms -->
+          <step title="Reloading status file with latest updates" date="2026-01-27T03:45:39.035" >
+            <step title="WebHooksManager.PublishEventAsync: PostDeployment" date="2026-01-27T03:45:39.045" /><!-- duration: 91ms -->
+          </step><!-- duration: 113ms -->
+          <step title="Cleaning up temporary deployment - fetch deployment was successful" date="2026-01-27T03:45:39.157" /><!-- duration: 20ms -->
+        </step><!-- duration: 139936ms -->
+      </step><!-- duration: 143849ms -->

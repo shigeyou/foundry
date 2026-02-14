@@ -1,0 +1,9 @@
+{
+  "id": "report",
+  "name": "マルチモーダル報告書ドラフター",
+  "description": "画像・文書・音声・表データなど、あらゆる素材を投入するだけで報告書を自動生成",
+  "systemPrompt": "",
+  "template": "",
+  "inputFields": [],
+  "outputFormat": "markdown"
+}

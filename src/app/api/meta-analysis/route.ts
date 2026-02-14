@@ -3,16 +3,20 @@ import { prisma } from "@/lib/db";
 import { AzureOpenAI } from "openai";
 import { getCurrentUser } from "@/lib/auth";
 
-// GET: メタ分析履歴を取得（ユーザー別）
+// GET: メタ分析履歴を取得（ユーザー別・ファインダー別）
 export async function GET(request: NextRequest) {
   try {
     const user = await getCurrentUser();
     const searchParams = request.nextUrl.searchParams;
     const limit = parseInt(searchParams.get("limit") || "10");
+    const finderId = searchParams.get("finderId") || null;
 
-    // 自分のメタ分析履歴のみ取得
+    // finderIdがnullのデータも含める（後方互換性）
+    const finderIdFilter = finderId ? { OR: [{ finderId }, { finderId: null }] } : {};
+
+    // 自分のメタ分析履歴のみ取得（ファインダー別）
     const history = await prisma.metaAnalysisRun.findMany({
-      where: { userId: user.id },
+      where: { userId: user.id, ...finderIdFilter },
       orderBy: { createdAt: "desc" },
       take: limit,
     });
@@ -72,13 +76,19 @@ interface MetaAnalysisResult {
   thinkingProcess: string;
 }
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
+    const body = await request.json().catch(() => ({}));
+    const finderId: string | null = body.finderId || null;
+
     const user = await getCurrentUser();
 
-    // 自分の探索履歴のみを取得
+    // finderIdがnullのデータも含める（後方互換性）
+    const finderIdFilter = finderId ? { OR: [{ finderId }, { finderId: null }] } : {};
+
+    // 自分の探索履歴のみを取得（ファインダー別）
     const explorations = await prisma.exploration.findMany({
-      where: { userId: user.id },
+      where: { userId: user.id, ...finderIdFilter },
       orderBy: { createdAt: "desc" },
     });
 
@@ -145,7 +155,7 @@ export async function POST() {
       )
       .join("\n\n");
 
-    const systemPrompt = `あなたは「勝ち筋ファインダーVer.0.7」のメタ分析AIです。
+    const systemPrompt = `あなたは「勝ち筋ファインダー」のメタ分析AIです。
 複数の経営者が探索した勝ち筋を横断分析し、より高次の戦略的洞察を抽出します。
 
 ## あなたの役割
@@ -223,9 +233,10 @@ ${strategiesSummary}
       thinkingProcess: aiResult.thinkingProcess || "",
     };
 
-    // 履歴をデータベースに保存（ユーザー別）
+    // 履歴をデータベースに保存（ユーザー別・ファインダー別）
     const savedRun = await prisma.metaAnalysisRun.create({
       data: {
+        id: `meta-${Date.now()}`,
         totalExplorations: result.totalExplorations,
         totalStrategies: result.totalStrategies,
         topStrategies: JSON.stringify(result.topStrategies),
@@ -235,6 +246,7 @@ ${strategiesSummary}
         thinkingProcess: result.thinkingProcess,
         userId: user.id,
         userName: user.name,
+        finderId,
       },
     });
 

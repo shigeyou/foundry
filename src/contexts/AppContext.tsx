@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from "react";
+import { getDefaultWeights, getScoreLabels, getFinderSettings } from "@/config/finder-config";
 
 // ===== 型定義 =====
 export interface SwotData {
@@ -27,16 +28,11 @@ export interface RAGDocument {
   fileType: string;
   metadata: string | null;
   createdAt: string;
+  updatedAt: string;
 }
 
-export interface ScoreWeights {
-  revenuePotential: number;
-  timeToRevenue: number;
-  competitiveAdvantage: number;
-  executionFeasibility: number;
-  hqContribution: number;
-  mergerSynergy: number;
-}
+// スコアウェイトは動的なキーを持つ（各ファインダーで異なる）
+export type ScoreWeights = Record<string, number>;
 
 export interface Strategy {
   name: string;
@@ -45,6 +41,7 @@ export interface Strategy {
   totalScore: number;
   scores?: Record<string, number>;
   judgment?: string;
+  tags?: string[];
 }
 
 export interface ExplorationResult {
@@ -140,23 +137,11 @@ export interface PatternExtractResult {
 }
 
 // ===== 定数 =====
-export const defaultWeights: ScoreWeights = {
-  revenuePotential: 30,
-  timeToRevenue: 20,
-  competitiveAdvantage: 20,
-  executionFeasibility: 15,
-  hqContribution: 10,
-  mergerSynergy: 5,
-};
+// デフォルトウェイトはファインダー設定から取得（後方互換性のため関数として公開）
+export const defaultWeights: ScoreWeights = getDefaultWeights(null);
 
-export const scoreLabels: Record<keyof ScoreWeights, string> = {
-  revenuePotential: "収益ポテンシャル",
-  timeToRevenue: "収益化までの距離",
-  competitiveAdvantage: "勝ち筋の強さ",
-  executionFeasibility: "実行可能性",
-  hqContribution: "本社貢献",
-  mergerSynergy: "合併シナジー",
-};
+// スコアラベルはファインダー設定から取得（後方互換性のため関数として公開）
+export const scoreLabels: Record<string, string> = getScoreLabels(null);
 
 export const categories = [
   "IT基盤",
@@ -169,31 +154,15 @@ export const categories = [
   "その他",
 ];
 
-export const presetQuestions = [
-  { label: "親会社支援", question: "商船三井グループへの貢献価値を高めるには？" },
-  { label: "生成AI", question: "生成AIで業務効率化・新サービス創出するには？" },
-  { label: "脱炭素", question: "脱炭素化支援で新たな収益源を作るには？" },
-  { label: "船員育成", question: "船員育成・技術継承で差別化するには？" },
-  { label: "コスト削減", question: "業務コストを削減しながら価値を高めるには？" },
-  { label: "安全管理", question: "安全管理の高度化で収益に繋げるには？" },
-  { label: "新規事業", question: "既存の強みを活かした新規事業は何か？" },
-  { label: "統合シナジー", question: "3社統合で生まれるシナジーをどう活かすか？" },
-  // 商船三井マリテックス固有の問い（RAGドキュメント参照）
-  { label: "洋上風力", question: "洋上風力発電分野での事業機会を拡大するには？" },
-  { label: "ケーブル船", question: "海底ケーブル敷設事業で競争優位を築くには？" },
-  { label: "船主サービス", question: "船主向けサービスの付加価値を最大化するには？" },
-  { label: "シミュレータ", question: "操船シミュレータを活用した新サービスを展開するには？" },
-  { label: "DX推進", question: "デジタル変革で顧客への提供価値を向上させるには？" },
-  { label: "オフショア", question: "オフショア事業を次の成長ドライバーにするには？" },
-  { label: "E2E提供", question: "特殊船のE2Eソリューション提供で差別化するには？" },
-  { label: "海洋調査", question: "海洋調査・研究支援サービスで新規顧客を開拓するには？" },
-  { label: "グローバル", question: "海外市場での事業展開を加速するには？" },
-  { label: "船舶検査", question: "船舶検査・管理サービスの収益性を向上させるには？" },
-  { label: "ドローン", question: "ドローン技術を活用した新サービス・業務効率化を実現するには？" },
-];
+// プリセット質問はファインダー設定から取得（後方互換性のためデフォルトで勝ち筋ファインダー）
+export const presetQuestions = getFinderSettings(null).presetQuestions;
 
 // ===== Context 型 =====
 interface AppContextType {
+  // ファインダーID（守りのDX、人材、勝ち筋など）
+  finderId: string | null;
+  setFinderId: (id: string | null) => void;
+
   // タブ
   activeTab: TabType;
   setActiveTab: (tab: TabType) => void;
@@ -235,6 +204,7 @@ interface AppContextType {
   explorationResult: ExplorationResult | null;
   explorationError: string | null;
   startExploration: (question: string, context: string) => Promise<void>;
+  cancelExploration: () => void;
   clearExplorationResult: () => void;
 
   // 進化生成
@@ -243,6 +213,7 @@ interface AppContextType {
   evolveResult: EvolveResult | null;
   evolveError: string | null;
   startEvolve: (mode: EvolveMode) => Promise<void>;
+  cancelEvolve: () => void;
   clearEvolveResult: () => void;
 
   // AI自動探索
@@ -251,6 +222,7 @@ interface AppContextType {
   autoExploreResult: AutoExploreResult | null;
   autoExploreError: string | null;
   startAutoExplore: () => Promise<void>;
+  cancelAutoExplore: () => void;
   clearAutoExploreResult: () => void;
 
   // メタ分析
@@ -259,6 +231,7 @@ interface AppContextType {
   metaAnalysisResult: MetaAnalysisResult | null;
   metaAnalysisError: string | null;
   startMetaAnalysis: () => Promise<void>;
+  cancelMetaAnalysis: () => void;
   clearMetaAnalysisResult: () => void;
 
   // パターン抽出
@@ -267,6 +240,7 @@ interface AppContextType {
   patternExtractResult: PatternExtractResult | null;
   patternExtractError: string | null;
   startPatternExtract: () => Promise<void>;
+  cancelPatternExtract: () => void;
   clearPatternExtractResult: () => void;
 
   // まとめ
@@ -275,6 +249,7 @@ interface AppContextType {
   summaryResult: SummaryResult | null;
   summaryError: string | null;
   startSummary: () => Promise<void>;
+  cancelSummary: () => void;
   clearSummaryResult: () => void;
 
   // プリセット質問生成
@@ -290,7 +265,15 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 // ===== Provider =====
-export function AppProvider({ children }: { children: ReactNode }) {
+interface AppProviderProps {
+  children: ReactNode;
+  initialFinderId?: string | null;
+}
+
+export function AppProvider({ children, initialFinderId = null }: AppProviderProps) {
+  // ファインダーID
+  const [finderId, setFinderId] = useState<string | null>(initialFinderId);
+
   // タブ
   const [activeTab, setActiveTab] = useState<TabType>("intro");
 
@@ -310,8 +293,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // RAG
   const [ragDocuments, setRagDocuments] = useState<RAGDocument[]>([]);
 
-  // スコア設定
-  const [weights, setWeightsState] = useState<ScoreWeights>(defaultWeights);
+  // スコア設定（finderId に応じたデフォルトウェイトで初期化）
+  const [weights, setWeightsState] = useState<ScoreWeights>(() => getDefaultWeights(initialFinderId));
 
   // 探索
   const [explorationStatus, setExplorationStatus] = useState<ExplorationStatus>("idle");
@@ -323,6 +306,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const explorationStartTimeRef = useRef<number>(0);
   const explorationProgressRef = useRef<NodeJS.Timeout | null>(null);
   const explorationMaxProgressRef = useRef<number>(0);
+  const explorationAbortRef = useRef<AbortController | null>(null);
 
   // 進化生成
   const [evolveStatus, setEvolveStatus] = useState<ExplorationStatus>("idle");
@@ -332,6 +316,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const evolveProgressRef = useRef<NodeJS.Timeout | null>(null);
   const evolveStartTimeRef = useRef<number>(0);
   const evolveMaxProgressRef = useRef<number>(0);
+  const evolveAbortRef = useRef<AbortController | null>(null);
 
   // AI自動探索
   const [autoExploreStatus, setAutoExploreStatus] = useState<ExplorationStatus>("idle");
@@ -341,6 +326,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const autoExploreProgressRef = useRef<NodeJS.Timeout | null>(null);
   const autoExploreStartTimeRef = useRef<number>(0);
   const autoExploreMaxProgressRef = useRef<number>(0);
+  const autoExploreAbortRef = useRef<AbortController | null>(null);
 
   // メタ分析
   const [metaAnalysisStatus, setMetaAnalysisStatus] = useState<ExplorationStatus>("idle");
@@ -350,6 +336,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const metaAnalysisProgressRef = useRef<NodeJS.Timeout | null>(null);
   const metaAnalysisStartTimeRef = useRef<number>(0);
   const metaAnalysisMaxProgressRef = useRef<number>(0);
+  const metaAnalysisAbortRef = useRef<AbortController | null>(null);
 
   // パターン抽出
   const [patternExtractStatus, setPatternExtractStatus] = useState<ExplorationStatus>("idle");
@@ -359,6 +346,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const patternExtractProgressRef = useRef<NodeJS.Timeout | null>(null);
   const patternExtractStartTimeRef = useRef<number>(0);
   const patternExtractMaxProgressRef = useRef<number>(0);
+  const patternExtractAbortRef = useRef<AbortController | null>(null);
 
   // まとめ
   const [summaryStatus, setSummaryStatus] = useState<ExplorationStatus>("idle");
@@ -368,6 +356,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const summaryProgressRef = useRef<NodeJS.Timeout | null>(null);
   const summaryStartTimeRef = useRef<number>(0);
   const summaryMaxProgressRef = useRef<number>(0);
+  const summaryAbortRef = useRef<AbortController | null>(null);
 
   // プリセット質問
   const [presetQuestionsState, setPresetQuestionsState] = useState<{ label: string; question: string }[]>(presetQuestions);
@@ -408,45 +397,66 @@ export function AppProvider({ children }: { children: ReactNode }) {
     requestAnimationFrame(animate);
   }, []);
 
-  // イージング関数: 前半ゆっくり→後半加速（尻上がり）
-  // ユーザー要望: 前半を現在の50%の速度に抑え、93%付近での停滞感を解消
+  // イージング関数: 前半ゆっくり→後半尻上がりに加速→97%まで自然に到達
+  // easeInCubic (t³) で停滞感のないスムーズな進行を実現
   const calculateEasedProgress = useCallback((startTime: number, expectedDuration: number): number => {
     const elapsed = Date.now() - startTime;
-    const t = elapsed / expectedDuration; // 時間比率（1を超える可能性あり）
+    const t = elapsed / expectedDuration;
 
     let progress: number;
 
-    if (t <= 0.5) {
-      // 前半 (0-50%時間): 0-10%進捗 (非常にゆっくり - 現在の約50%の速度)
-      progress = (t / 0.5) * 10;
-    } else if (t <= 0.8) {
-      // 中盤 (50-80%時間): 10-35%進捗 (やや加速)
-      const midT = (t - 0.5) / 0.3;
-      progress = 10 + midT * 25;
-    } else if (t <= 1.0) {
-      // 後半 (80-100%時間): 35-70%進捗 (加速)
-      const lateT = (t - 0.8) / 0.2;
-      progress = 35 + lateT * 35;
-    } else if (t <= 1.5) {
-      // 時間超過前半 (100-150%時間): 70-90%進捗 (まだ動いている感じ)
-      const overT = (t - 1.0) / 0.5;
-      progress = 70 + overT * 20;
+    if (t <= 1.0) {
+      // 予定時間内: easeInCubic (t³) で 0→92%
+      // 前半はゆっくり、後半は尻上がりに急加速
+      progress = t * t * t * 92;
     } else {
-      // 時間超過後半 (150%以降): 90-99%進捗 (ゆっくりだが停滞感なし)
-      const overT2 = t - 1.5;
-      const extraProgress = Math.min(overT2 * 10, 9);
-      progress = 90 + extraProgress;
+      // 時間超過: 92%→97% を漸近的に（常に動いている感覚）
+      const overtime = t - 1.0;
+      progress = 92 + 5 * (1 - Math.exp(-overtime * 0.8));
     }
 
-    return Math.min(progress, 99);
+    // 97%キャップ: 完了時にanimateToCompleteで100%へスムーズに遷移
+    return Math.min(progress, 97);
   }, []);
 
   // ===== 初期化 =====
+  // processing中の探索を復帰する関数
+  const resumeProcessingExploration = useCallback(async () => {
+    try {
+      const res = await fetch("/api/explore?status=processing");
+      const data = await res.json();
+      if (data.id && data.status === "processing") {
+        console.log("Resuming processing exploration:", data.id);
+        setExplorationId(data.id);
+        setExplorationStatus("running");
+        explorationStartTimeRef.current = new Date(data.createdAt).getTime();
+        explorationMaxProgressRef.current = 0;
+
+        // プログレスアニメーション再開
+        explorationProgressRef.current = setInterval(() => {
+          const newProgress = calculateEasedProgress(explorationStartTimeRef.current, 450000);
+          explorationMaxProgressRef.current = Math.max(explorationMaxProgressRef.current, newProgress);
+          setExplorationProgress(explorationMaxProgressRef.current);
+        }, 500);
+
+        // ポーリング再開
+        pollingRef.current = setInterval(() => {
+          pollExplorationStatus(data.id);
+        }, 3000);
+        pollExplorationStatus(data.id);
+      }
+    } catch (error) {
+      console.error("Failed to check processing explorations:", error);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     fetchSwot();
     fetchServices();
     fetchRAGDocuments();
     loadWeights();
+    resumeProcessingExploration();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -492,8 +502,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   // ===== スコア設定 =====
+  const storageKey = finderId ? `scoreWeights_${finderId}` : "scoreWeights";
+
   const loadWeights = () => {
-    const saved = localStorage.getItem("scoreWeights");
+    const saved = localStorage.getItem(storageKey);
     if (saved) {
       setWeightsState(JSON.parse(saved));
     }
@@ -501,8 +513,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const setWeights = useCallback((newWeights: ScoreWeights) => {
     setWeightsState(newWeights);
-    localStorage.setItem("scoreWeights", JSON.stringify(newWeights));
-  }, []);
+    localStorage.setItem(storageKey, JSON.stringify(newWeights));
+  }, [storageKey]);
 
   // 個別の重みを変更（他の項目は変更しない）
   // スコア計算時に合計で正規化されるため、合計が100%でなくても問題ない
@@ -510,23 +522,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setWeightsState((prev) => {
       const clampedValue = Math.max(0, Math.min(100, newValue));
       const newWeights = { ...prev, [key]: clampedValue };
-      localStorage.setItem("scoreWeights", JSON.stringify(newWeights));
+      localStorage.setItem(storageKey, JSON.stringify(newWeights));
       return newWeights;
     });
-  }, []);
+  }, [storageKey]);
 
   // ===== スコア計算 =====
   const calculateWeightedScore = useCallback(
     (scores: Record<string, number>) => {
       const totalWeight = Object.values(weights).reduce((a, b) => a + b, 0);
       if (totalWeight === 0) return 0;
-      const weightedSum =
-        (scores.revenuePotential || 0) * weights.revenuePotential +
-        (scores.timeToRevenue || 0) * weights.timeToRevenue +
-        (scores.competitiveAdvantage || 0) * weights.competitiveAdvantage +
-        (scores.executionFeasibility || 0) * weights.executionFeasibility +
-        (scores.hqContribution || 0) * weights.hqContribution +
-        (scores.mergerSynergy || 0) * weights.mergerSynergy;
+      let weightedSum = 0;
+      Object.keys(weights).forEach((key) => {
+        weightedSum += (scores[key] || 0) * (weights[key] || 0);
+      });
       return weightedSum / totalWeight;
     },
     [weights]
@@ -608,6 +617,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       clearInterval(explorationProgressRef.current);
       explorationProgressRef.current = null;
     }
+    // 既存リクエストをキャンセル
+    if (explorationAbortRef.current) {
+      explorationAbortRef.current.abort();
+    }
+    explorationAbortRef.current = new AbortController();
 
     // 開始時間を記録
     explorationStartTimeRef.current = Date.now();
@@ -627,7 +641,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
           context,
           constraints: [],
           background: true,
+          finderId,
         }),
+        signal: explorationAbortRef.current.signal,
       });
 
       const data = await res.json();
@@ -670,10 +686,30 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setExplorationStatus("failed");
       }
     } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        return;
+      }
       console.error("Exploration failed:", error);
       setExplorationError("探索に失敗しました");
       setExplorationStatus("failed");
     }
+  };
+
+  const cancelExploration = () => {
+    if (explorationAbortRef.current) {
+      explorationAbortRef.current.abort();
+      explorationAbortRef.current = null;
+    }
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current);
+      pollingRef.current = null;
+    }
+    if (explorationProgressRef.current) {
+      clearInterval(explorationProgressRef.current);
+      explorationProgressRef.current = null;
+    }
+    setExplorationStatus("idle");
+    setExplorationProgress(0);
   };
 
   const clearExplorationResult = () => {
@@ -699,6 +735,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       clearInterval(evolveProgressRef.current);
       evolveProgressRef.current = null;
     }
+    if (evolveAbortRef.current) {
+      evolveAbortRef.current.abort();
+    }
+    evolveAbortRef.current = new AbortController();
 
     // 開始時間を記録
     evolveStartTimeRef.current = Date.now();
@@ -720,7 +760,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const res = await fetch("/api/evolve", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mode, save: true }),
+        body: JSON.stringify({ mode, save: true, finderId }),
+        signal: evolveAbortRef.current.signal,
       });
 
       // プログレスタイマーをクリア
@@ -750,6 +791,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         });
       }
     } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        return;
+      }
       console.error("Evolve failed:", error);
       if (evolveProgressRef.current) {
         clearInterval(evolveProgressRef.current);
@@ -759,6 +803,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setEvolveStatus("failed");
       setEvolveProgress(0);
     }
+  };
+
+  const cancelEvolve = () => {
+    if (evolveAbortRef.current) {
+      evolveAbortRef.current.abort();
+      evolveAbortRef.current = null;
+    }
+    if (evolveProgressRef.current) {
+      clearInterval(evolveProgressRef.current);
+      evolveProgressRef.current = null;
+    }
+    setEvolveStatus("idle");
+    setEvolveProgress(0);
   };
 
   const clearEvolveResult = () => {
@@ -779,6 +836,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       clearInterval(autoExploreProgressRef.current);
       autoExploreProgressRef.current = null;
     }
+    if (autoExploreAbortRef.current) {
+      autoExploreAbortRef.current.abort();
+    }
+    autoExploreAbortRef.current = new AbortController();
 
     // 開始時間を記録
     autoExploreStartTimeRef.current = Date.now();
@@ -801,6 +862,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const res = await fetch("/api/auto-explore", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ finderId }),
+        signal: autoExploreAbortRef.current.signal,
       });
 
       // プログレスタイマーをクリア
@@ -836,6 +899,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         });
       }
     } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        return;
+      }
       console.error("Auto-explore failed:", error);
       if (autoExploreProgressRef.current) {
         clearInterval(autoExploreProgressRef.current);
@@ -845,6 +911,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setAutoExploreStatus("failed");
       setAutoExploreProgress(0);
     }
+  };
+
+  const cancelAutoExplore = () => {
+    if (autoExploreAbortRef.current) {
+      autoExploreAbortRef.current.abort();
+      autoExploreAbortRef.current = null;
+    }
+    if (autoExploreProgressRef.current) {
+      clearInterval(autoExploreProgressRef.current);
+      autoExploreProgressRef.current = null;
+    }
+    setAutoExploreStatus("idle");
+    setAutoExploreProgress(0);
   };
 
   const clearAutoExploreResult = () => {
@@ -865,6 +944,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       clearInterval(metaAnalysisProgressRef.current);
       metaAnalysisProgressRef.current = null;
     }
+    if (metaAnalysisAbortRef.current) {
+      metaAnalysisAbortRef.current.abort();
+    }
+    metaAnalysisAbortRef.current = new AbortController();
 
     // 開始時間を記録
     metaAnalysisStartTimeRef.current = Date.now();
@@ -884,7 +967,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }, 500);
 
     try {
-      const res = await fetch("/api/meta-analysis", { method: "POST" });
+      const res = await fetch("/api/meta-analysis", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ finderId }),
+        signal: metaAnalysisAbortRef.current.signal,
+      });
 
       // プログレスタイマーをクリア
       if (metaAnalysisProgressRef.current) {
@@ -927,6 +1015,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         });
       }
     } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        return;
+      }
       console.error("Meta analysis failed:", error);
       if (metaAnalysisProgressRef.current) {
         clearInterval(metaAnalysisProgressRef.current);
@@ -936,6 +1027,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setMetaAnalysisStatus("failed");
       setMetaAnalysisProgress(0);
     }
+  };
+
+  const cancelMetaAnalysis = () => {
+    if (metaAnalysisAbortRef.current) {
+      metaAnalysisAbortRef.current.abort();
+      metaAnalysisAbortRef.current = null;
+    }
+    if (metaAnalysisProgressRef.current) {
+      clearInterval(metaAnalysisProgressRef.current);
+      metaAnalysisProgressRef.current = null;
+    }
+    setMetaAnalysisStatus("idle");
+    setMetaAnalysisProgress(0);
   };
 
   const clearMetaAnalysisResult = () => {
@@ -955,6 +1059,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       clearInterval(patternExtractProgressRef.current);
       patternExtractProgressRef.current = null;
     }
+    if (patternExtractAbortRef.current) {
+      patternExtractAbortRef.current.abort();
+    }
+    patternExtractAbortRef.current = new AbortController();
 
     patternExtractStartTimeRef.current = Date.now();
     setPatternExtractStatus("running");
@@ -974,7 +1082,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const res = await fetch("/api/learning", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ minDecisions: 5 }),
+        body: JSON.stringify({ minDecisions: 5, finderId }),
+        signal: patternExtractAbortRef.current.signal,
       });
 
       if (patternExtractProgressRef.current) {
@@ -1001,6 +1110,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         });
       }
     } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        return;
+      }
       console.error("Pattern extract failed:", error);
       if (patternExtractProgressRef.current) {
         clearInterval(patternExtractProgressRef.current);
@@ -1010,6 +1122,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setPatternExtractStatus("failed");
       setPatternExtractProgress(0);
     }
+  };
+
+  const cancelPatternExtract = () => {
+    if (patternExtractAbortRef.current) {
+      patternExtractAbortRef.current.abort();
+      patternExtractAbortRef.current = null;
+    }
+    if (patternExtractProgressRef.current) {
+      clearInterval(patternExtractProgressRef.current);
+      patternExtractProgressRef.current = null;
+    }
+    setPatternExtractStatus("idle");
+    setPatternExtractProgress(0);
   };
 
   const clearPatternExtractResult = () => {
@@ -1030,6 +1155,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       clearInterval(summaryProgressRef.current);
       summaryProgressRef.current = null;
     }
+    if (summaryAbortRef.current) {
+      summaryAbortRef.current.abort();
+    }
+    summaryAbortRef.current = new AbortController();
 
     // 開始時間を記録
     summaryStartTimeRef.current = Date.now();
@@ -1049,7 +1178,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }, 500);
 
     try {
-      const res = await fetch("/api/summary", { method: "POST" });
+      const res = await fetch("/api/summary", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ finderId }),
+        signal: summaryAbortRef.current.signal,
+      });
 
       // プログレスタイマーをクリア
       if (summaryProgressRef.current) {
@@ -1080,6 +1214,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         });
       }
     } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        return;
+      }
       console.error("Summary generation failed:", error);
       if (summaryProgressRef.current) {
         clearInterval(summaryProgressRef.current);
@@ -1089,6 +1226,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setSummaryStatus("failed");
       setSummaryProgress(0);
     }
+  };
+
+  const cancelSummary = () => {
+    if (summaryAbortRef.current) {
+      summaryAbortRef.current.abort();
+      summaryAbortRef.current = null;
+    }
+    if (summaryProgressRef.current) {
+      clearInterval(summaryProgressRef.current);
+      summaryProgressRef.current = null;
+    }
+    setSummaryStatus("idle");
+    setSummaryProgress(0);
   };
 
   const clearSummaryResult = () => {
@@ -1185,6 +1335,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value: AppContextType = {
+    finderId,
+    setFinderId,
     activeTab,
     setActiveTab,
     swot,
@@ -1213,36 +1365,42 @@ export function AppProvider({ children }: { children: ReactNode }) {
     explorationResult,
     explorationError,
     startExploration,
+    cancelExploration,
     clearExplorationResult,
     evolveStatus,
     evolveProgress,
     evolveResult,
     evolveError,
     startEvolve,
+    cancelEvolve,
     clearEvolveResult,
     autoExploreStatus,
     autoExploreProgress,
     autoExploreResult,
     autoExploreError,
     startAutoExplore,
+    cancelAutoExplore,
     clearAutoExploreResult,
     metaAnalysisStatus,
     metaAnalysisProgress,
     metaAnalysisResult,
     metaAnalysisError,
     startMetaAnalysis,
+    cancelMetaAnalysis,
     clearMetaAnalysisResult,
     patternExtractStatus,
     patternExtractProgress,
     patternExtractResult,
     patternExtractError,
     startPatternExtract,
+    cancelPatternExtract,
     clearPatternExtractResult,
     summaryStatus,
     summaryProgress,
     summaryResult,
     summaryError,
     startSummary,
+    cancelSummary,
     clearSummaryResult,
     presetQuestions: presetQuestionsState,
     presetQuestionsStatus,

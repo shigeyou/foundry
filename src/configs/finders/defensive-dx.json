@@ -1,0 +1,182 @@
+{
+  "id": "defensive-dx",
+  "order": 2,
+  "name": "自社開発AIアプリファインダー",
+  "description": "業務効率化・コスト削減・セキュリティ強化など、内製開発で実現可能な「守りのDX」施策を発見・評価するツール",
+  "evaluationAxes": [
+    {
+      "id": "効率化",
+      "name": "業務効率化インパクト",
+      "description": "どれだけ業務時間・工数を削減できるか",
+      "weight": 1.0,
+      "minScore": 1,
+      "maxScore": 5,
+      "scoringGuide": [
+        { "score": 5, "description": "部門全体で月100時間以上の削減、または完全自動化が可能" },
+        { "score": 4, "description": "月50時間以上の削減、主要業務の大幅効率化" },
+        { "score": 3, "description": "月20時間程度の削減、定型業務の効率化" },
+        { "score": 2, "description": "月数時間の削減、限定的な効率化" },
+        { "score": 1, "description": "効率化効果が限定的または測定困難" }
+      ]
+    },
+    {
+      "id": "内製可能",
+      "name": "内製開発の実現性",
+      "description": "Azure環境・既存スキルで内製開発可能か",
+      "weight": 1.2,
+      "minScore": 1,
+      "maxScore": 5,
+      "scoringGuide": [
+        { "score": 5, "description": "Azure標準サービス＋既存スキルで即開発可能。Entra ID連携も容易" },
+        { "score": 4, "description": "既存スキルで対応可能。一部学習コストあり" },
+        { "score": 3, "description": "新規技術習得が必要だが、Azure内で完結" },
+        { "score": 2, "description": "外部サービス連携や専門知識が必要" },
+        { "score": 1, "description": "内製困難。外部ベンダー依存が高い" }
+      ]
+    },
+    {
+      "id": "セキュリティ",
+      "name": "セキュリティ・コンプライアンス",
+      "description": "機密性・セキュリティ要件への適合度",
+      "weight": 1.0,
+      "minScore": 1,
+      "maxScore": 5,
+      "scoringGuide": [
+        { "score": 5, "description": "Azure閉域網内で完結。Entra IDで認証統合。監査ログ完備" },
+        { "score": 4, "description": "グループセキュリティポリシーに準拠。軽微な追加対応で対応可能" },
+        { "score": 3, "description": "一般的なセキュリティ要件を満たす。追加のアクセス制御が必要" },
+        { "score": 2, "description": "外部連携があり、データ取り扱いに注意が必要" },
+        { "score": 1, "description": "機密データの外部流出リスクあり。追加対策が必須" }
+      ]
+    },
+    {
+      "id": "即効性",
+      "name": "クイックウィン度",
+      "description": "短期間で成果を出せるか",
+      "weight": 0.8,
+      "minScore": 1,
+      "maxScore": 5,
+      "scoringGuide": [
+        { "score": 5, "description": "1-2週間でPoC、1ヶ月で本番投入可能" },
+        { "score": 4, "description": "1-2ヶ月で成果物リリース可能" },
+        { "score": 3, "description": "3-6ヶ月で段階的にリリース" },
+        { "score": 2, "description": "6ヶ月-1年の開発期間" },
+        { "score": 1, "description": "1年以上かかる大規模プロジェクト" }
+      ]
+    },
+    {
+      "id": "浸透性",
+      "name": "現場浸透性",
+      "description": "現場が実際に使ってくれるか",
+      "weight": 0.8,
+      "minScore": 1,
+      "maxScore": 5,
+      "scoringGuide": [
+        { "score": 5, "description": "既存ワークフローに自然に統合。Teams/Outlook連携で抵抗感なし" },
+        { "score": 4, "description": "軽い説明で利用開始可能。UI/UXが直感的" },
+        { "score": 3, "description": "研修・マニュアルで対応可能。操作は平易" },
+        { "score": 2, "description": "業務フロー変更が必要。一定の習熟期間" },
+        { "score": 1, "description": "大幅な業務変革が必要。抵抗感が強い" }
+      ]
+    },
+    {
+      "id": "保守性",
+      "name": "運用・保守性",
+      "description": "内製で継続的に運用・改善できるか",
+      "weight": 0.8,
+      "minScore": 1,
+      "maxScore": 5,
+      "scoringGuide": [
+        { "score": 5, "description": "ローコード/ノーコードで現場がメンテ可能。インフラはAzure任せ" },
+        { "score": 4, "description": "CDIO/エンジニアで保守可能。ドキュメント整備で引き継ぎ容易" },
+        { "score": 3, "description": "定期的なメンテナンスが必要だが、工数は限定的" },
+        { "score": 2, "description": "専門知識が必要。属人化リスクあり" },
+        { "score": 1, "description": "複雑な運用が必要。外部サポート依存" }
+      ]
+    }
+  ],
+  "systemPrompt": "あなたは「自社開発AIアプリファインダー」のAIアシスタントです。\n\n## 対象企業の特徴（重要）\n商船三井マリテックス株式会社には以下の強みがあります：\n\n1. **CDIO兼フルスタックエンジニア兼理事**が在籍\n   - 技術的な意思決定と経営判断を一人で行える\n   - 実務経験が豊富で、現場の痛みを理解している\n   - 内製開発のリード・レビューが可能\n\n2. **グループ共有のAzure環境**が利用可能\n   - 機密性を担保した形でシステム開発が可能\n   - Azure AD（Entra ID）による認証統合\n   - グループのセキュリティポリシーに準拠\n\n3. **Microsoftエンタープライズエコシステム**を活用\n   - Microsoft 365（Teams, Outlook, SharePoint等）\n   - Power Platform（Power Apps, Power Automate, Power BI）\n   - Azure各種サービス（Functions, Logic Apps, Cosmos DB等）\n   - Entra ID（旧Azure AD）による統合認証\n\n## あなたの役割\n上記の環境を最大限に活かし、内製開発で実現可能な「守りのDX」施策を発見します。\n守りのDXとは：業務効率化、コスト削減、ペーパーレス化、セキュリティ強化、コンプライアンス対応など、\n既存業務を改善し、企業の基盤を強化する取り組みです。\n\n## 重要な原則\n1. **内製開発を前提とする** - 外部ベンダー依存を避け、自社でコントロール可能な施策を優先\n2. **Azure/M365エコシステム内で完結** - 新規SaaS導入より既存資産の活用を優先\n3. **クイックウィンを重視** - 小さく始めて成果を見せ、組織の信頼を獲得\n4. **現場の痛みを解決** - 技術先行ではなく、実務課題から逆算\n5. **セキュリティ・ガバナンス重視** - グループポリシーに準拠した安全な実装\n\n## 出力ガイドライン\n- 10〜20件の守りのDX施策を生成してください\n- 各施策には具体的な技術スタック（Azure/M365サービス名）を含めてください\n- 実装イメージ（Power Automate、Azure Functions、Teams連携など）を明記\n- スコアは厳密に評価し、すべて高評価にならないよう現実的に判定してください",
+  "outputFormat": "scorecard",
+  "presetQuestions": [
+    {
+      "id": "paperless",
+      "label": "ペーパーレス",
+      "question": "紙の書類・押印・FAXなど、アナログ業務をデジタル化できる施策を見つけてください"
+    },
+    {
+      "id": "automation",
+      "label": "業務自動化",
+      "question": "手作業・定型作業を自動化できる施策を見つけてください。Power Automate、Azure Functions等の活用を想定"
+    },
+    {
+      "id": "data-integration",
+      "label": "データ統合",
+      "question": "散在するExcel・システム間のデータを統合・可視化できる施策を見つけてください"
+    },
+    {
+      "id": "security",
+      "label": "セキュリティ強化",
+      "question": "情報セキュリティ・アクセス管理を強化できる施策を見つけてください。Entra ID活用を想定"
+    },
+    {
+      "id": "communication",
+      "label": "コミュニケーション改善",
+      "question": "社内コミュニケーション・情報共有を改善できる施策を見つけてください。Teams/SharePoint活用を想定"
+    },
+    {
+      "id": "entra-id",
+      "label": "EntraID",
+      "question": "Entra ID（旧Azure AD）を活用したID管理・シングルサインオン・条件付きアクセス・多要素認証などの施策を見つけてください"
+    },
+    {
+      "id": "security-governance",
+      "label": "セキュリティ",
+      "question": "情報漏洩防止・監査ログ・コンプライアンス対応・ゼロトラストなど、セキュリティガバナンスを強化する施策を見つけてください"
+    },
+    {
+      "id": "bcp",
+      "label": "BCP",
+      "question": "事業継続計画（BCP）・災害対策・リモートワーク対応・データバックアップなど、有事に備えた施策を見つけてください"
+    },
+    {
+      "id": "management-dashboard",
+      "label": "経営ダッシュボード",
+      "question": "経営層向けのKPI可視化・リアルタイムモニタリング・意思決定支援ダッシュボードを構築する施策を見つけてください。Power BI活用を想定"
+    },
+    {
+      "id": "ai-copilot",
+      "label": "AI/Copilot",
+      "question": "Microsoft Copilot・Azure OpenAI・AIアシスタントを活用した業務効率化・意思決定支援の施策を見つけてください"
+    },
+    {
+      "id": "power-platform",
+      "label": "Power Platform",
+      "question": "Power Apps・Power Automate・Power BIを全社展開し、市民開発者を育成する戦略・施策を見つけてください"
+    },
+    {
+      "id": "internal-control",
+      "label": "内部統制",
+      "question": "J-SOX対応・監査証跡の自動化・職務分掌・アクセス権管理など、内部統制を強化する施策を見つけてください"
+    },
+    {
+      "id": "knowledge-management",
+      "label": "ナレッジ管理",
+      "question": "ベテランの暗黙知を形式知化し、SharePoint・Teams・Wikiで共有・検索可能にする施策を見つけてください"
+    },
+    {
+      "id": "approval-workflow",
+      "label": "申請・承認フロー",
+      "question": "稟議・経費精算・休暇申請・契約承認など、紙やメールで行っている申請・承認フローを電子化する施策を見つけてください"
+    },
+    {
+      "id": "vessel-data",
+      "label": "船舶データ連携",
+      "question": "船舶の運航データ・IoTセンサーデータ・位置情報などを統合し、可視化・分析・予測に活用する施策を見つけてください"
+    },
+    {
+      "id": "physical-ai",
+      "label": "フィジカルAI",
+      "question": "ロボット・ドローン・自律走行車両・産業用センサーなど、フィジカルAI（物理世界で動作するAI）を活用した業務効率化・安全性向上・自動化施策を見つけてください"
+    }
+  ]
+}

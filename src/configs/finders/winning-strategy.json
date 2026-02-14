@@ -1,0 +1,132 @@
+{
+  "id": "winning-strategy",
+  "order": 1,
+  "name": "勝ち筋ファインダー",
+  "description": "企業の強み・資産を活かした戦略オプション（勝ち筋）を発見・評価するツール",
+  "evaluationAxes": [
+    {
+      "id": "revenuePotential",
+      "name": "収益ポテンシャル",
+      "description": "儲かる大きさ",
+      "weight": 1.0,
+      "minScore": 1,
+      "maxScore": 5,
+      "scoringGuide": [
+        { "score": 5, "description": "市場が大きく、単価と量の両方が立つ。勝てば会社の柱になる" },
+        { "score": 4, "description": "中規模市場で十分な収益が見込める" },
+        { "score": 3, "description": "特定領域で十分な利益が出る。部門の柱にはなる" },
+        { "score": 2, "description": "ニッチ市場で限定的な収益" },
+        { "score": 1, "description": "良い話だが、上限が小さく事業になりにくい" }
+      ]
+    },
+    {
+      "id": "timeToRevenue",
+      "name": "収益化までの距離",
+      "description": "いつ儲かるか",
+      "weight": 1.0,
+      "minScore": 1,
+      "maxScore": 5,
+      "scoringGuide": [
+        { "score": 5, "description": "3〜12か月で課金検証まで進める" },
+        { "score": 4, "description": "12〜18か月で収益化" },
+        { "score": 3, "description": "12〜24か月" },
+        { "score": 2, "description": "24〜36か月" },
+        { "score": 1, "description": "3年超。規制や大規模投資が前提" }
+      ]
+    },
+    {
+      "id": "competitiveAdvantage",
+      "name": "勝ち筋の強さ",
+      "description": "なぜ自社が勝てるか",
+      "weight": 1.0,
+      "minScore": 1,
+      "maxScore": 5,
+      "scoringGuide": [
+        { "score": 5, "description": "自社にしかない資産が決定的に効く" },
+        { "score": 4, "description": "強い優位性があり、模倣には時間がかかる" },
+        { "score": 3, "description": "優位性はあるが、模倣も可能" },
+        { "score": 2, "description": "一時的な優位性のみ" },
+        { "score": 1, "description": "誰でもできる。価格競争になりやすい" }
+      ]
+    },
+    {
+      "id": "executionFeasibility",
+      "name": "実行可能性",
+      "description": "作れる、売れる、運用できる",
+      "weight": 1.0,
+      "minScore": 1,
+      "maxScore": 5,
+      "scoringGuide": [
+        { "score": 5, "description": "必要なデータ、システム、体制、意思決定が揃っている" },
+        { "score": 4, "description": "軽微な調整で実行可能" },
+        { "score": 3, "description": "不足はあるが、半年以内に埋められる" },
+        { "score": 2, "description": "1年以上の準備期間が必要" },
+        { "score": 1, "description": "権限、データ、現場運用のいずれかが欠けて詰む" }
+      ]
+    },
+    {
+      "id": "hqContribution",
+      "name": "本社貢献",
+      "description": "グループとして意味があるか",
+      "weight": 1.0,
+      "minScore": 1,
+      "maxScore": 5,
+      "scoringGuide": [
+        { "score": 5, "description": "本社の戦略テーマや収益に直結し、横展開できる" },
+        { "score": 4, "description": "グループ戦略との整合性が高い" },
+        { "score": 3, "description": "間接効果はあるが、主戦場ではない" },
+        { "score": 2, "description": "グループへの貢献は限定的" },
+        { "score": 1, "description": "ローカル最適で、説明が難しい" }
+      ]
+    },
+    {
+      "id": "mergerSynergy",
+      "name": "合併シナジー",
+      "description": "1社では出ない価値が出るか",
+      "weight": 1.0,
+      "minScore": 1,
+      "maxScore": 5,
+      "scoringGuide": [
+        { "score": 5, "description": "両社の資産が掛け算になる" },
+        { "score": 4, "description": "相互補完による価値創出" },
+        { "score": 3, "description": "足し算の効率化レベル" },
+        { "score": 2, "description": "シナジー効果は薄い" },
+        { "score": 1, "description": "シナジーが薄く、調整コストが勝つ" }
+      ]
+    }
+  ],
+  "systemPrompt": "あなたは「勝ち筋ファインダー」のAIアシスタントです。\n\n## あなたの役割\n対象企業の現場が持っている力（実績・技術・ノウハウ）を、AIの視点で増幅し、具体的な戦略オプション（勝ち筋）に変換します。\n\n## 重要な原則\n1. 既存リソースの活用を優先する\n2. 実行可能な提案のみ行う\n3. 抽象的ではなく具体的に\n4. 組織のシナジーを意識する\n\n## 出力ガイドライン\n- 10〜20件の勝ち筋を生成してください\n- スコアは厳密に評価し、すべて高評価にならないよう現実的に判定してください\n- 各勝ち筋には具体的な実現ステップと成功指標を含めてください",
+  "outputFormat": "scorecard",
+  "presetQuestions": [
+    { "id": "gen-ai", "label": "生成AI", "question": "生成AIで業務効率化・新サービス創出するには？" },
+    { "id": "ai-agent", "label": "AIエージェント", "question": "AIエージェントで複雑な業務を自動化するアプリを作るには？" },
+    { "id": "rag", "label": "RAG構築", "question": "社内ナレッジをRAG化して、誰でもAIに質問できる環境を作るには？" },
+    { "id": "claude-gpt", "label": "Claude/GPT", "question": "Claude/GPTを業務に組み込んだ内製アプリを開発するには？" },
+    { "id": "dx", "label": "社内DX", "question": "会社でDXを推進したいと考えています。社内の自動化・効率化を進められる仕組みを作りたいです。まずは、最もインパクトの大きいアプリ案を提案してください。" },
+    { "id": "automation", "label": "自動化", "question": "業務自動化（RPA・AI）で人的リソースを最適化するには？" },
+    { "id": "workflow", "label": "ワークフロー", "question": "承認ワークフローを自動化して意思決定速度を上げるには？" },
+    { "id": "api", "label": "API連携", "question": "複数システムをAPI連携させてデータの二重入力をなくすには？" },
+    { "id": "drone", "label": "ドローン", "question": "ドローン技術を活用した新サービス・業務効率化を実現するには？" },
+    { "id": "iot", "label": "IoTセンサー", "question": "IoTセンサーでリアルタイム監視・予知保全を実現するには？" },
+    { "id": "edge-ai", "label": "エッジAI", "question": "エッジAIで現場判断を自動化・高速化するには？" },
+    { "id": "digital-twin", "label": "デジタルツイン", "question": "デジタルツイン技術を活用して業務効率化・予測保全を実現するには？" },
+    { "id": "analytics", "label": "データ分析", "question": "データ分析で意思決定の質を向上させるには？" },
+    { "id": "dashboard", "label": "ダッシュボード", "question": "経営ダッシュボードでリアルタイムにKPIを可視化するには？" },
+    { "id": "forecast", "label": "予測モデル", "question": "需要予測モデルで在庫コスト・機会損失を最小化するには？" },
+    { "id": "meeting", "label": "会議削減", "question": "会議時間を半減させながら意思決定品質を維持するには？" },
+    { "id": "async", "label": "非同期化", "question": "同期コミュニケーションを減らし、深い集中時間を確保するには？" },
+    { "id": "tacit-knowledge", "label": "属人化解消", "question": "ベテランの暗黙知をシステム化して属人化を解消するには？" },
+    { "id": "failsafe", "label": "破滅回避", "question": "致命的な失敗を防ぐためのフェイルセーフ設計をどう組み込むか？" },
+    { "id": "parent-support", "label": "親会社支援", "question": "親会社グループへの貢献価値を高めるには？" },
+    { "id": "new-biz", "label": "新規事業", "question": "既存の強みを活かした新規事業は何か？" },
+    { "id": "subscription", "label": "サブスク", "question": "サブスクリプション型収益モデルを導入するには？" },
+    { "id": "horizontal", "label": "横展開", "question": "成功した社内システムを他社・グループ会社に横展開するには？" },
+    { "id": "e2e", "label": "E2E提供", "question": "E2E（エンド・ツー・エンド）サービスで顧客価値を最大化するには？" },
+    { "id": "talent", "label": "専門人材", "question": "エンジニア・専門人材の採用競争に勝つには？" },
+    { "id": "training", "label": "人材育成", "question": "人材育成・技術継承で差別化するには？" },
+    { "id": "insource", "label": "内製化", "question": "IT内製化で外注コストを削減しながら開発速度を上げるには？" },
+    { "id": "azure", "label": "Azure活用", "question": "Azure環境を最大限活用してコスト効率の良いシステムを構築するには？" },
+    { "id": "security", "label": "セキュリティ", "question": "サイバーセキュリティ対策を強化しながら利便性を損なわないには？" },
+    { "id": "carbon", "label": "脱炭素", "question": "脱炭素化支援で新たな収益源を作るには？" }
+  ]
+}
