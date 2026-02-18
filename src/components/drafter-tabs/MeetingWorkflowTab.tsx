@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useDrafter, PastMinutesFile, DrafterTemplate } from "@/contexts/DrafterContext";
 import { FileDropzone } from "@/components/ui/file-dropzone";
-import { Document, Packer, Paragraph, TextRun } from "docx";
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, LevelFormat, AlignmentType, convertInchesToTwip, Footer, PageNumber } from "docx";
 import { saveAs } from "file-saver";
 
 // アップロード用 fetch（2分タイムアウト）
@@ -105,6 +105,7 @@ function FileOrTextInput({ value, onChange, placeholder, rows = 6 }: FileOrTextI
   const [isUploading, setIsUploading] = useState(false);
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [pasteStatus, setPasteStatus] = useState<string | null>(null);
 
   const handleFileUpload = async (files: File[]) => {
     const file = files[0];
@@ -113,6 +114,7 @@ function FileOrTextInput({ value, onChange, placeholder, rows = 6 }: FileOrTextI
     setIsUploading(true);
     setError(null);
     setUploadedFileName(null);
+    setPasteStatus(null);
 
     try {
       const formData = new FormData();
@@ -141,19 +143,53 @@ function FileOrTextInput({ value, onChange, placeholder, rows = 6 }: FileOrTextI
     }
   };
 
+  const handlePaste = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text && text.trim()) {
+        onChange(text);
+        setPasteStatus(`貼り付けました（${text.length.toLocaleString()}文字）`);
+        setError(null);
+        setUploadedFileName(null);
+      } else {
+        setError("クリップボードにテキストがありません");
+      }
+    } catch {
+      setError("クリップボードの読み取りに失敗しました。テキストエリアに直接Ctrl+Vで貼り付けてください。");
+    }
+  };
+
   return (
     <div className="space-y-2">
-      <FileDropzone
-        accept=".pdf,.docx,.md,.txt,.json,.msg,.eml"
-        onFilesSelected={handleFileUpload}
-        uploading={isUploading}
-        label="ファイルをドラッグ&ドロップ"
-        helperText="PDF, DOCX, TXT, MSG, EML 対応"
-      />
+      <div className="grid grid-cols-2 gap-2">
+        <FileDropzone
+          accept=".pdf,.docx,.md,.txt,.json,.msg,.eml"
+          onFilesSelected={handleFileUpload}
+          uploading={isUploading}
+          label="ファイルをドロップ（PDF/DOCX/TXT/MD/MSG/EML）"
+          compact
+        />
+        <button
+          onClick={handlePaste}
+          disabled={isUploading}
+          className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-green-300 dark:border-green-700 bg-green-50/50 dark:bg-green-900/10 p-3 text-green-700 dark:text-green-300 hover:bg-green-100 dark:hover:bg-green-900/30 hover:border-green-400 dark:hover:border-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <svg className="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+          </svg>
+          <span className="text-xs font-medium">コピペで貼り付け</span>
+        </button>
+      </div>
 
       {uploadedFileName && !error && (
         <div className="text-xs text-green-600 dark:text-green-400">
           ✓ {uploadedFileName} を読み込みました
+        </div>
+      )}
+
+      {pasteStatus && !error && (
+        <div className="text-xs text-green-600 dark:text-green-400">
+          ✓ {pasteStatus}
         </div>
       )}
 
@@ -174,6 +210,52 @@ function MeetingOverviewInput({ value, onChange }: MeetingOverviewInputProps) {
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const valueRef = useRef(value);
+  valueRef.current = value;
+
+  // 音声入力トグル
+  const toggleListening = () => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+      return;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setError("このブラウザは音声認識に対応していません");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = "ja-JP";
+    recognition.continuous = true;
+    recognition.interimResults = true;
+
+    let finalTranscript = valueRef.current;
+
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
+      let interim = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalTranscript += transcript;
+        } else {
+          interim = transcript;
+        }
+      }
+      onChange(finalTranscript + interim);
+    };
+
+    recognition.onerror = () => setIsListening(false);
+    recognition.onend = () => setIsListening(false);
+
+    recognitionRef.current = recognition;
+    recognition.start();
+    setIsListening(true);
+  };
 
   const handleFileUpload = async (files: File[]) => {
     const file = files[0];
@@ -238,18 +320,72 @@ function MeetingOverviewInput({ value, onChange }: MeetingOverviewInputProps) {
     }
   };
 
+  // クリップボードからテキストを貼り付けてAI抽出
+  const handlePasteAndExtract = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (!text || !text.trim()) {
+        setError("クリップボードにテキストがありません");
+        return;
+      }
+
+      setError(null);
+      setUploadedFileName(null);
+      setIsExtracting(true);
+      setStatusMessage("AIが会議情報を抽出中...");
+
+      const extractResponse = await fetchWithTimeout("/api/drafter/extract-meeting-info", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          content: text,
+          fileName: "clipboard-paste",
+        }),
+      });
+
+      const extractResult = await extractResponse.json();
+
+      if (!extractResponse.ok) {
+        onChange(text);
+        setStatusMessage(null);
+        setError("AI抽出に失敗。貼り付けたテキストをそのまま表示。");
+        return;
+      }
+
+      onChange(extractResult.extractedContent);
+      setStatusMessage(null);
+    } catch (err) {
+      console.error("Clipboard read error:", err);
+      setError("クリップボードの読み取りに失敗しました。テキストエリアに直接Ctrl+Vで貼り付けてください。");
+      setStatusMessage(null);
+    } finally {
+      setIsExtracting(false);
+    }
+  };
+
   const isProcessing = isUploading || isExtracting;
 
   return (
     <div className="space-y-3">
-      <FileDropzone
-        accept=".pdf,.docx,.md,.txt,.json,.msg,.eml"
-        onFilesSelected={handleFileUpload}
-        uploading={isProcessing}
-        label="ファイルをドラッグ&ドロップ"
-        helperText="PDF, DOCX, TXT, MSG, EML 対応"
-        featureText="✨ AIが会議情報を自動抽出"
-      />
+      <div className="grid grid-cols-2 gap-2">
+        <FileDropzone
+          accept=".pdf,.docx,.md,.txt,.json,.msg,.eml"
+          onFilesSelected={handleFileUpload}
+          uploading={isProcessing}
+          label="ファイルをドロップ（PDF/DOCX/TXT/MD/MSG/EML）"
+          compact
+        />
+        <button
+          onClick={handlePasteAndExtract}
+          disabled={isProcessing}
+          className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-green-300 dark:border-green-700 bg-green-50/50 dark:bg-green-900/10 p-3 text-green-700 dark:text-green-300 hover:bg-green-100 dark:hover:bg-green-900/30 hover:border-green-400 dark:hover:border-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <svg className="w-5 h-5 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+          </svg>
+          <span className="text-xs font-medium">コピペ → AI抽出</span>
+        </button>
+      </div>
 
       {statusMessage && (
         <div className="flex items-center gap-2 text-xs text-blue-600 dark:text-blue-400">
@@ -265,6 +401,33 @@ function MeetingOverviewInput({ value, onChange }: MeetingOverviewInputProps) {
       )}
 
       {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
+
+      <div className="relative">
+        <textarea
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={"手入力する場合はここに直接記入"}
+          rows={5}
+          className="w-full px-3 py-2 pr-12 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+        />
+        <button
+          onClick={toggleListening}
+          className={`absolute top-2 right-2 p-1.5 rounded-lg text-xs font-medium transition-colors ${
+            isListening
+              ? "bg-red-500 text-white animate-pulse"
+              : "bg-slate-100 dark:bg-slate-600 text-slate-500 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-500"
+          }`}
+          title={isListening ? "音声入力を停止" : "音声で入力"}
+        >
+          {isListening ? "⏹" : "🎤"}
+        </button>
+        {isListening && (
+          <span className="absolute top-2 right-12 flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+          </span>
+        )}
+      </div>
     </div>
   );
 }
@@ -305,7 +468,7 @@ function ProjectOpenButton() {
             </span>
           </div>
           <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight">
-            プロジェクトを作っていなければ②へ
+            以前保存した.jsonファイルを読み込み、設定を復元します。初回は②へ進んでください
           </p>
         </div>
 
@@ -383,11 +546,15 @@ function TemplateSelector() {
     selectTemplate,
     addTemplate,
     deleteTemplate,
+    updateTemplate,
   } = useDrafter();
   const [isExpanded, setIsExpanded] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [previewTemplate, setPreviewTemplate] = useState<DrafterTemplate | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editContent, setEditContent] = useState("");
+  const [editSaving, setEditSaving] = useState(false);
   const [newName, setNewName] = useState("");
   const [newContent, setNewContent] = useState("");
   const [isUploading, setIsUploading] = useState(false);
@@ -396,7 +563,18 @@ function TemplateSelector() {
 
   const handlePreview = (template: DrafterTemplate) => {
     setPreviewTemplate(template);
+    setEditContent(template.content);
+    setIsEditing(false);
     setShowPreview(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!previewTemplate || !editContent.trim()) return;
+    setEditSaving(true);
+    await updateTemplate(previewTemplate.id, editContent.trim());
+    setPreviewTemplate({ ...previewTemplate, content: editContent.trim() });
+    setIsEditing(false);
+    setEditSaving(false);
   };
 
   const handleDeleteTemplate = async (id: string) => {
@@ -517,7 +695,7 @@ function TemplateSelector() {
               )}
             </div>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight">
-              議事録の構成・フォーマットを定義
+              見出し構成や記載項目のフォーマットを指定。過去の議事録をアップロードすればAIがテンプレート化
             </p>
           </div>
         </div>
@@ -627,34 +805,74 @@ function TemplateSelector() {
             </div>
           </div>
 
-          {/* プレビュー表示（選択時） */}
+          {/* プレビュー・編集表示 */}
           {showPreview && previewTemplate && (
             <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-sm font-medium text-blue-700 dark:text-blue-300">
                   📄 {previewTemplate.name}
                 </p>
-                <button
-                  onClick={() => setShowPreview(false)}
-                  className="text-blue-400 hover:text-blue-600 text-lg"
-                >
-                  ×
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      if (isEditing) {
+                        setEditContent(previewTemplate.content);
+                      }
+                      setIsEditing(!isEditing);
+                    }}
+                    className={`px-2 py-1 text-xs rounded transition-colors ${
+                      isEditing
+                        ? "bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-200"
+                        : "bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-200 hover:bg-blue-200"
+                    }`}
+                  >
+                    {isEditing ? "キャンセル" : "✏️ 編集"}
+                  </button>
+                  <button
+                    onClick={() => { setShowPreview(false); setIsEditing(false); }}
+                    className="text-blue-400 hover:text-blue-600 text-lg leading-none"
+                  >
+                    ×
+                  </button>
+                </div>
               </div>
-              <div className="p-2 bg-white dark:bg-slate-800 rounded border max-h-[150px] overflow-y-auto mb-2">
-                <pre className="text-xs text-slate-600 dark:text-slate-300 whitespace-pre-wrap font-mono">
-                  {previewTemplate.content}
-                </pre>
+
+              {isEditing ? (
+                <textarea
+                  value={editContent}
+                  onChange={(e) => setEditContent(e.target.value)}
+                  rows={10}
+                  className="w-full px-3 py-2 text-xs border border-blue-300 dark:border-blue-700 rounded-lg bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-mono focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-2"
+                />
+              ) : (
+                <div className="p-2 bg-white dark:bg-slate-800 rounded border max-h-[200px] overflow-y-auto mb-2">
+                  <pre className="text-xs text-slate-600 dark:text-slate-300 whitespace-pre-wrap font-mono">
+                    {previewTemplate.content}
+                  </pre>
+                </div>
+              )}
+
+              <div className="flex gap-2">
+                {isEditing ? (
+                  <button
+                    onClick={handleSaveEdit}
+                    disabled={editSaving || !editContent.trim() || editContent === previewTemplate.content}
+                    className="flex-1 px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:bg-slate-400 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {editSaving ? "保存中..." : "💾 変更を保存"}
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      selectTemplate(previewTemplate);
+                      setShowPreview(false);
+                    }}
+                    className="flex-1 px-3 py-1.5 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700"
+                  >
+                    ✓ このテンプレートを使用
+                  </button>
+                )}
               </div>
-              <button
-                onClick={() => {
-                  selectTemplate(previewTemplate);
-                  setShowPreview(false);
-                }}
-                className="w-full px-3 py-1.5 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700"
-              >
-                ✓ このテンプレートを使用
-              </button>
             </div>
           )}
 
@@ -691,7 +909,7 @@ function TemplateSelector() {
                       onFilesSelected={handleFileUpload}
                       uploading={isUploading || isExtracting}
                       label="ファイルをドロップ or クリック"
-                      helperText="AIが構造を抽出してテンプレート化"
+                      helperText="対応形式：PDF, DOCX, MD, TXT → AIが構造を抽出してテンプレート化"
                     />
                     {extractionStatus && (
                       <div className={`mt-2 flex items-center gap-2 text-xs ${
@@ -806,7 +1024,7 @@ function PastMinutesInput() {
         onFilesSelected={handleFilesUpload}
         uploading={isUploading}
         label="ファイルをドラッグ&ドロップ"
-        helperText="PDF, DOCX, TXT, MSG, EML 対応"
+        helperText="対応形式：PDF, DOCX, TXT, MSG, EML（複数可）"
       />
 
       {error && <p className="text-sm text-red-600">{error}</p>}
@@ -854,33 +1072,186 @@ function PreviewExport() {
     setIsExporting(true);
     setDownloadedFile(null);
     try {
-      const paragraphs = currentDraft.content.split("\n").map((line) => {
-        return new Paragraph({
-          children: [
-            new TextRun({
-              text: line,
-              font: "Yu Gothic",
-              size: 24,
-            }),
-          ],
-        });
-      });
+      // マークダウンのインラインをパースしてTextRun配列に変換
+      const parseInline = (text: string, baseOpts: { font: string; size: number; bold?: boolean }): TextRun[] => {
+        const runs: TextRun[] = [];
+        // **bold** と通常テキストを分離
+        const parts = text.split(/(\*\*[^*]+\*\*)/g);
+        for (const part of parts) {
+          if (!part) continue;
+          const boldMatch = part.match(/^\*\*(.+)\*\*$/);
+          if (boldMatch) {
+            runs.push(new TextRun({ text: boldMatch[1], ...baseOpts, bold: true }));
+          } else {
+            runs.push(new TextRun({ text: part, ...baseOpts, bold: baseOpts.bold }));
+          }
+        }
+        return runs.length > 0 ? runs : [new TextRun({ text, ...baseOpts })];
+      };
 
-      const titleParagraph = new Paragraph({
-        children: [
-          new TextRun({
-            text: currentDraft.title,
-            font: "Yu Gothic",
-            size: 32,
-            bold: true,
-          }),
-        ],
-      });
+      const font = "Yu Gothic";
+      const paragraphs: Paragraph[] = [];
+      const lines = currentDraft.content.split("\n");
+
+      for (const line of lines) {
+        // 見出し: # → Heading1, ## → Heading2, ### → Heading3
+        const headingMatch = line.match(/^(#{1,3})\s+(.+)$/);
+        if (headingMatch) {
+          const level = headingMatch[1].length;
+          const text = headingMatch[2];
+          const headingLevel = level === 1 ? HeadingLevel.HEADING_1 : level === 2 ? HeadingLevel.HEADING_2 : HeadingLevel.HEADING_3;
+          const fontSize = level === 1 ? 32 : level === 2 ? 28 : 24;
+          paragraphs.push(new Paragraph({
+            heading: headingLevel,
+            children: parseInline(text, { font, size: fontSize, bold: true }),
+            spacing: { before: level === 1 ? 360 : 240, after: 120 },
+          }));
+          continue;
+        }
+
+        // 箇条書き: - item / * item
+        const bulletMatch = line.match(/^(\s*)[-*]\s+(.+)$/);
+        if (bulletMatch) {
+          const indent = bulletMatch[1].length;
+          const bulletLevel = Math.min(Math.floor(indent / 2), 2);
+          paragraphs.push(new Paragraph({
+            children: parseInline(bulletMatch[2], { font, size: 22 }),
+            numbering: { reference: "bullet-list", level: bulletLevel },
+            spacing: { before: 40, after: 40 },
+          }));
+          continue;
+        }
+
+        // 番号付きリスト: 1. item
+        const numberedMatch = line.match(/^(\s*)\d+[.)]\s+(.+)$/);
+        if (numberedMatch) {
+          const indent = numberedMatch[1].length;
+          const numLevel = Math.min(Math.floor(indent / 2), 2);
+          paragraphs.push(new Paragraph({
+            children: parseInline(numberedMatch[2], { font, size: 22 }),
+            numbering: { reference: "numbered-list", level: numLevel },
+            spacing: { before: 40, after: 40 },
+          }));
+          continue;
+        }
+
+        // 水平線: --- / ***
+        if (/^[-*_]{3,}\s*$/.test(line.trim())) {
+          paragraphs.push(new Paragraph({
+            children: [],
+            border: { bottom: { color: "999999", space: 1, style: "single", size: 6 } },
+            spacing: { before: 120, after: 120 },
+          }));
+          continue;
+        }
+
+        // 空行
+        if (line.trim() === "") {
+          paragraphs.push(new Paragraph({ children: [], spacing: { before: 80, after: 80 } }));
+          continue;
+        }
+
+        // 通常テキスト
+        paragraphs.push(new Paragraph({
+          children: parseInline(line, { font, size: 22 }),
+          spacing: { before: 40, after: 40 },
+        }));
+      }
 
       const doc = new Document({
+        numbering: {
+          config: [
+            {
+              reference: "bullet-list",
+              levels: [
+                {
+                  level: 0,
+                  format: LevelFormat.BULLET,
+                  text: "\u2022",
+                  alignment: AlignmentType.LEFT,
+                  style: {
+                    run: { font: "Arial" },
+                    paragraph: { indent: { left: convertInchesToTwip(0.25), hanging: convertInchesToTwip(0.25) } },
+                  },
+                },
+                {
+                  level: 1,
+                  format: LevelFormat.BULLET,
+                  text: "\u2013",
+                  alignment: AlignmentType.LEFT,
+                  style: {
+                    run: { font: "Arial" },
+                    paragraph: { indent: { left: convertInchesToTwip(0.5), hanging: convertInchesToTwip(0.25) } },
+                  },
+                },
+                {
+                  level: 2,
+                  format: LevelFormat.BULLET,
+                  text: "\u25AA",
+                  alignment: AlignmentType.LEFT,
+                  style: {
+                    run: { font: "Arial" },
+                    paragraph: { indent: { left: convertInchesToTwip(0.75), hanging: convertInchesToTwip(0.25) } },
+                  },
+                },
+              ],
+            },
+            {
+              reference: "numbered-list",
+              levels: [
+                {
+                  level: 0,
+                  format: LevelFormat.DECIMAL,
+                  text: "%1.",
+                  alignment: AlignmentType.START,
+                  style: {
+                    paragraph: { indent: { left: convertInchesToTwip(0.25), hanging: convertInchesToTwip(0.25) } },
+                  },
+                },
+                {
+                  level: 1,
+                  format: LevelFormat.DECIMAL,
+                  text: "%2)",
+                  alignment: AlignmentType.START,
+                  style: {
+                    paragraph: { indent: { left: convertInchesToTwip(0.5), hanging: convertInchesToTwip(0.25) } },
+                  },
+                },
+                {
+                  level: 2,
+                  format: LevelFormat.LOWER_LETTER,
+                  text: "%3.",
+                  alignment: AlignmentType.START,
+                  style: {
+                    paragraph: { indent: { left: convertInchesToTwip(0.75), hanging: convertInchesToTwip(0.25) } },
+                  },
+                },
+              ],
+            },
+          ],
+        },
+        styles: {
+          default: {
+            document: {
+              run: { font: "Yu Gothic", size: 22 },
+            },
+          },
+        },
         sections: [
           {
-            children: [titleParagraph, new Paragraph({ text: "" }), ...paragraphs],
+            children: paragraphs,
+            footers: {
+              default: new Footer({
+                children: [
+                  new Paragraph({
+                    alignment: AlignmentType.CENTER,
+                    children: [
+                      new TextRun({ children: [PageNumber.CURRENT], font: "Yu Gothic", size: 18 }),
+                    ],
+                  }),
+                ],
+              }),
+            },
           },
         ],
       });
@@ -926,8 +1297,8 @@ function PreviewExport() {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
+    <div className="flex-1 min-h-0 flex flex-col gap-4">
+      <div className="flex items-center justify-between shrink-0">
         <span className="text-sm text-green-600 dark:text-green-400 font-medium flex items-center gap-1">
           ✅ 生成完了
         </span>
@@ -944,7 +1315,7 @@ function PreviewExport() {
       </div>
 
       {/* プレビュー */}
-      <div className="p-4 bg-white dark:bg-slate-800 rounded-lg border max-h-[300px] overflow-y-auto">
+      <div className="flex-1 min-h-0 p-4 bg-white dark:bg-slate-800 rounded-lg border overflow-y-auto">
         <h4 className="font-bold text-lg text-slate-900 dark:text-white mb-3">
           {currentDraft.title}
         </h4>
@@ -979,7 +1350,7 @@ function PreviewExport() {
       )}
 
       {/* エクスポートボタン */}
-      <div>
+      <div className="shrink-0">
         <p className="text-xs text-slate-600 dark:text-slate-400 mb-3">
           Wordで保存後、Microsoft Copilotで編集できます
         </p>
@@ -1039,8 +1410,8 @@ export function MeetingWorkflowTab() {
   const hasMeetingOverview = meetingInput.meetingOverview.trim() !== "";
   const hasMinimumInput = hasMeetingOverview;
 
-  const handleGenerate = async () => {
-    await generateDraft();
+  const handleGenerate = async (detailLevel: "detailed" | "standard" | "concise" = "standard") => {
+    await generateDraft(detailLevel);
   };
 
   return (
@@ -1061,17 +1432,13 @@ export function MeetingWorkflowTab() {
       </div>
 
       {/* フロー説明 */}
-      <div className="flex items-center justify-center gap-2 py-2 px-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-sm">
+      <div className="flex items-center justify-center gap-3 py-2 px-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-sm">
         <span className="flex items-center gap-1 px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full">
           <span className="font-bold">Step1</span> 入力して生成
         </span>
         <span className="text-slate-400">→</span>
         <span className="flex items-center gap-1 px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full">
-          <span className="font-bold">Step2</span> 結果を確認
-        </span>
-        <span className="text-slate-400">→</span>
-        <span className="flex items-center gap-1 px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full">
-          <span className="font-bold">Step3</span> 議事録を保存
+          <span className="font-bold">Step2</span> 確認・保存
         </span>
       </div>
 
@@ -1094,7 +1461,7 @@ export function MeetingWorkflowTab() {
           <InputSection
             icon="📋"
             title="会議情報"
-            description="日時・場所・参加者・議題など（形式自由 - AIが読み取ります）"
+            description="日時・場所・参加者・議題などの基本情報。Outlookメールや案内文をそのまま貼り付ければAIが自動で整理します"
             action="ドキュメントをドロップまたはペースト → AIが自動抽出"
             optional={false}
             stepNumber="③"
@@ -1109,7 +1476,7 @@ export function MeetingWorkflowTab() {
           <InputSection
             icon="🎙️"
             title="文字起こし / 会議メモ"
-            description="録音の文字起こし、または会議中に取ったメモ"
+            description="Teams等の文字起こしテキストや手書きメモを入力。発言内容が多いほど詳細な議事録を生成できます"
             action="文字起こしテキストまたはメモをペースト"
             optional={false}
             stepNumber="④"
@@ -1126,7 +1493,7 @@ export function MeetingWorkflowTab() {
           <InputSection
             icon="📁"
             title="過去の議事録（お手本）"
-            description="文体やフォーマットの参考"
+            description="過去に作成した議事録をお手本として添付すると、文体・構成・表現を学習して同じスタイルで生成します"
             action="過去の議事録ファイルをドロップ"
             defaultCollapsed={true}
             stepNumber="⑤"
@@ -1138,7 +1505,7 @@ export function MeetingWorkflowTab() {
           <InputSection
             icon="✏️"
             title="追加指示"
-            description="「箇条書きで」「決定事項を強調」など"
+            description="「箇条書きで」「決定事項を太字で」「英語の固有名詞はカタカナ表記で」など、生成時の注意点や要望を自由に記述"
             action="生成時の注意点や要望を入力"
             defaultCollapsed={true}
             stepNumber="⑥"
@@ -1151,46 +1518,54 @@ export function MeetingWorkflowTab() {
             />
           </InputSection>
 
-          {/* 生成ボタン */}
-          <div className="pt-2">
-            <button
-              onClick={handleGenerate}
-              disabled={!hasMinimumInput || generateStatus === "running"}
-              className="w-full px-6 py-4 bg-green-600 text-white text-lg font-bold rounded-xl hover:bg-green-700 transition-colors disabled:bg-slate-400 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-lg"
-            >
-              {generateStatus === "running" ? (
-                <>
-                  <span className="animate-spin">⏳</span>
-                  生成中...
-                </>
-              ) : (
-                <>
-                  🤖 議事録を生成
-                </>
-              )}
-            </button>
+          {/* 生成ボタン（3段階） */}
+          <div className="pt-2 space-y-2">
+            {generateStatus === "running" ? (
+              <div className="w-full px-6 py-4 bg-slate-400 text-white text-lg font-bold rounded-xl flex items-center justify-center gap-3 shadow-lg">
+                <span className="animate-spin">⏳</span>
+                生成中...
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  onClick={() => handleGenerate("detailed")}
+                  disabled={!hasMinimumInput}
+                  className="px-3 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-colors disabled:bg-slate-400 disabled:cursor-not-allowed flex flex-col items-center gap-1 shadow-lg"
+                >
+                  <span className="text-base">📝 詳細</span>
+                  <span className="text-[10px] font-normal opacity-80">発言・経緯を網羅</span>
+                </button>
+                <button
+                  onClick={() => handleGenerate("standard")}
+                  disabled={!hasMinimumInput}
+                  className="px-3 py-3 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition-colors disabled:bg-slate-400 disabled:cursor-not-allowed flex flex-col items-center gap-1 shadow-lg ring-2 ring-green-300 dark:ring-green-400"
+                >
+                  <span className="text-base">🤖 標準</span>
+                  <span className="text-[10px] font-normal opacity-80">要点+議論の流れ</span>
+                </button>
+                <button
+                  onClick={() => handleGenerate("concise")}
+                  disabled={!hasMinimumInput}
+                  className="px-3 py-3 bg-amber-600 text-white font-bold rounded-xl hover:bg-amber-700 transition-colors disabled:bg-slate-400 disabled:cursor-not-allowed flex flex-col items-center gap-1 shadow-lg"
+                >
+                  <span className="text-base">⚡ 要約</span>
+                  <span className="text-[10px] font-normal opacity-80">決定事項を簡潔に</span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* 右カラム: 生成結果 + 保存 */}
-        <div className="p-4 space-y-4 overflow-y-auto bg-white dark:bg-slate-800">
-          {/* Step2: 生成結果 */}
-          <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full text-sm">
-            <span className="font-bold">Step2</span> 結果を確認
+        {/* 右カラム: プレビュー・確認・保存 */}
+        <div className="p-4 flex flex-col overflow-y-auto bg-white dark:bg-slate-800">
+          <span className="inline-flex items-center gap-1 px-3 py-1 mb-4 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full text-sm shrink-0">
+            <span className="font-bold">Step2</span> 確認・保存
           </span>
 
-          {/* プレビュー */}
           {currentDraft ? (
-            <div className="p-4 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 max-h-[400px] overflow-y-auto">
-              <h4 className="font-bold text-lg text-slate-900 dark:text-white mb-3">
-                {currentDraft.title}
-              </h4>
-              <div className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">
-                {currentDraft.content}
-              </div>
-            </div>
+            <PreviewExport />
           ) : (
-            <div className="flex-1 p-8 bg-slate-100 dark:bg-slate-800/50 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-600 text-center flex flex-col items-center justify-center">
+            <div className="flex-1 min-h-0 p-8 bg-slate-100 dark:bg-slate-800/50 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-600 text-center flex flex-col items-center justify-center">
               <div className="text-5xl mb-4 opacity-20">📄</div>
               <p className="text-slate-400 dark:text-slate-500">
                 左の入力を元に議事録を生成すると
@@ -1201,20 +1576,8 @@ export function MeetingWorkflowTab() {
             </div>
           )}
 
-          {/* Step3: 保存 - 常に表示 */}
-          <span className="inline-flex items-center gap-1 px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full text-sm">
-            <span className="font-bold">Step3</span> 議事録を保存
-          </span>
-          {currentDraft ? (
-            <PreviewExport />
-          ) : (
-            <p className="text-sm text-slate-400 dark:text-slate-500">
-              議事録を生成すると保存オプションが表示されます
-            </p>
-          )}
-
-          {/* プロジェクトを保存（最後に配置） */}
-          <div className="pt-4 mt-4 border-t border-slate-200 dark:border-slate-700">
+          {/* プロジェクトを保存 */}
+          <div className="pt-4 mt-4 border-t border-slate-200 dark:border-slate-700 shrink-0">
             <ProjectSaveButton />
           </div>
         </div>

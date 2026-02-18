@@ -60,10 +60,36 @@ interface MeetingInputData {
   additionalInstructions: string;
 }
 
+type DetailLevel = "detailed" | "standard" | "concise";
+
+const DETAIL_LEVEL_CONFIG: Record<DetailLevel, { instruction: string; maxTokens: number }> = {
+  detailed: {
+    instruction: `## 文章量の指示
+- 【詳細モード】発言内容をできるだけ網羅的に記録し、議論の経緯・背景・理由も詳しく記載してください。
+- 各議題について、発言者ごとの主張・質疑応答・補足説明を省略せず記載してください。
+- 決定事項だけでなく、決定に至るまでの議論プロセスも記録してください。`,
+    maxTokens: 8000,
+  },
+  standard: {
+    instruction: `## 文章量の指示
+- 【標準モード】要点を押さえつつ、議論の流れがわかる程度の詳しさで記載してください。
+- 重要な発言や議論は記載し、繰り返しや些末な内容は省略してください。`,
+    maxTokens: 4000,
+  },
+  concise: {
+    instruction: `## 文章量の指示
+- 【要約モード】決定事項・アクションアイテムを中心に、簡潔にまとめてください。
+- 各議題は2〜3行で要約し、議論の詳細は省略してください。
+- 全体をコンパクトにまとめることを最優先してください。`,
+    maxTokens: 2000,
+  },
+};
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { drafterId, inputs, meetingInput } = body;
+    const { drafterId, inputs, meetingInput, detailLevel: rawDetailLevel } = body;
+    const detailLevel: DetailLevel = (["detailed", "standard", "concise"].includes(rawDetailLevel) ? rawDetailLevel : "standard") as DetailLevel;
 
     // 議事録ドラフターの場合
     const isMeetingDrafter = drafterId === "minutes";
@@ -79,7 +105,8 @@ export async function POST(request: NextRequest) {
       }
 
       // システムプロンプトを構築
-      let systemPrompt = MEETING_MINUTES_SYSTEM_PROMPT;
+      const levelConfig = DETAIL_LEVEL_CONFIG[detailLevel];
+      let systemPrompt = MEETING_MINUTES_SYSTEM_PROMPT + "\n\n" + levelConfig.instruction;
 
       // 過去の議事録があればスタイル参考として追加
       if (pastMinutes && pastMinutes.length > 0) {
@@ -114,7 +141,7 @@ export async function POST(request: NextRequest) {
             { role: "system", content: systemPrompt },
             { role: "user", content: userPrompt },
           ],
-          max_completion_tokens: 4000,
+          max_completion_tokens: levelConfig.maxTokens,
           temperature: 0.3,
         },
         { signal: controller.signal }

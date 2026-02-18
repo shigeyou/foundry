@@ -420,6 +420,11 @@ export default function MetaFinderPage() {
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
+  // フリーテキストプロンプト
+  const [freePrompt, setFreePrompt] = useState<string>("");
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+
   // バッチ探索用の状態
   const [batches, setBatches] = useState<BatchInfo[]>([]);
   const [latestBatch, setLatestBatch] = useState<BatchInfo | null>(null);
@@ -538,6 +543,114 @@ export default function MetaFinderPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // フリーテキスト探索実行
+  const handleFreeExplore = async () => {
+    if (loading || !freePrompt.trim()) return;
+
+    // マトリクス選択をクリア
+    setSelectedTheme(null);
+    setSelectedDept(null);
+    setGeneratedPrompt("");
+
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
+
+    setLoading(true);
+    setError(null);
+    setResult(null);
+
+    try {
+      const res = await fetch("/api/meta-finder", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          additionalContext: freePrompt.trim(),
+          themeId: "freetext",
+          themeName: "フリー探索",
+          deptId: "all",
+          deptName: "全社",
+        }),
+        signal: abortControllerRef.current.signal,
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "分析に失敗しました");
+      }
+
+      const data = await res.json();
+      const ideas: DiscoveredIdea[] = (data.needs || []).map((need: { id: string; name: string; description: string; reason: string; financial: number; customer: number; process: number; growth: number }) => ({
+        id: need.id,
+        name: need.name,
+        description: need.description,
+        reason: need.reason,
+        financial: need.financial,
+        customer: need.customer,
+        process: need.process,
+        growth: need.growth,
+      }));
+      setResult({
+        ideas,
+        thinkingProcess: data.thinkingProcess,
+        summary: data.summary,
+      });
+    } catch (err) {
+      if (err instanceof Error && err.name === "AbortError") return;
+      setError(err instanceof Error ? err.message : "エラーが発生しました");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 音声入力トグル
+  const toggleListening = () => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+      return;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("このブラウザは音声認識に対応していません");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = "ja-JP";
+    recognition.continuous = true;
+    recognition.interimResults = true;
+
+    let finalTranscript = freePrompt;
+
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
+      let interim = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalTranscript += transcript;
+        } else {
+          interim = transcript;
+        }
+      }
+      setFreePrompt(finalTranscript + interim);
+    };
+
+    recognition.onerror = () => {
+      setIsListening(false);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognitionRef.current = recognition;
+    recognition.start();
+    setIsListening(true);
   };
 
   // キャンセル処理
@@ -739,6 +852,63 @@ export default function MetaFinderPage() {
       </header>
 
       <main className="max-w-full mx-auto px-4 py-6">
+        {/* ========== フリーテキストプロンプトボックス ========== */}
+        <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-4 mb-6">
+          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+            自由探索プロンプト
+            <span className="text-xs font-normal text-gray-500 dark:text-gray-400 ml-2">
+              テーマを自由に入力して探索（マトリクスを使わない探索）
+            </span>
+          </h2>
+          <div className="flex gap-3">
+            <div className="flex-1 relative">
+              <textarea
+                value={freePrompt}
+                onChange={(e) => setFreePrompt(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+                    e.preventDefault();
+                    handleFreeExplore();
+                  }
+                }}
+                placeholder="例：AIを使って船員教育をどう革新できるか？ / 洋上風力事業で他社と差別化するには？"
+                className="w-full h-20 p-3 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 rounded-lg text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-slate-500 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                disabled={loading}
+              />
+              {isListening && (
+                <span className="absolute top-2 right-2 flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                </span>
+              )}
+            </div>
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={toggleListening}
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  isListening
+                    ? "bg-red-500 hover:bg-red-600 text-white"
+                    : "bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 text-gray-700 dark:text-gray-300"
+                }`}
+                title={isListening ? "音声入力を停止" : "音声入力を開始"}
+                disabled={loading}
+              >
+                {isListening ? "⏹ 停止" : "🎤 音声"}
+              </button>
+              <button
+                onClick={handleFreeExplore}
+                disabled={loading || !freePrompt.trim()}
+                className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-lg text-sm font-bold shadow-md transition-all disabled:cursor-not-allowed"
+              >
+                {loading ? "探索中..." : "🚀 探索"}
+              </button>
+            </div>
+          </div>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+            Ctrl+Enter で送信
+          </p>
+        </div>
+
         {/* ========== 全探索セクション（常に表示）========== */}
         {/* 進捗表示（実行中の場合のみ） */}
         {latestBatch?.status === "running" && (
@@ -1187,13 +1357,21 @@ export default function MetaFinderPage() {
             {/* Summary */}
             <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg border border-blue-200 dark:border-blue-800 p-4 mb-6">
               <div className="flex items-center gap-3 mb-3">
-                <span className="px-3 py-1 bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200 rounded-full text-sm font-medium">
-                  {selectedThemeObj?.label}
-                </span>
-                <span className="text-gray-400">×</span>
-                <span className="px-3 py-1 rounded-full text-sm font-medium bg-emerald-100 dark:bg-emerald-800 text-emerald-800 dark:text-emerald-200">
-                  {selectedDeptObj?.label}
-                </span>
+                {selectedThemeObj ? (
+                  <>
+                    <span className="px-3 py-1 bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200 rounded-full text-sm font-medium">
+                      {selectedThemeObj.label}
+                    </span>
+                    <span className="text-gray-400">×</span>
+                    <span className="px-3 py-1 rounded-full text-sm font-medium bg-emerald-100 dark:bg-emerald-800 text-emerald-800 dark:text-emerald-200">
+                      {selectedDeptObj?.label}
+                    </span>
+                  </>
+                ) : (
+                  <span className="px-3 py-1 bg-indigo-100 dark:bg-indigo-800 text-indigo-800 dark:text-indigo-200 rounded-full text-sm font-medium">
+                    フリー探索
+                  </span>
+                )}
               </div>
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
                 探索結果

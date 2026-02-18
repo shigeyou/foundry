@@ -146,8 +146,8 @@ interface DrafterContextType {
   generateStatus: "idle" | "running" | "completed" | "error";
   setGenerateStatus: (status: "idle" | "running" | "completed" | "error") => void;
 
-  // 生成実行
-  generateDraft: () => Promise<void>;
+  // 生成実行（detailLevel: "detailed" | "standard" | "concise"）
+  generateDraft: (detailLevel?: "detailed" | "standard" | "concise") => Promise<void>;
 
   // エクスポート/インポート
   exportProject: (projectName: string) => void;
@@ -163,7 +163,7 @@ interface DrafterProviderProps {
 }
 
 const initialMeetingInput: MeetingInputData = {
-  meetingOverview: "",
+  meetingOverview: "日時：〇月〇日(〇) 〇-〇時\n場所：\n参加者：\n議題：\n1. \n2. \n3. \n4. ",
   transcript: "",
   pastMinutes: [],
   additionalInstructions: "",
@@ -450,7 +450,7 @@ export function DrafterProvider({ children, initialDrafterId = null }: DrafterPr
     setLoadedFileName(null);
   };
 
-  const generateDraft = async () => {
+  const generateDraft = async (detailLevel: "detailed" | "standard" | "concise" = "standard") => {
     if (!drafterId) return;
 
     setGenerateStatus("running");
@@ -466,6 +466,7 @@ export function DrafterProvider({ children, initialDrafterId = null }: DrafterPr
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           drafterId,
+          detailLevel,
           // 従来型の入力データ
           inputs: isMeetingMinutes ? {} : inputFields.reduce((acc, field) => {
             acc[field.id] = field.value;
@@ -493,7 +494,6 @@ export function DrafterProvider({ children, initialDrafterId = null }: DrafterPr
         status: "draft",
       });
       setGenerateStatus("completed");
-      setActiveTab("edit");
     } catch (error) {
       console.error("Draft generation error:", error);
       setGenerateStatus("error");

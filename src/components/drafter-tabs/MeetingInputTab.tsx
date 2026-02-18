@@ -195,6 +195,51 @@ function MeetingOverviewInput({ value, onChange, placeholder }: MeetingOverviewI
     }
   };
 
+  // クリップボードからテキストを貼り付けてAI抽出
+  const handlePasteAndExtract = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (!text || !text.trim()) {
+        setError("クリップボードにテキストがありません");
+        return;
+      }
+
+      setError(null);
+      setIsExtracting(true);
+      setStatusMessage("AIが議事概要を抽出中...");
+
+      const extractResponse = await fetch("/api/drafter/extract-meeting-info", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          content: text,
+          fileName: "clipboard-paste",
+        }),
+      });
+
+      const extractResult = await extractResponse.json();
+
+      if (!extractResponse.ok) {
+        onChange(text);
+        setStatusMessage(null);
+        setUploadedFileName(null);
+        setError("AI抽出に失敗しました。貼り付けたテキストをそのまま表示しています。");
+        return;
+      }
+
+      onChange(extractResult.extractedContent);
+      setUploadedFileName(null);
+      setStatusMessage(null);
+    } catch (err) {
+      // clipboard API が使えない場合のフォールバック
+      console.error("Clipboard read error:", err);
+      setError("クリップボードの読み取りに失敗しました。テキストエリアに直接貼り付けてください。");
+      setStatusMessage(null);
+    } finally {
+      setIsExtracting(false);
+    }
+  };
+
   const isProcessing = isUploading || isExtracting;
 
   return (
@@ -206,6 +251,18 @@ function MeetingOverviewInput({ value, onChange, placeholder }: MeetingOverviewI
         label="Outlookメールやドキュメントをドラッグ&ドロップ"
         helperText="Outlookメール(.msg), PDF, DOCX, MD, TXT等に対応 - AIが議事概要を自動抽出"
       />
+
+      {/* テキストコピペ → AI抽出ボタン */}
+      <button
+        onClick={handlePasteAndExtract}
+        disabled={isProcessing}
+        className="w-full px-4 py-2.5 text-sm font-medium rounded-lg border-2 border-dashed border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 hover:bg-green-100 dark:hover:bg-green-900/40 hover:border-green-400 dark:hover:border-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        </svg>
+        クリップボードから貼り付け → AI自動抽出
+      </button>
 
       {statusMessage && (
         <div className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400">

@@ -74,7 +74,7 @@ async function explorePattern(
     `${BATCH_PROMPT}\n\n${userPrompt}`,
     {
       temperature: 0.7,
-      maxTokens: 8000,
+      maxTokens: 4000,
       jsonMode: true,
     }
   );
@@ -134,7 +134,7 @@ async function runBatchInBackground(batchId: string) {
 
     let documentContext = "## 分析対象ドキュメント\n\n";
     for (const doc of ragDocuments) {
-      documentContext += `### ${doc.filename}\n${doc.content.slice(0, 3000)}\n\n`;
+      documentContext += `### ${doc.filename}\n${doc.content.slice(0, 1500)}\n\n`;
     }
 
     // 全パターンを構築（未完了のみ）
