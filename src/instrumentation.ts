@@ -21,6 +21,7 @@ export async function register() {
           for (const source of webSources) {
             await prisma.webSource.create({
               data: {
+                id: source.id || crypto.randomUUID(),
                 name: source.name,
                 url: source.url,
                 description: source.description,
@@ -51,6 +52,7 @@ export async function register() {
           for (const doc of documents) {
             await prisma.rAGDocument.create({
               data: {
+                id: doc.id || crypto.randomUUID(),
                 filename: doc.filename,
                 fileType: doc.fileType,
                 content: doc.content,
@@ -146,6 +148,7 @@ export async function register() {
               for (const asset of seedData.coreAssets) {
                 await prisma.coreAsset.create({
                   data: {
+                    id: asset.id || crypto.randomUUID(),
                     name: asset.name,
                     type: asset.type,
                     description: asset.description,
@@ -163,6 +166,7 @@ export async function register() {
               for (const service of seedData.coreServices) {
                 await prisma.coreService.create({
                   data: {
+                    id: service.id || crypto.randomUUID(),
                     name: service.name,
                     category: service.category,
                     description: service.description,

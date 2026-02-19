@@ -10,6 +10,9 @@
 - Playwright: `npx playwright test`
 - **UI変更時は必ずブラウザで実操作を確認**（APIが200返すだけでは不十分）
 
+## 報告ルール
+- **変更後は必ず該当ページのURLを提示すること**（例: `http://localhost:3006/me`）
+
 ## デプロイ（Azure）
 - RAGシードファイル: `prisma/seed-data/rag-documents.json`
 - 起動時にRAG 0件なら自動シード

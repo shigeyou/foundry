@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { generateWithClaude } from "@/lib/claude";
-import { PERSONALITY_OS, SYSTEM_PROMPT_ORE_NAVI } from "@/lib/personality-os";
+import { PERSONALITY_OS, SYSTEM_PROMPT_ORE_NAVI, ORE_NAVI_MODE_MODIFIERS } from "@/lib/personality-os";
 import { loadPersonalData, buildPersonalityPrompt } from "@/lib/personal-data-loader";
 import { checkAndIngestNewFiles } from "@/lib/auto-ingest";
 
@@ -85,7 +85,7 @@ interface OreNaviResult {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { question } = body;
+    const { question, mode } = body;
 
     if (!question || question.trim() === "") {
       return NextResponse.json(
@@ -147,10 +147,16 @@ ${question}
 上記の人格OS（プロフィール・価値観・運用モジュール）と会社の文脈を踏まえて、回答を生成してください。
 出力はJSON形式で。`;
 
+    // モード修飾子をシステムプロンプトに結合
+    const modeModifier = mode && ORE_NAVI_MODE_MODIFIERS[mode] ? ORE_NAVI_MODE_MODIFIERS[mode] : "";
+    const systemPrompt = modeModifier
+      ? `${SYSTEM_PROMPT_ORE_NAVI}\n\n${modeModifier}`
+      : SYSTEM_PROMPT_ORE_NAVI;
+
     const response = await generateWithClaude(
-      `${SYSTEM_PROMPT_ORE_NAVI}\n\n${userPrompt}`,
+      `${systemPrompt}\n\n${userPrompt}`,
       {
-        temperature: 0.9, // 多様性を高めるため0.7→0.9に変更
+        temperature: 0.9,
         maxTokens: 8000,
         jsonMode: true,
       }
