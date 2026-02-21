@@ -165,7 +165,9 @@ export async function syncWithManifest(): Promise<SyncResult> {
 
     // 削除検出: DBにあるがディレクトリにないファイルを全て削除
     // (マニフェストベースだけでなく、手動アップロードやシード経由の古いデータも対象)
+    // 注意: orenavi scopeのドキュメントは別管理なので除外
     const allDbDocs = await prisma.rAGDocument.findMany({
+      where: { scope: { not: "orenavi" } },
       select: { id: true, filename: true },
     });
     const currentFiles = new Set(Object.keys(newManifest));
@@ -265,6 +267,97 @@ export async function checkAndIngestNewFiles(): Promise<{
   ingested: string[];
 }> {
   return { checked: false, ingested: [] };
+}
+
+// ─── 俺ナビ専用ドキュメント インジェスト ───
+
+const ORE_NAVI_SOURCE_DIR = "C:\\Dev\\kaede_ver10\\agent_docs\\system_prompt";
+const ORE_NAVI_FILES = [
+  "Myプロフィール.md",
+  "My運用モジュール.md",
+  "My価値観.md",
+  "My回答ルール.md",
+];
+
+/**
+ * 俺ナビ専用の4ファイルをRAGにインジェスト（scope: "orenavi"）
+ * ハッシュベースで変更があった場合のみ更新
+ */
+export async function ingestOreNaviDocuments(): Promise<{
+  created: string[];
+  updated: string[];
+  skipped: string[];
+  errors: string[];
+}> {
+  const result = { created: [] as string[], updated: [] as string[], skipped: [] as string[], errors: [] as string[] };
+
+  if (!fs.existsSync(ORE_NAVI_SOURCE_DIR)) {
+    console.log("[OreNavi-Ingest] ディレクトリが見つかりません:", ORE_NAVI_SOURCE_DIR);
+    return result;
+  }
+
+  for (const filename of ORE_NAVI_FILES) {
+    const filePath = path.join(ORE_NAVI_SOURCE_DIR, filename);
+
+    if (!fs.existsSync(filePath)) {
+      console.log(`[OreNavi-Ingest] ファイルなし: ${filename}`);
+      result.errors.push(filename);
+      continue;
+    }
+
+    try {
+      const content = fs.readFileSync(filePath, "utf-8").replace(/^\uFEFF/, "");
+      const currentHash = computeFileHash(filePath);
+
+      const existing = await prisma.rAGDocument.findFirst({
+        where: { filename, scope: "orenavi" },
+      });
+
+      if (existing) {
+        // ハッシュチェック: metadataにハッシュを保存
+        const existingMeta = existing.metadata ? JSON.parse(existing.metadata) : {};
+        if (existingMeta.hash === currentHash) {
+          result.skipped.push(filename);
+          continue;
+        }
+        await prisma.rAGDocument.update({
+          where: { id: existing.id },
+          data: { content, metadata: JSON.stringify({ hash: currentHash }) },
+        });
+        console.log(`[OreNavi-Ingest] 更新: ${filename} (${content.length} chars)`);
+        result.updated.push(filename);
+      } else {
+        const docId = `orenavi-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        await prisma.rAGDocument.create({
+          data: {
+            id: docId,
+            filename,
+            fileType: "md",
+            content,
+            scope: "orenavi",
+            metadata: JSON.stringify({ hash: currentHash }),
+          },
+        });
+        console.log(`[OreNavi-Ingest] 新規: ${filename} (${content.length} chars)`);
+        result.created.push(filename);
+      }
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      console.error(`[OreNavi-Ingest] エラー: ${filename} - ${msg}`);
+      result.errors.push(filename);
+    }
+  }
+
+  const actions = [
+    result.created.length > 0 ? `新規${result.created.length}` : "",
+    result.updated.length > 0 ? `更新${result.updated.length}` : "",
+    result.skipped.length > 0 ? `スキップ${result.skipped.length}` : "",
+  ].filter(Boolean);
+  if (actions.length > 0) {
+    console.log(`[OreNavi-Ingest] 完了: ${actions.join(", ")}`);
+  }
+
+  return result;
 }
 
 // ─── ファイル内容抽出 ───

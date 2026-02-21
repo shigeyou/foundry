@@ -377,3 +377,26 @@ export async function generateWithClaude(
 
   return content;
 }
+
+// Multi-turn chat generation function
+export async function generateChatWithClaude(
+  messages: Array<{ role: "system" | "user" | "assistant"; content: string }>,
+  options?: { temperature?: number; maxTokens?: number }
+): Promise<string> {
+  const response = await getClient().chat.completions.create({
+    model: process.env.AZURE_OPENAI_DEPLOYMENT || "gpt-4",
+    messages,
+    temperature: options?.temperature ?? 0.7,
+    max_completion_tokens: options?.maxTokens ?? 4000,
+  });
+
+  const choice = response.choices[0];
+  const content = choice?.message?.content;
+  if (!content) {
+    const finishReason = choice?.finish_reason ?? "no_choice";
+    console.error(`[generateChatWithClaude] No content. finish_reason=${finishReason}`);
+    throw new Error(`No response from AI (finish_reason: ${finishReason})`);
+  }
+
+  return content;
+}

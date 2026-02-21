@@ -1062,7 +1062,7 @@ export default function OreNaviPage() {
 
         {/* クイックアクセス - 常に表示（コンパクト） */}
         <div className="mb-4 w-full">
-          <div className="flex flex-wrap gap-2 mb-2 text-[11px]">
+          <div className="flex flex-wrap gap-2 mb-2 text-[14px]">
             {Object.entries(MODE_LABELS).map(([key, { label, color }]) => (
               <button
                 key={key}
@@ -1297,15 +1297,32 @@ export default function OreNaviPage() {
 
                 {/* 再生/一時停止（再生中のみ表示） */}
                 {isPlaying && (
-                  <button
-                    onClick={togglePlayPause}
-                    className="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors"
-                    title="一時停止"
-                  >
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
-                    </svg>
-                  </button>
+                  <>
+                    <button
+                      onClick={togglePlayPause}
+                      className="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors"
+                      title={isPaused ? "再開" : "一時停止"}
+                    >
+                      {isPaused ? (
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M8 5v14l11-7z" />
+                        </svg>
+                      ) : (
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
+                        </svg>
+                      )}
+                    </button>
+                    <button
+                      onClick={stopSpeech}
+                      className="p-2 bg-red-900/50 hover:bg-red-800/50 rounded-lg transition-colors text-red-400"
+                      title="停止"
+                    >
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M6 6h12v12H6z" />
+                      </svg>
+                    </button>
+                  </>
                 )}
 
                 {/* 速度スライダー */}

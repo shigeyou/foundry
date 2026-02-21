@@ -1,60 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { generateWithClaude } from "@/lib/claude";
-import { BATCH_PROMPT, normalizeScore, type DiscoveredNeed } from "@/lib/meta-finder-prompt";
+import {
+  BATCH_PROMPT,
+  normalizeScore,
+  type DiscoveredNeed,
+  businessThemes,
+  departments,
+  themeAngles,
+  deptContext,
+} from "@/lib/meta-finder-prompt";
 
-// テーマ定義（18テーマ）
-const businessThemes = [
-  // 【特別モード】
-  { id: "holistic", label: "全部入り（本質探索）" },
-
-  // 【A】事業・戦略
-  { id: "competitive", label: "競争優位・差別化" },
-  { id: "innovation", label: "新規事業・イノベーション" },
-  { id: "portfolio", label: "事業ポートフォリオ・資源配分" },
-
-  // 【B】オペレーション・基盤
-  { id: "efficiency", label: "業務効率化・コスト最適化" },
-  { id: "quality", label: "品質・安全・信頼性" },
-  { id: "offensive-dx", label: "攻めのDX" },
-  { id: "defensive-dx", label: "守りのDX" },
-
-  // 【C】人・組織・文化
-  { id: "org-design", label: "組織設計・権限委譲" },
-  { id: "leadership", label: "リーダーシップ・マネジメント力" },
-  { id: "talent", label: "人材獲得・育成・定着" },
-  { id: "culture", label: "組織文化・心理的安全性" },
-  { id: "engagement", label: "エンゲージメント・モチベーション" },
-
-  // 【D】意思決定・ガバナンス
-  { id: "decision", label: "意思決定の質・スピード" },
-  { id: "risk", label: "リスク管理・コンプライアンス" },
-
-  // 【E】外部関係・社会
-  { id: "customer", label: "顧客価値・関係深化" },
-  { id: "partnership", label: "パートナー・エコシステム" },
-  { id: "sustainability", label: "環境対応・サステナビリティ" },
-];
-
-// 部門定義
-const departments = [
-  { id: "all", label: "全社" },
-  { id: "planning", label: "総合企画部" },
-  { id: "hr", label: "人事総務部" },
-  { id: "finance", label: "経理部" },
-  { id: "maritime-tech", label: "海洋技術事業部" },
-  { id: "simulator", label: "シミュレータ技術部" },
-  { id: "training", label: "海技訓練事業部" },
-  { id: "cable", label: "ケーブル船事業部" },
-  { id: "offshore-training", label: "オフショア船訓練事業部" },
-  { id: "ocean", label: "海洋事業部" },
-  { id: "wind", label: "洋上風力部" },
-  { id: "onsite", label: "オンサイト事業部" },
-  { id: "maritime-ops", label: "海事業務部" },
-  { id: "newbuild", label: "新造船PM事業本部" },
-];
-
-// 単一パターンの探索を実行
+// 単一パターンの探索を実行（テーマ別視点・部門別文脈を注入）
 async function explorePattern(
   themeId: string,
   themeName: string,
@@ -62,19 +19,28 @@ async function explorePattern(
   deptName: string,
   documentContext: string
 ): Promise<DiscoveredNeed[]> {
+  const themeAngle = themeAngles[themeId] || "";
+  const deptCtx = deptContext[deptId] || "";
+
   const userPrompt = `${documentContext}
 
 ## 追加の指示
-探索テーマ：${themeName}
-対象部門：${deptName}
 
-上記のテーマと対象について、本質的な課題と打ち手を発見してください。`;
+### 探索テーマ：${themeName}
+${themeAngle}
+
+### 対象部門：${deptName}
+${deptCtx}
+
+上記のテーマと部門の文脈を深く理解した上で、
+この組み合わせでしか出てこない固有の課題と打ち手を発見してください。
+「どのテーマ・部門でも言えること」は除外し、この組み合わせならではの施策に集中してください。`;
 
   const response = await generateWithClaude(
     `${BATCH_PROMPT}\n\n${userPrompt}`,
     {
-      temperature: 0.7,
-      maxTokens: 4000,
+      temperature: 0.8,
+      maxTokens: 6000,
       jsonMode: true,
     }
   );
@@ -119,8 +85,9 @@ async function runBatchInBackground(batchId: string) {
 
     console.log(`[MetaFinder Batch] Starting/Resuming: ${completedPatterns}/${batch.totalPatterns} done, ${completedSet.size} patterns in DB`);
 
-    // RAGドキュメントを取得
+    // RAGドキュメントを取得（俺ナビ専用を除外）
     const ragDocuments = await prisma.rAGDocument.findMany({
+      where: { scope: { not: "orenavi" } },
       select: { filename: true, content: true },
     });
 
@@ -134,7 +101,30 @@ async function runBatchInBackground(batchId: string) {
 
     let documentContext = "## 分析対象ドキュメント\n\n";
     for (const doc of ragDocuments) {
-      documentContext += `### ${doc.filename}\n${doc.content.slice(0, 1500)}\n\n`;
+      documentContext += `### ${doc.filename}\n${doc.content.slice(0, 3000)}\n\n`;
+    }
+
+    // SWOT分析結果を取得・注入
+    const swot = await prisma.defaultSwot.findFirst();
+    if (swot) {
+      documentContext += `## SWOT分析（自社の戦略的位置づけ）
+
+### 強み（Strengths）
+${swot.strengths}
+
+### 弱み（Weaknesses）
+${swot.weaknesses}
+
+### 機会（Opportunities）
+${swot.opportunities}
+
+### 脅威（Threats）
+${swot.threats}
+${swot.summary ? `\n### SWOT総括\n${swot.summary}` : ""}
+
+**上記のSWOT分析を踏まえ、強みを活かし弱みを補う施策、機会を捉え脅威に備える施策を優先的に提案してください。**
+
+`;
     }
 
     // 全パターンを構築（未完了のみ）
@@ -150,7 +140,8 @@ async function runBatchInBackground(batchId: string) {
 
     console.log(`[MetaFinder Batch] ${pendingPatterns.length} patterns remaining`);
 
-    // 並列数（Azure OpenAI RPM制限に応じて調整）
+    // 並列数: 各パターン約12,500トークン(入力+出力) x 10 = 125,000 TPM
+    // Azure制限を超える場合は6-8に減らすこと
     const CONCURRENCY = 10;
 
     // チャンク単位で並列実行

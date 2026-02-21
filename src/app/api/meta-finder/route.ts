@@ -38,8 +38,9 @@ export async function POST(req: NextRequest) {
     const deptId = body.deptId || "all";
     const deptName = body.deptName || "全社";
 
-    // docs/summaries/ からドキュメントを取得
+    // docs/summaries/ からドキュメントを取得（俺ナビ専用を除外）
     const ragDocuments = await prisma.rAGDocument.findMany({
+      where: { scope: { not: "orenavi" } },
       select: {
         filename: true,
         content: true,
@@ -59,7 +60,31 @@ export async function POST(req: NextRequest) {
       documentContext += `### ${doc.filename}\n${doc.content.slice(0, 5000)}\n\n`;
     }
 
-    const userPrompt = `${documentContext}
+    // SWOT分析結果を取得・注入
+    const swot = await prisma.defaultSwot.findFirst();
+    let swotContext = "";
+    if (swot) {
+      swotContext = `## SWOT分析（自社の戦略的位置づけ）
+
+### 強み（Strengths）
+${swot.strengths}
+
+### 弱み（Weaknesses）
+${swot.weaknesses}
+
+### 機会（Opportunities）
+${swot.opportunities}
+
+### 脅威（Threats）
+${swot.threats}
+${swot.summary ? `\n### SWOT総括\n${swot.summary}` : ""}
+
+**上記のSWOT分析を踏まえ、強みを活かし弱みを補う施策、機会を捉え脅威に備える施策を優先的に提案してください。**
+
+`;
+    }
+
+    const userPrompt = `${documentContext}${swotContext}
 
 ${additionalContext ? `## 追加の指示\n${additionalContext}` : "## 指示\n上記のドキュメントを分析し、最も価値のある課題と打ち手を発見してください。"}`;
 

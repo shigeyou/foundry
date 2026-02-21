@@ -112,22 +112,35 @@ export async function POST(req: NextRequest) {
       console.log(`[OreNavi] Using default PERSONALITY_OS`);
     }
 
-    // RAGドキュメントを取得（会社の文脈）
+    // RAGドキュメントを取得（共通 + 俺ナビ専用）
     const ragDocuments = await prisma.rAGDocument.findMany({
+      where: { scope: { in: ["shared", "orenavi"] } },
       select: {
         filename: true,
         content: true,
+        scope: true,
       },
     });
 
     // ドキュメントをプロンプト用にフォーマット
-    let companyContext = "## 会社の文脈（RAGドキュメントより）\n\n";
-    if (ragDocuments.length > 0) {
-      for (const doc of ragDocuments) {
+    const sharedDocs = ragDocuments.filter(d => d.scope === "shared");
+    const oreNaviDocs = ragDocuments.filter(d => d.scope === "orenavi");
+
+    let companyContext = "";
+    if (sharedDocs.length > 0) {
+      companyContext += "## 会社の文脈（RAGドキュメントより）\n\n";
+      for (const doc of sharedDocs) {
         companyContext += `### ${doc.filename}\n${doc.content.slice(0, 3000)}\n\n`;
       }
-    } else {
-      companyContext += "（RAGドキュメントは未登録）\n\n";
+    }
+    if (oreNaviDocs.length > 0) {
+      companyContext += "## 俺ナビ専用ドキュメント\n\n";
+      for (const doc of oreNaviDocs) {
+        companyContext += `### ${doc.filename}\n${doc.content}\n\n`;
+      }
+    }
+    if (ragDocuments.length === 0) {
+      companyContext = "## 会社の文脈（RAGドキュメントより）\n\n（RAGドキュメントは未登録）\n\n";
     }
 
     const userPrompt = `${personalityPrompt}

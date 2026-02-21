@@ -160,6 +160,7 @@ model RAGDocument {
   fileType  String
   content   String
   metadata  String?
+  scope     String   @default("shared")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -323,4 +324,17 @@ model MetaFinderIdea {
   @@index([themeId])
   @@index([deptId])
   @@index([score])
+}
+
+// メタファインダー AIチャット保存
+model MetaFinderChat {
+  id        String   @id @default(cuid())
+  ideaId    String   // MetaFinderIdea.id（参照のみ、FK無し）
+  ideaName  String   // アイデア名（スナップショット）
+  themeName String
+  deptName  String
+  messages  String   // JSON: [{role, content}]
+  createdAt DateTime @default(now())
+
+  @@index([ideaId])
 }

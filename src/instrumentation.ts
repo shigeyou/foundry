@@ -339,8 +339,9 @@ export async function register() {
     } finally {
       // ingestディレクトリからの自動インジェスト
       // シードの成否に関わらず必ず起動する
-      void import("@/lib/auto-ingest").then(({ syncWithManifest, startIngestWatcher }) => {
+      void import("@/lib/auto-ingest").then(({ syncWithManifest, startIngestWatcher, ingestOreNaviDocuments }) => {
         syncWithManifest().catch((err) => console.error("[Auto-Ingest] 初回同期エラー:", err));
+        ingestOreNaviDocuments().catch((err) => console.error("[OreNavi-Ingest] 初回インジェストエラー:", err));
         startIngestWatcher();
       });
 

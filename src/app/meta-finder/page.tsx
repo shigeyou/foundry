@@ -4,6 +4,13 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { HomeButton } from "@/components/ui/home-button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { exportMetaFinderPdf } from "@/lib/export-pdf";
+import { IdeaChatDialog, type IdeaChatTarget } from "@/components/meta-finder/IdeaChatDialog";
+import {
+  businessThemes,
+  departments,
+  themeAngles,
+  deptContext,
+} from "@/lib/meta-finder-prompt";
 
 interface DiscoveredIdea {
   id: string;
@@ -15,6 +22,9 @@ interface DiscoveredIdea {
   customer: number;
   process: number;
   growth: number;
+  // ソース情報（どのセルから生まれたか）
+  themeName?: string;
+  deptName?: string;
 }
 
 interface MetaFinderResult {
@@ -88,38 +98,7 @@ const themeCategories = [
   { id: "external", label: "外部・社会", color: "bg-cyan-100 dark:bg-cyan-900/50 text-cyan-800 dark:text-cyan-200" },
 ];
 
-// 事業テーマ（行）- 18テーマ
-const businessThemes = [
-  // 【特別モード】
-  { id: "holistic", label: "全部入り（本質探索）", description: "特定の切り口に縛られず、最も本質的なことを探索する", category: "special" },
-
-  // 【A】事業・戦略
-  { id: "competitive", label: "競争優位・差別化", description: "他社にない強みをどう築くか、独自のポジショニング", category: "strategy" },
-  { id: "innovation", label: "新規事業・イノベーション", description: "新しい価値の創出、事業機会の発見、技術革新", category: "strategy" },
-  { id: "portfolio", label: "事業ポートフォリオ・資源配分", description: "何に集中し何を捨てるか、経営資源の最適配分", category: "strategy" },
-
-  // 【B】オペレーション・基盤
-  { id: "efficiency", label: "業務効率化・コスト最適化", description: "無駄の削減、プロセス改善、生産性向上", category: "operations" },
-  { id: "quality", label: "品質・安全・信頼性", description: "サービス品質、作業安全、顧客からの信頼", category: "operations" },
-  { id: "offensive-dx", label: "攻めのDX", description: "デジタル技術による新規事業創出・競争優位性確立・顧客体験向上", category: "operations" },
-  { id: "defensive-dx", label: "守りのDX", description: "デジタル技術による業務効率化・コスト削減・リスク低減・既存事業の強靭化", category: "operations" },
-
-  // 【C】人・組織・文化
-  { id: "org-design", label: "組織設計・権限委譲", description: "誰が何を決めどう動くか、組織構造と意思決定権限", category: "people" },
-  { id: "leadership", label: "リーダーシップ・マネジメント力", description: "管理職の質、部下育成力、チームを導く力", category: "people" },
-  { id: "talent", label: "人材獲得・育成・定着", description: "良い人材をどう集め、育て、辞めさせないか", category: "people" },
-  { id: "culture", label: "組織文化・心理的安全性", description: "本音が言える風土、失敗から学べる文化、信頼関係", category: "people" },
-  { id: "engagement", label: "エンゲージメント・モチベーション", description: "やる気と当事者意識、仕事への没頭、会社への愛着", category: "people" },
-
-  // 【D】意思決定・ガバナンス
-  { id: "decision", label: "意思決定の質・スピード", description: "正しく速く決められるか、データに基づく判断", category: "governance" },
-  { id: "risk", label: "リスク管理・コンプライアンス", description: "守るべきものを守る、法令遵守、内部統制", category: "governance" },
-
-  // 【E】外部関係・社会
-  { id: "customer", label: "顧客価値・関係深化", description: "顧客にとっての存在意義、関係性の強化", category: "external" },
-  { id: "partnership", label: "パートナー・エコシステム", description: "外部との協働、アライアンス、共創", category: "external" },
-  { id: "sustainability", label: "環境対応・サステナビリティ", description: "GX推進、環境負荷低減、長期的な社会価値", category: "external" },
-];
+// businessThemes, departments, themeAngles, deptContext は @/lib/meta-finder-prompt から import
 
 // カテゴリごとにテーマをグループ化
 const themesByCategory = themeCategories.map(cat => ({
@@ -127,243 +106,7 @@ const themesByCategory = themeCategories.map(cat => ({
   themes: businessThemes.filter(t => t.category === cat.id),
 }));
 
-// 部門（列）
-const departments = [
-  { id: "all", label: "全社", description: "全社共通で活用できる施策" },
-  { id: "planning", label: "総合企画部", description: "経営計画・予算編成・事業企画・DX推進企画" },
-  { id: "hr", label: "人事総務部", description: "採用・育成・労務・総務・安全衛生" },
-  { id: "finance", label: "経理部", description: "決算・予実管理・原価管理・内部統制" },
-  { id: "maritime-tech", label: "海洋技術事業部", description: "港湾・係留安全性検討・GXコンサル" },
-  { id: "simulator", label: "シミュレータ技術部", description: "シミュレータ維持管理・シナリオ開発" },
-  { id: "training", label: "海技訓練事業部", description: "操船・機関・荷役・DP訓練" },
-  { id: "cable", label: "ケーブル船事業部", description: "ケーブル船運航・船舶管理" },
-  { id: "offshore-training", label: "オフショア船訓練事業部", description: "DPコース・船種別コース運営" },
-  { id: "ocean", label: "海洋事業部", description: "研究船運航・観測支援" },
-  { id: "wind", label: "洋上風力部", description: "海域調査・O&M支援" },
-  { id: "onsite", label: "オンサイト事業部", description: "技術者派遣・艤装支援" },
-  { id: "maritime-ops", label: "海事業務部", description: "JG・GC/LC・許認可申請" },
-  { id: "newbuild", label: "新造船PM事業本部", description: "建造監理・技術PM・品質工程管理" },
-];
 
-// テーマ別の探索視点
-const themeAngles: Record<string, string> = {
-  // 【特別モード】
-  "holistic": `「全部入り」という名前は、逆説的に「何も縛らない」ことを意味します。
-
-コスト削減、売上拡大、リスク管理...といった個別の切り口には、それぞれの限界があります。
-その切り口に縛られている限り、見えないものがあるかもしれない。
-
-この探索では、以下の問いに正面から向き合ってください：
-
-**「この部門・この人にとって、今、最も本質的なことは何か？」**
-
-思考のヒント：
-- 「やるべきこと」ではなく「やめるべきこと」は何か？
-- 10年後に振り返ったとき、今最も重要だったと言えることは何か？
-- 表面的な課題の奥にある、本当の問題は何か？
-- 誰も言語化できていないが、皆が薄々感じていることは何か？
-- 「効率化」や「改善」を超えた、本質的な変化とは何か？
-
-正解は求めていません。
-むしろ「正解があるはず」という思い込みを手放し、
-この対象に対する深い洞察を得ることが目的です。`,
-
-  // 【A】事業・戦略
-  "competitive": `競争優位とは「選ばれる理由」です。
-価格で勝負するのか、品質で勝負するのか、スピードで勝負するのか。
-あるいは「この会社にしかできないこと」で勝負するのか。
-
-重要なのは「何で戦うか」を明確にし、そこにリソースを集中すること。
-すべてで勝とうとすると、どこでも勝てなくなります。
-
-この部門の強み、他社が真似できない資産は何か？
-それをどう磨き、どう活かすかを探索してください。`,
-
-  "innovation": `イノベーションは「ゼロから生み出す」だけでなく「既存の掛け合わせ」からも生まれます。
-この部門が持つ専門性と、他業界・他部門の知見を組み合わせることで、
-まだ誰も見たことのないサービスが生まれる可能性があります。
-
-「失敗しても学びになる」小さな実験を積み重ねられる仕組みも併せて考えてください。
-イノベーションの敵は「失敗を許さない文化」です。`,
-
-  "portfolio": `経営資源は有限です。人も、金も、時間も。
-だからこそ「何をやるか」より「何をやらないか」の判断が重要になります。
-
-成長事業に投資すべきか、成熟事業を守るべきか。
-撤退すべき事業はないか。買収すべき事業はないか。
-
-この部門において「もっと注力すべきこと」と「やめるべきこと」を探索してください。
-聖域なく、ゼロベースで考えることが大切です。`,
-
-  // 【B】オペレーション・基盤
-  "efficiency": `「本当に必要な作業は何か？」を問い直すところから始めてください。
-単なる自動化ではなく、そもそも不要な作業を見つけ出すことが最大のコスト削減です。
-
-「昔からやっているから」「誰かが始めたから」という理由だけで続けている作業はないか？
-人がやるべき仕事とシステムに任せるべき仕事の境界線を再定義してください。`,
-
-  "quality": `品質と安全は「当たり前」と思われがちですが、それを維持するコストは決して小さくありません。
-問題は、品質維持のための作業が属人化・形骸化していないかということです。
-
-「なぜこの手順が必要なのか」を常に問い直し、本質的な品質向上に集中できる環境を作る。
-現場の「気づき」を拾い上げ、組織的な改善につなげる仕組みを考えてください。`,
-
-  "offensive-dx": `攻めのDXとは、デジタル技術を「武器」として使い、競争優位性を築くことです。
-重要なのは「他社ができないこと」を見つけること。汎用的な効率化ツールでは差別化になりません。
-
-この部門ならではの専門性、データ、顧客接点を活かし、
-「この会社だからこそ提供できる価値」を生み出す施策を大胆に構想してください。`,
-
-  "defensive-dx": `守りのDXは地味に見えますが、経営の根幹を支える重要な取り組みです。
-ポイントは「今動いているものを止めない」ことと「将来の変化に備える」ことの両立。
-
-既存業務をデジタル化する際は、単なる電子化ではなく、
-業務フロー自体を見直す機会として捉え、「変化に強い仕組み」を設計してください。`,
-
-  // 【C】人・組織・文化
-  "org-design": `組織設計の本質は「誰が何を決められるか」を明確にすることです。
-
-権限が集中しすぎると意思決定が遅くなり、分散しすぎると統制が効かなくなる。
-現場に任せるべきことと、上が決めるべきことの境界線はどこにあるか？
-
-また、組織の「箱」だけでなく「つながり」も重要です。
-部門間の壁を越えて協働できる仕組みがあるか探索してください。`,
-
-  "leadership": `管理職の質が組織の命運を握ります。
-優秀なプレイヤーが優秀なマネージャーになるとは限らない。
-
-部下の強みを引き出せているか？成長機会を与えられているか？
-適切なフィードバックができているか？心理的安全性を作れているか？
-
-管理職の育成・支援・評価の仕組みに課題はないか探索してください。
-「名ばかり管理職」を作らない仕組みが必要です。`,
-
-  "talent": `「良い人が来ない」「良い人が辞める」—これは結果であって原因ではありません。
-
-なぜ来ないのか？—会社の魅力が伝わっていない？報酬が見合わない？成長機会がない？
-なぜ辞めるのか？—上司との関係？将来が見えない？仕事がつまらない？評価されない？
-
-採用・育成・評価・配置の一連の流れの中で、どこにボトルネックがあるか。
-「この会社で働きたい」「この会社で働き続けたい」と思わせる要素は何かを探索してください。`,
-
-  "culture": `組織文化は「空気」のようなもので、目に見えないが確実に行動に影響を与えます。
-
-本音が言えない空気はないか？失敗を責める文化はないか？
-挑戦より保身が優先される風土はないか？上に忖度する習慣はないか？
-
-心理的安全性がなければ、問題は隠され、改善は進まず、イノベーションは生まれません。
-「言いたいことが言える」「失敗しても学びに変えられる」組織を作るための施策を探索してください。`,
-
-  "engagement": `エンゲージメントが低い組織では、人は「仕事をこなす」だけになります。
-創意工夫は生まれず、問題を見ても見て見ぬふり、改善提案もしなくなる。
-
-エンゲージメントを高めるには：
-- 仕事の意味・目的が理解できているか
-- 自分の成長を実感できているか
-- 貢献が認められ、評価されているか
-- 仲間との信頼関係があるか
-- 将来の展望が見えているか
-
-これらの観点から、何が欠けているか、どう改善できるかを探索してください。`,
-
-  // 【D】意思決定・ガバナンス
-  "decision": `意思決定の質を上げるには、まず「何を決めるべきか」を明確にする必要があります。
-データは意思決定を支援しますが、データに意思決定を委ねてはいけません。
-
-選択肢の提示、リスクの可視化、シナリオの比較を通じて、
-経営者や現場リーダーが「腹を括る」ための判断材料を提供できる仕組みを考えてください。
-
-また、決めた後の実行とフォローアップも重要です。
-「決めっぱなし」になっていないか？振り返りと軌道修正の仕組みはあるか？`,
-
-  "risk": `リスク管理の本質は「想定外をなくすこと」ではなく「想定外に強くなること」です。
-完璧な予測は不可能ですが、早期発見・迅速対応・学習改善のサイクルは強化できます。
-
-また、コンプライアンスは「守り」に見えて、実は「攻め」の武器にもなります。
-「ルールを守る会社」から「ルールを使いこなす会社」への転換を支援する施策を考えてください。`,
-
-  // 【E】外部関係・社会
-  "customer": `顧客対応で最も価値があるのは「問い合わせを減らす」ことではなく「信頼を築く」ことです。
-
-顧客が本当に求めているものは何か？言葉にしていないニーズは何か？
-「また頼みたい」と思われる関係を築くには何が必要か？
-
-顧客の声を聴き、分析し、サービス改善につなげる仕組みを探索してください。
-顧客との接点を「コスト」ではなく「価値創造の機会」として捉え直すことが重要です。`,
-
-  "partnership": `一社だけでできることには限界があります。
-パートナーとの協働、アライアンス、エコシステムの構築が競争力の源泉になる時代です。
-
-どんなパートナーと組むべきか？何を自社でやり、何を外部に委ねるか？
-Win-Winの関係をどう構築し、維持するか？
-
-この部門において、外部との連携で生まれる新しい価値を探索してください。`,
-
-  "sustainability": `サステナビリティは「コスト」ではなく「投資」として捉えるべきフェーズに入っています。
-環境対応をビジネスチャンスに変える発想が求められます。
-
-CO2削減や資源効率化の取り組みを「見える化」し、顧客や社会への訴求価値に変換する。
-長期的な視点で、この部門が社会に提供できる価値は何かを探索してください。`,
-};
-
-// 部門別の文脈
-const deptContext: Record<string, string> = {
-  "all": `全社横断で活用できる施策を構想してください。
-部門を超えた情報共有、全社共通の課題解決、組織文化の変革につながるものを優先します。
-特定部門でのパイロット運用から始めて、成功事例を横展開する流れも視野に入れてください。`,
-
-  "planning": `総合企画部は会社の羅針盤です。
-経営計画の策定、予算編成、事業ポートフォリオの最適化、そしてDX推進の司令塔としての役割を担います。
-全社の情報が集まるこの部門だからこそ見える課題、この部門だからこそできる変革があるはずです。`,
-
-  "hr": `人事総務部は「人」に関わるすべての窓口です。
-採用・育成・評価・労務管理から、安全衛生、福利厚生まで幅広い業務を担います。
-従業員一人ひとりの成長と、組織全体のパフォーマンス向上を両立させる視点で考えてください。`,
-
-  "finance": `経理部は会社の健康状態を数字で表現する部門です。
-決算、予実管理、原価管理、内部統制と、正確性と迅速性の両方が求められます。
-数字の裏にあるストーリーを読み解き、経営判断に活かせる情報を提供する役割も担います。`,
-
-  "maritime-tech": `海洋技術事業部は、港湾・係留の安全性検討やGXコンサルティングを手がけます。
-高度な技術的専門性と、それを分かりやすく伝えるコミュニケーション力の両方が求められます。
-技術力を「顧客の安心」に変換するプロセスをAIで強化する可能性を探ってください。`,
-
-  "simulator": `シミュレータ技術部は、訓練用シミュレータの維持管理とシナリオ開発を担います。
-リアリティのある訓練環境を提供し、安全な失敗と学びの機会を創出する重要な役割です。
-AIを活用して、より効果的な訓練シナリオを生成したり、訓練結果を分析する可能性を考えてください。`,
-
-  "training": `海技訓練事業部は、操船・機関・荷役・DP訓練を提供します。
-実践的なスキルを安全に習得させることが使命であり、教育効果の最大化が常に求められます。
-訓練生の理解度に応じたカスタマイズや、訓練記録の活用にAIが貢献できる余地があります。`,
-
-  "cable": `ケーブル船事業部は、海底ケーブル敷設船の運航・船舶管理を行います。
-特殊な技術と長期間の洋上作業を伴うプロジェクトが多く、計画性と柔軟性の両立が鍵です。
-遠隔地からの船舶状況把握や、乗組員のサポートにAIを活用できる可能性を探ってください。`,
-
-  "offshore-training": `オフショア船訓練事業部は、DPコースや船種別コースの運営を担います。
-高度な専門性を持つ受講生に対し、実践的かつ効率的な訓練を提供することが求められます。
-コース運営の効率化と訓練品質の向上をAIでどう実現できるか考えてください。`,
-
-  "ocean": `海洋事業部は、研究船の運航と観測支援を行います。
-科学者や研究機関との協働が多く、正確なデータ収集と柔軟な運航計画が求められます。
-研究支援の高度化や、観測データの活用にAIが貢献できる可能性を探ってください。`,
-
-  "wind": `洋上風力部は、成長市場である洋上風力発電の海域調査やO&M支援を手がけます。
-新しい市場でのポジション確立と、他社との差別化が重要なフェーズです。
-洋上風力特有の課題解決にAIを活用し、競争優位を築く方法を考えてください。`,
-
-  "onsite": `オンサイト事業部は、造船所・船主・海運会社への技術者派遣や艤装支援を行います。
-顧客先での信頼構築と、技術者一人ひとりのパフォーマンス向上が事業の根幹です。
-派遣技術者のサポートや、顧客との関係強化にAIを活用する可能性を探ってください。`,
-
-  "maritime-ops": `海事業務部は、JG検査対応、GC/LC発給、各種許認可申請など、海事に関わる手続き業務を担います。
-専門知識と正確性が求められる業務であり、法規制の変更への対応も欠かせません。
-複雑な手続きの効率化や、ナレッジの蓄積にAIを活用できる可能性を考えてください。`,
-
-  "newbuild": `新造船PM事業本部は、建造監理、技術PM、品質工程管理を一貫して担う大規模部門です。
-複数の造船所、多岐にわたるステークホルダー、長期にわたるプロジェクトを管理します。
-プロジェクト全体の見える化や、リスクの早期発見にAIを活用する可能性を探ってください。`,
-};
 
 // プロンプト生成関数
 function generatePrompt(themeId: string, deptId: string): string {
@@ -408,17 +151,17 @@ ${themeAngle}
 }
 
 export default function MetaFinderPage() {
-  // 単発探索用の状態
+  // 単発探索用の状態（複数セル選択対応）
   const [result, setResult] = useState<MetaFinderResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const [selectedTheme, setSelectedTheme] = useState<string | null>(null);
-  const [selectedDept, setSelectedDept] = useState<string | null>(null);
+  const [selectedCells, setSelectedCells] = useState<Set<string>>(new Set());
   const [expandedIdea, setExpandedIdea] = useState<string | null>(null);
   const [generatedPrompt, setGeneratedPrompt] = useState<string>("");
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const [multiExploreProgress, setMultiExploreProgress] = useState<{ current: number; total: number } | null>(null);
 
   // フリーテキストプロンプト
   const [freePrompt, setFreePrompt] = useState<string>("");
@@ -433,6 +176,10 @@ export default function MetaFinderPage() {
   const [batchActiveTab, setBatchActiveTab] = useState<"top" | "theme" | "dept">("top");
   const [batchExpandedIdea, setBatchExpandedIdea] = useState<string | null>(null);
   const [selectedBatchId, setSelectedBatchId] = useState<string | null>(null);
+
+  // AIチャット用の状態
+  const [chatIdea, setChatIdea] = useState<IdeaChatTarget | null>(null);
+  const [chatOpen, setChatOpen] = useState(false);
 
   // プログレスバーのシミュレーション（easeIn: 最初ゆっくり→後半加速）
   useEffect(() => {
@@ -472,22 +219,51 @@ export default function MetaFinderPage() {
     };
   }, [loading]);
 
-  // セル選択時の処理（プロンプト表示のみ）
+  // セルキーのヘルパー
+  const cellKey = (themeId: string, deptId: string) => `${themeId}::${deptId}`;
+  const parseCell = (key: string) => {
+    const [themeId, deptId] = key.split("::");
+    return { themeId, deptId };
+  };
+
+  // セル選択時の処理（複数選択対応・トグル式）
   const handleCellClick = (themeId: string, deptId: string) => {
     if (loading) return;
 
-    setSelectedTheme(themeId);
-    setSelectedDept(deptId);
+    const key = cellKey(themeId, deptId);
     setResult(null);
     setError(null);
 
-    const prompt = generatePrompt(themeId, deptId);
-    setGeneratedPrompt(prompt);
+    setSelectedCells(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      // プロンプトプレビューは最後に選択したセルのもの
+      if (next.size > 0) {
+        const lastKey = Array.from(next).pop()!;
+        const { themeId: lastTheme, deptId: lastDept } = parseCell(lastKey);
+        setGeneratedPrompt(generatePrompt(lastTheme, lastDept));
+      } else {
+        setGeneratedPrompt("");
+      }
+      return next;
+    });
   };
 
-  // 探索実行
+  // 選択解除
+  const clearSelection = () => {
+    setSelectedCells(new Set());
+    setGeneratedPrompt("");
+    setResult(null);
+    setError(null);
+  };
+
+  // 探索実行（複数セル対応：順次探索→結果統合）
   const handleExplore = async () => {
-    if (loading || !generatedPrompt) return;
+    if (loading || selectedCells.size === 0) return;
 
     // 既存のリクエストをキャンセル
     if (abortControllerRef.current) {
@@ -497,51 +273,77 @@ export default function MetaFinderPage() {
 
     setLoading(true);
     setError(null);
+    setResult(null);
+
+    const cells = Array.from(selectedCells).map(parseCell);
+    const allIdeas: DiscoveredIdea[] = [];
+    const allThinkingProcesses: string[] = [];
+    const allSummaries: string[] = [];
+    setMultiExploreProgress({ current: 0, total: cells.length });
 
     try {
-      const res = await fetch("/api/meta-finder", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          additionalContext: generatedPrompt,
-          themeId: selectedTheme,
-          themeName: selectedThemeObj?.label,
-          deptId: selectedDept,
-          deptName: selectedDeptObj?.label,
-        }),
-        signal: abortControllerRef.current.signal,
-      });
+      for (let i = 0; i < cells.length; i++) {
+        if (abortControllerRef.current.signal.aborted) break;
 
-      if (!res.ok) {
+        const { themeId, deptId } = cells[i];
+        const theme = businessThemes.find(t => t.id === themeId);
+        const dept = departments.find(d => d.id === deptId);
+        const prompt = generatePrompt(themeId, deptId);
+
+        setMultiExploreProgress({ current: i, total: cells.length });
+
+        const res = await fetch("/api/meta-finder", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            additionalContext: prompt,
+            themeId,
+            themeName: theme?.label || themeId,
+            deptId,
+            deptName: dept?.label || deptId,
+          }),
+          signal: abortControllerRef.current.signal,
+        });
+
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.error || `分析に失敗しました（${theme?.label} × ${dept?.label}）`);
+        }
+
         const data = await res.json();
-        throw new Error(data.error || "分析に失敗しました");
+        const ideas: DiscoveredIdea[] = (data.needs || []).map((need: { id: string; name: string; description: string; reason: string; financial: number; customer: number; process: number; growth: number }) => ({
+          id: need.id,
+          name: need.name,
+          description: need.description,
+          reason: need.reason,
+          financial: need.financial,
+          customer: need.customer,
+          process: need.process,
+          growth: need.growth,
+          themeName: theme?.label || themeId,
+          deptName: dept?.label || deptId,
+        }));
+        allIdeas.push(...ideas);
+        if (data.thinkingProcess) allThinkingProcesses.push(`【${theme?.label} × ${dept?.label}】\n${data.thinkingProcess}`);
+        if (data.summary) allSummaries.push(`[${theme?.label} × ${dept?.label}] ${data.summary}`);
+
+        // 途中経過を表示
+        setResult({
+          ideas: [...allIdeas],
+          thinkingProcess: allThinkingProcesses.join("\n\n---\n\n"),
+          summary: allSummaries.join("\n"),
+        });
       }
 
-      const data = await res.json();
-      // APIレスポンスを新しい形式に変換（BSC 4視点）
-      const ideas: DiscoveredIdea[] = (data.needs || []).map((need: { id: string; name: string; description: string; reason: string; financial: number; customer: number; process: number; growth: number }) => ({
-        id: need.id,
-        name: need.name,
-        description: need.description,
-        reason: need.reason,
-        financial: need.financial,
-        customer: need.customer,
-        process: need.process,
-        growth: need.growth,
-      }));
-      setResult({
-        ideas,
-        thinkingProcess: data.thinkingProcess,
-        summary: data.summary,
-      });
+      setMultiExploreProgress({ current: cells.length, total: cells.length });
     } catch (err) {
       if (err instanceof Error && err.name === "AbortError") {
-        // キャンセルは正常処理
         return;
       }
       setError(err instanceof Error ? err.message : "エラーが発生しました");
     } finally {
       setLoading(false);
+      setMultiExploreProgress(null);
     }
   };
 
@@ -550,8 +352,7 @@ export default function MetaFinderPage() {
     if (loading || !freePrompt.trim()) return;
 
     // マトリクス選択をクリア
-    setSelectedTheme(null);
-    setSelectedDept(null);
+    setSelectedCells(new Set());
     setGeneratedPrompt("");
 
     if (abortControllerRef.current) {
@@ -706,7 +507,7 @@ export default function MetaFinderPage() {
     const confirmed = confirm(
       "全マトリックス探索を開始しますか？\n\n" +
       "・18テーマ × 14部門 = 252パターン\n" +
-      "・推定所要時間: 約4時間\n" +
+      "・推定所要時間: 約6時間\n" +
       "・就寝前の実行を推奨します"
     );
 
@@ -828,8 +629,16 @@ export default function MetaFinderPage() {
     return scoreB - scoreA;
   });
 
-  const selectedThemeObj = businessThemes.find(t => t.id === selectedTheme);
-  const selectedDeptObj = departments.find(d => d.id === selectedDept);
+  // 選択中セルの情報を取得
+  const selectedCellsList = Array.from(selectedCells).map(key => {
+    const { themeId, deptId } = parseCell(key);
+    return {
+      themeId,
+      deptId,
+      theme: businessThemes.find(t => t.id === themeId),
+      dept: departments.find(d => d.id === deptId),
+    };
+  });
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-slate-900 transition-colors">
@@ -1070,7 +879,7 @@ export default function MetaFinderPage() {
                           className="p-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 cursor-pointer"
                           onClick={() => setBatchExpandedIdea(batchExpandedIdea === idea.id ? null : idea.id)}
                         >
-                          <div className="flex items-start gap-3">
+                          <div className="flex items-start gap-3" style={{ zoom: 1.2 }}>
                             <div className="flex-shrink-0 w-7 h-7 flex items-center justify-center bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400 rounded-full font-bold text-xs">
                               {index + 1}
                             </div>
@@ -1091,9 +900,11 @@ export default function MetaFinderPage() {
                                   {idea.deptName}
                                 </span>
                               </div>
+                          </div>
+                          </div>
 
                               {batchExpandedIdea === idea.id && (
-                                <div className="mt-2 space-y-2 text-xs text-slate-600 dark:text-slate-300">
+                                <div className="mt-2 space-y-2 text-xs text-slate-600 dark:text-slate-300" style={{ zoom: 1.4 }}>
                                   <div>
                                     <span className="font-medium text-slate-500 dark:text-slate-400">概要</span>
                                     <p className="mt-0.5">{idea.description}</p>
@@ -1126,10 +937,33 @@ export default function MetaFinderPage() {
                                     <span>⚙️業務 {idea.process}/5</span>
                                     <span>🌱成長 {idea.growth}/5</span>
                                   </div>
+                                  <div className="pt-2">
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setChatIdea({
+                                          id: idea.id,
+                                          name: idea.name,
+                                          description: idea.description,
+                                          actions: idea.actions,
+                                          reason: idea.reason,
+                                          themeName: idea.themeName,
+                                          deptName: idea.deptName,
+                                          financial: idea.financial,
+                                          customer: idea.customer,
+                                          process: idea.process,
+                                          growth: idea.growth,
+                                          score: idea.score,
+                                        });
+                                        setChatOpen(true);
+                                      }}
+                                      className="px-3 py-1.5 bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/50 dark:hover:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-lg text-xs font-medium transition-colors"
+                                    >
+                                      💬 AIに質問
+                                    </button>
+                                  </div>
                                 </div>
                               )}
-                            </div>
-                          </div>
                         </div>
                       ))}
                     </div>
@@ -1153,7 +987,7 @@ export default function MetaFinderPage() {
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
               探索マトリックス
               <span className="text-sm font-normal text-gray-500 dark:text-gray-400 ml-2">
-                セルをクリックして個別探索
+                セルをクリックして選択（複数選択可）
               </span>
             </h2>
             <button
@@ -1169,7 +1003,7 @@ export default function MetaFinderPage() {
                 ? "開始中..."
                 : latestBatch?.status === "running"
                 ? `🌙 実行中 ${batchProgressPercent}%`
-                : "🌙 全探索（252通り・約4時間）"}
+                : "🌙 全探索（252通り・約6時間）"}
             </button>
           </div>
 
@@ -1221,8 +1055,7 @@ export default function MetaFinderPage() {
                       </td>
                       {/* 各部門のセル */}
                       {departments.map((dept) => {
-                        const isSelected = selectedTheme === theme.id && selectedDept === dept.id;
-                        const isLoading = isSelected && loading;
+                        const isSelected = selectedCells.has(cellKey(theme.id, dept.id));
                         return (
                           <td
                             key={`${theme.id}-${dept.id}`}
@@ -1230,18 +1063,10 @@ export default function MetaFinderPage() {
                               isSelected
                                 ? "bg-blue-500 dark:bg-blue-600 ring-2 ring-blue-400 ring-offset-1"
                                 : "bg-white dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-900/30"
-                            } ${loading && !isSelected ? "opacity-50 cursor-not-allowed" : ""}`}
+                            } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
                             onClick={() => handleCellClick(theme.id, dept.id)}
                           >
-                            {isLoading ? (
-                              <div className="flex items-center justify-center">
-                                <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
-                              </div>
-                            ) : isSelected && result ? (
-                              <span className="text-white font-bold text-sm">
-                                {result.ideas.length}
-                              </span>
-                            ) : isSelected ? (
+                            {isSelected ? (
                               <span className="text-white text-lg">✓</span>
                             ) : (
                               <span className="text-gray-300 dark:text-slate-600 text-lg">•</span>
@@ -1258,45 +1083,68 @@ export default function MetaFinderPage() {
         </div>
 
         {/* 選択情報と探索ボタン（表の直下） */}
-        {selectedTheme && selectedDept && !result && (
-          <div className="flex items-center gap-8 mb-6 flex-wrap">
-            {/* 選択情報 */}
-            <div className="flex items-center gap-3 flex-wrap">
-              <span className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg text-sm font-bold shadow-sm">
-                {selectedThemeObj?.label}
-              </span>
-              <span className="text-gray-400 dark:text-gray-500">×</span>
-              <span className="px-4 py-2 text-white rounded-lg text-sm font-bold shadow-sm bg-gradient-to-r from-emerald-500 to-emerald-600">
-                {selectedDeptObj?.label}
-              </span>
+        {selectedCells.size > 0 && !result && (
+          <div className="mb-6">
+            {/* 選択中のセル一覧 */}
+            <div className="flex items-start gap-4 flex-wrap mb-3">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  選択中 ({selectedCells.size}件):
+                </span>
+                {selectedCellsList.map(({ themeId, deptId, theme, dept }) => (
+                  <span
+                    key={cellKey(themeId, deptId)}
+                    className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 rounded-lg text-xs font-medium"
+                  >
+                    {theme?.label} × {dept?.label}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCellClick(themeId, deptId);
+                      }}
+                      className="ml-1 text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-200"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+                <button
+                  onClick={clearSelection}
+                  className="px-2 py-1 text-xs text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+                >
+                  全解除
+                </button>
+              </div>
             </div>
 
             {/* 探索ボタン */}
-            <button
-              onClick={handleExplore}
-              disabled={loading}
-              className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-xl font-bold text-lg shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 transition-all duration-300 disabled:cursor-not-allowed flex items-center gap-3"
-            >
-              {loading ? (
-                <>
-                  <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div>
-                  <span>探索中...</span>
-                </>
-              ) : (
-                <>
-                  <span>🚀</span>
-                  <span>探索を開始</span>
-                </>
-              )}
-            </button>
-            {loading && (
+            <div className="flex items-center gap-4">
               <button
-                onClick={handleCancel}
-                className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-xl font-medium transition-colors flex items-center gap-2"
+                onClick={handleExplore}
+                disabled={loading}
+                className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-xl font-bold text-lg shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 transition-all duration-300 disabled:cursor-not-allowed flex items-center gap-3"
               >
-                キャンセル
+                {loading ? (
+                  <>
+                    <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div>
+                    <span>探索中... {multiExploreProgress ? `(${multiExploreProgress.current + 1}/${multiExploreProgress.total})` : ""}</span>
+                  </>
+                ) : (
+                  <>
+                    <span>🚀</span>
+                    <span>{selectedCells.size === 1 ? "探索を開始" : `${selectedCells.size}件を一括探索`}</span>
+                  </>
+                )}
               </button>
-            )}
+              {loading && (
+                <button
+                  onClick={handleCancel}
+                  className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-xl font-medium transition-colors flex items-center gap-2"
+                >
+                  キャンセル
+                </button>
+              )}
+            </div>
           </div>
         )}
 
@@ -1308,6 +1156,11 @@ export default function MetaFinderPage() {
               <div>
                 <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
                   AIがバックグラウンドで探索中...
+                  {multiExploreProgress && multiExploreProgress.total > 1 && (
+                    <span className="ml-2 font-normal">
+                      ({multiExploreProgress.current + 1}/{multiExploreProgress.total} パターン目)
+                    </span>
+                  )}
                 </p>
                 <p className="text-xs text-blue-600/70 dark:text-blue-400/70">
                   RAGドキュメントと会社の文脈を参照しながら、アイデアを検討しています
@@ -1327,7 +1180,7 @@ export default function MetaFinderPage() {
         )}
 
         {/* プロンプト表示エリア（処理中は非表示） */}
-        {selectedTheme && selectedDept && !result && !loading && (
+        {selectedCells.size > 0 && !result && !loading && (
           <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-6 mb-6">
             {/* プロンプト内容 */}
             <div className="bg-slate-50 dark:bg-slate-900 rounded-lg p-5 border border-slate-200 dark:border-slate-700">
@@ -1356,17 +1209,19 @@ export default function MetaFinderPage() {
           <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-6">
             {/* Summary */}
             <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg border border-blue-200 dark:border-blue-800 p-4 mb-6">
-              <div className="flex items-center gap-3 mb-3">
-                {selectedThemeObj ? (
-                  <>
-                    <span className="px-3 py-1 bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200 rounded-full text-sm font-medium">
-                      {selectedThemeObj.label}
+              <div className="flex items-center gap-3 mb-3 flex-wrap">
+                {selectedCellsList.length > 0 ? (
+                  selectedCellsList.map(({ themeId, deptId, theme, dept }) => (
+                    <span key={cellKey(themeId, deptId)} className="inline-flex items-center gap-1">
+                      <span className="px-2 py-1 bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-200 rounded-full text-xs font-medium">
+                        {theme?.label}
+                      </span>
+                      <span className="text-gray-400 text-xs">×</span>
+                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-emerald-100 dark:bg-emerald-800 text-emerald-800 dark:text-emerald-200">
+                        {dept?.label}
+                      </span>
                     </span>
-                    <span className="text-gray-400">×</span>
-                    <span className="px-3 py-1 rounded-full text-sm font-medium bg-emerald-100 dark:bg-emerald-800 text-emerald-800 dark:text-emerald-200">
-                      {selectedDeptObj?.label}
-                    </span>
-                  </>
+                  ))
                 ) : (
                   <span className="px-3 py-1 bg-indigo-100 dark:bg-indigo-800 text-indigo-800 dark:text-indigo-200 rounded-full text-sm font-medium">
                     フリー探索
@@ -1398,7 +1253,7 @@ export default function MetaFinderPage() {
                     className="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-lg cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
                     onClick={() => setExpandedIdea(isExpanded ? null : idea.id)}
                   >
-                    <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-start justify-between gap-4" style={{ zoom: 1.2 }}>
                       <div className="flex items-start gap-3 flex-1">
                         <span className="text-lg font-bold text-blue-600 dark:text-blue-400 mt-0.5">
                           #{index + 1}
@@ -1407,6 +1262,17 @@ export default function MetaFinderPage() {
                           <h3 className="font-semibold text-slate-800 dark:text-slate-200">
                             {idea.name}
                           </h3>
+                          {idea.themeName && idea.deptName && (
+                            <div className="flex items-center gap-1.5 mt-1">
+                              <span className="px-1.5 py-0.5 text-xs bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 rounded">
+                                {idea.themeName}
+                              </span>
+                              <span className="text-gray-400 text-xs">×</span>
+                              <span className="px-1.5 py-0.5 text-xs bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 rounded">
+                                {idea.deptName}
+                              </span>
+                            </div>
+                          )}
                           {!isExpanded && (
                             <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 line-clamp-2">
                               {idea.description}
@@ -1430,7 +1296,7 @@ export default function MetaFinderPage() {
                     </div>
 
                     {isExpanded && (
-                      <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-600 space-y-3 text-sm">
+                      <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-600 space-y-3 text-sm" style={{ zoom: 1.4 }}>
                         <div>
                           <span className="font-medium text-slate-600 dark:text-slate-400">概要</span>
                           <p className="text-slate-700 dark:text-slate-300 mt-1">{idea.description}</p>
@@ -1452,6 +1318,32 @@ export default function MetaFinderPage() {
                           <span className="px-2 py-1 bg-orange-100 dark:bg-orange-900/50 text-orange-700 dark:text-orange-300 rounded text-xs">
                             🌱成長: {idea.growth}/5
                           </span>
+                        </div>
+                        <div className="pt-2">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const ideaScore = (idea.financial + idea.customer + idea.process + idea.growth) / 4;
+                              setChatIdea({
+                                id: idea.id,
+                                name: idea.name,
+                                description: idea.description,
+                                actions: null,
+                                reason: idea.reason,
+                                themeName: idea.themeName || selectedCellsList[0]?.theme?.label || "",
+                                deptName: idea.deptName || selectedCellsList[0]?.dept?.label || "",
+                                financial: idea.financial,
+                                customer: idea.customer,
+                                process: idea.process,
+                                growth: idea.growth,
+                                score: ideaScore,
+                              });
+                              setChatOpen(true);
+                            }}
+                            className="px-3 py-1.5 bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/50 dark:hover:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-lg text-xs font-medium transition-colors"
+                          >
+                            💬 AIに質問
+                          </button>
                         </div>
                       </div>
                     )}
@@ -1475,8 +1367,7 @@ export default function MetaFinderPage() {
               <button
                 onClick={() => {
                   setResult(null);
-                  setSelectedTheme(null);
-                  setSelectedDept(null);
+                  setSelectedCells(new Set());
                   setGeneratedPrompt("");
                 }}
                 className="px-4 py-2 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium transition-colors"
@@ -1487,6 +1378,15 @@ export default function MetaFinderPage() {
           </div>
         )}
       </main>
+
+      {/* AIチャットダイアログ */}
+      {chatIdea && (
+        <IdeaChatDialog
+          idea={chatIdea}
+          open={chatOpen}
+          onOpenChange={setChatOpen}
+        />
+      )}
     </div>
   );
 }
