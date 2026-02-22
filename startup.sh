@@ -1,10 +1,9 @@
 #!/bin/bash
 
-# Restore node_modules if Oryx moved them
-# Oryx startup script: extracts node_modules.tar.gz to /node_modules,
-# renames original ./node_modules to ./_del_node_modules,
-# then symlinks ./node_modules -> /node_modules
-# We need to undo this because standalone build has its own node_modules
+# Undo Oryx node_modules extraction
+# Oryx: extracts node_modules.tar.gz to /node_modules, moves original to _del_node_modules,
+# symlinks ./node_modules -> /node_modules, sets NODE_PATH="/node_modules"
+# We must undo ALL of this for standalone build to work correctly
 if [ -d _del_node_modules ]; then
     echo "Restoring original node_modules (undoing Oryx node_modules extraction)..."
     rm -rf node_modules 2>/dev/null || unlink node_modules 2>/dev/null
@@ -12,6 +11,18 @@ if [ -d _del_node_modules ]; then
     echo "Restored node_modules from _del_node_modules"
     ls node_modules/ | head -10
 fi
+
+# Clear Oryx's /node_modules to prevent NODE_PATH conflicts
+# Oryx sets NODE_PATH="/node_modules" which causes Node to find incomplete packages there
+if [ -d /node_modules ] && [ -d node_modules ]; then
+    echo "Clearing Oryx /node_modules to prevent NODE_PATH conflicts..."
+    rm -rf /node_modules
+    mkdir -p /node_modules
+fi
+
+# Reset NODE_PATH to use only local node_modules
+export NODE_PATH="$(pwd)/node_modules"
+export PATH="$(pwd)/node_modules/.bin:$PATH"
 
 # Create data directory
 mkdir -p /home/data
