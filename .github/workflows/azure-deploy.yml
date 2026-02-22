@@ -183,26 +183,48 @@ jobs:
             -H "Authorization: Bearer ${TOKEN}" \
             -w "\nHTTP Status: %{http_code}\n" || true
 
-      - name: Deploy ZIP package
+      - name: Deploy ZIP package via Kudu API
         run: |
-          az webapp deploy \
-            --resource-group rg-ocreader-japaneast \
-            --name ${{ env.AZURE_WEBAPP_NAME }} \
-            --src-path deploy.zip \
-            --type zip \
-            --clean true \
-            --restart true \
-            --timeout 1800
+          KUDU_URL="https://${{ env.AZURE_WEBAPP_NAME }}.scm.azurewebsites.net"
+          TOKEN=$(az account get-access-token --resource https://management.azure.com/ --query accessToken -o tsv)
+          echo "Uploading deploy.zip ($(du -h deploy.zip | cut -f1)) to Kudu..."
+          HTTP_STATUS=$(curl -s -w "%{http_code}" -o /tmp/deploy-response.txt \
+            -X POST "${KUDU_URL}/api/zipdeploy?isAsync=true" \
+            -H "Authorization: Bearer ${TOKEN}" \
+            -H "Content-Type: application/zip" \
+            --data-binary @deploy.zip \
+            --max-time 600)
+          echo "Upload HTTP Status: $HTTP_STATUS"
+          cat /tmp/deploy-response.txt || true
+          if [ "$HTTP_STATUS" != "202" ] && [ "$HTTP_STATUS" != "200" ]; then
+            echo "ERROR: ZIP upload failed with status $HTTP_STATUS"
+            exit 1
+          fi
+          # Poll deployment status
+          echo "Polling deployment status..."
+          for i in $(seq 1 60); do
+            sleep 10
+            DEPLOY_STATUS=$(curl -s "${KUDU_URL}/api/deployments/latest" \
+              -H "Authorization: Bearer ${TOKEN}" | jq -r '.status // "unknown"')
+            echo "Attempt $i: Deployment status = $DEPLOY_STATUS"
+            if [ "$DEPLOY_STATUS" = "4" ]; then
+              echo "Deployment succeeded!"
+              break
+            elif [ "$DEPLOY_STATUS" = "3" ]; then
+              echo "ERROR: Deployment failed"
+              curl -s "${KUDU_URL}/api/deployments/latest" -H "Authorization: Bearer ${TOKEN}" | jq .
+              exit 1
+            fi
+          done
 
       - name: Wait for site to be ready
         run: |
           echo "Waiting for site to start..."
           sleep 60
-          for i in {1..10}; do
+          for i in {1..15}; do
             STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://molmat-foundry.azurewebsites.net/)
-            # Accept 200 (OK), 401 (Auth required), 302 (Redirect to login) as valid responses
             if [ "$STATUS" = "200" ] || [ "$STATUS" = "401" ] || [ "$STATUS" = "302" ]; then
-              echo "Site is up! Status: $STATUS (401/302 expected when Azure AD auth is enabled)"
+              echo "Site is up! Status: $STATUS"
               exit 0
             fi
             echo "Attempt $i: Status $STATUS, retrying in 30s..."
