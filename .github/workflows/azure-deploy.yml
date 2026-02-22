@@ -146,8 +146,7 @@ jobs:
             --name ${{ env.AZURE_WEBAPP_NAME }} \
             --settings \
               DATABASE_URL="file:/home/data/foundry.db" \
-              SCM_DO_BUILD_DURING_DEPLOYMENT="false" \
-              WEBSITE_RUN_FROM_PACKAGE="0"
+              SCM_DO_BUILD_DURING_DEPLOYMENT="false"
 
       - name: Wait for SCM to stabilize
         run: |
@@ -179,9 +178,7 @@ jobs:
             --type zip \
             --clean true \
             --restart true \
-            --async true \
-            --timeout 1800 \
-            --track-status false
+            --timeout 1800
 
       - name: Wait for site to be ready
         run: |

@@ -3,7 +3,14 @@ set -e
 
 echo "=== Foundry startup ==="
 echo "PWD: $(pwd)"
+echo "=== wwwroot contents ==="
+ls -la | head -25
+echo "=== node_modules check ==="
 echo "node_modules type: $(stat -c %F node_modules 2>/dev/null || echo 'missing')"
+if [ -L node_modules ]; then
+    echo "node_modules symlink target: $(readlink node_modules)"
+    echo "target exists: $(test -d "$(readlink node_modules)" && echo YES || echo NO)"
+fi
 
 # Handle Oryx node_modules extraction
 # Oryx may: extract node_modules.tar.gz to /node_modules, move original to _del_node_modules,
