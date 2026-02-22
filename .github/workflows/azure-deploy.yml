@@ -151,6 +151,19 @@ jobs:
           echo "Waiting 60 seconds for SCM container to stabilize after config changes..."
           sleep 60
 
+      - name: Clean stale files before deploy
+        run: |
+          # Use Kudu API to remove stale symlinks and Oryx artifacts
+          # Azure ZIP deploy can't overwrite symlinks with directories
+          KUDU_URL="https://${{ env.AZURE_WEBAPP_NAME }}.scm.azurewebsites.net"
+          TOKEN=$(az account get-access-token --resource https://management.azure.com/ --query accessToken -o tsv)
+          # Run cleanup command via Kudu command API
+          curl -s -X POST "${KUDU_URL}/api/command" \
+            -H "Authorization: Bearer ${TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d '{"command":"cd /home/site/wwwroot && if [ -L node_modules ]; then echo Removing_stale_symlink; unlink node_modules; fi && rm -f oryx-manifest.toml node_modules.tar.gz _del_node_modules 2>/dev/null; echo DONE","dir":"/home/site/wwwroot"}' \
+            2>&1 || echo "Kudu cleanup skipped"
+
       - name: Deploy to Azure Web App
         run: |
           az webapp deploy \

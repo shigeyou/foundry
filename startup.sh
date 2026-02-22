@@ -5,12 +5,13 @@ echo "=== Foundry startup ==="
 echo "PWD: $(pwd)"
 echo "node_modules type: $(stat -c %F node_modules 2>/dev/null || echo 'missing')"
 
-# Undo Oryx node_modules extraction
-# Oryx: extracts node_modules.tar.gz to /node_modules, moves original to _del_node_modules,
-# symlinks ./node_modules -> /node_modules, sets NODE_PATH="/node_modules"
+# Fix node_modules - handle all Oryx scenarios:
+# 1. _del_node_modules exists: Oryx moved our real node_modules there, restore it
+# 2. node_modules is a symlink to /node_modules: leftover from previous Oryx run
+# 3. node_modules is a real directory: already correct
+
 if [ -d _del_node_modules ]; then
-    echo "Restoring original node_modules..."
-    # Remove symlink (not -rf, which would follow it)
+    echo "Restoring original node_modules from _del_node_modules..."
     if [ -L node_modules ]; then
         unlink node_modules
     elif [ -e node_modules ]; then
@@ -19,14 +20,32 @@ if [ -d _del_node_modules ]; then
     mv _del_node_modules node_modules
     echo "Restored. Contents:"
     ls node_modules/ | head -15
+elif [ -L node_modules ]; then
+    # node_modules is a stale symlink (e.g. -> /node_modules from previous Oryx deploy)
+    target=$(readlink node_modules)
+    echo "node_modules is a symlink -> $target"
+    if [ -d "$target" ] && [ -f "$target/next/package.json" ]; then
+        # Symlink target has our packages (ZIP deployed into symlink target)
+        echo "Symlink target has packages, converting to real directory..."
+        unlink node_modules
+        cp -r "$target" node_modules
+        echo "Converted. Contents:"
+        ls node_modules/ | head -15
+    else
+        # Stale symlink with no useful content - remove it
+        echo "Stale symlink, removing..."
+        unlink node_modules
+        echo "ERROR: No valid node_modules found. ZIP deploy may have failed."
+        ls -la | head -20
+    fi
 fi
 
-# Prevent Oryx from doing this again on next restart
+# Prevent Oryx from extracting node_modules on next restart
 rm -f node_modules.tar.gz oryx-manifest.toml 2>/dev/null || true
 
 # Override NODE_PATH - Oryx sets it to /node_modules which has incomplete packages
 export NODE_PATH=""
-echo "NODE_PATH cleared. node_modules/next exists: $(ls node_modules/next/package.json 2>/dev/null && echo YES || echo NO)"
+echo "node_modules/next exists: $(ls node_modules/next/package.json 2>/dev/null && echo YES || echo NO)"
 
 # Create data directory
 mkdir -p /home/data
