@@ -120,8 +120,12 @@ jobs:
           find .next/standalone -type l ! -exec test -e {} \; -delete -print | head -20
           echo "Copying standalone with symlink resolution..."
           cp -rL .next/standalone deploy-pkg
+          # Remove pnpm internal store - not needed at runtime, saves ~100MB
+          rm -rf deploy-pkg/node_modules/.pnpm
           echo "=== node_modules contents ==="
           ls deploy-pkg/node_modules/ | head -20
+          echo "=== node_modules size ==="
+          du -sh deploy-pkg/node_modules/
           echo "=== next package check ==="
           ls deploy-pkg/node_modules/next/package.json && echo "next: OK" || echo "next: MISSING"
           echo "Creating ZIP..."
