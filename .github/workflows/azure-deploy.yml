@@ -68,27 +68,30 @@ jobs:
           # Copy database file (used as seed for first deploy)
           mkdir -p .next/standalone/data
           cp dev.db .next/standalone/data/dev.db
+          # Debug: check standalone node_modules
+          echo "=== Standalone node_modules check ==="
+          ls .next/standalone/node_modules/ | head -20 || echo "No node_modules in standalone"
+          ls .next/standalone/node_modules/next/package.json 2>/dev/null && echo "next: OK" || echo "next: MISSING"
+          echo "=== End check ==="
+          # Ensure next is in standalone (pnpm symlinks may not be followed by Next.js output tracing)
+          if [ ! -f ".next/standalone/node_modules/next/package.json" ]; then
+            echo "Copying next package to standalone..."
+            cp -rL node_modules/next .next/standalone/node_modules/
+          fi
           # Copy prisma for schema sync on startup (pnpm uses symlinks)
-          mkdir -p .next/standalone/node_modules
-          # Debug: show prisma locations
-          echo "=== Prisma locations ==="
-          ls -la node_modules/ | grep -i prisma || echo "No prisma in node_modules root"
-          ls -la node_modules/.pnpm/ | grep -i prisma | head -5 || echo "No prisma in .pnpm"
-          echo "=== End prisma locations ==="
-          # Copy prisma CLI (follow symlinks)
           for pkg in prisma @prisma; do
             if [ -e "node_modules/$pkg" ]; then
-              mkdir -p ".next/standalone/node_modules/$(dirname $pkg)"
-              cp -rL "node_modules/$pkg" ".next/standalone/node_modules/$pkg"
-              echo "Copied $pkg"
+              if [ ! -e ".next/standalone/node_modules/$pkg" ]; then
+                mkdir -p ".next/standalone/node_modules/$(dirname $pkg)"
+                cp -rL "node_modules/$pkg" ".next/standalone/node_modules/$pkg"
+                echo "Copied $pkg to standalone"
+              fi
             fi
           done
           # Copy .prisma generated client if it exists
-          if [ -d "node_modules/.prisma" ]; then
+          if [ -d "node_modules/.prisma" ] && [ ! -d ".next/standalone/node_modules/.prisma" ]; then
             cp -rL node_modules/.prisma .next/standalone/node_modules/
             echo "Copied .prisma"
-          else
-            echo ".prisma not in node_modules (using src/generated instead)"
           fi
           # Copy startup script
           cp startup.sh .next/standalone/startup.sh
