@@ -114,12 +114,12 @@ jobs:
 
       - name: Create deployment package (resolve symlinks)
         run: |
-          # Copy standalone to a clean directory, resolving all symlinks
           # pnpm output tracing leaves symlinks that break when extracted from ZIP
+          # First remove broken symlinks, then copy with -rL to resolve valid ones
+          echo "Removing broken symlinks..."
+          find .next/standalone -type l ! -exec test -e {} \; -delete -print | head -20
           echo "Copying standalone with symlink resolution..."
           cp -rL .next/standalone deploy-pkg
-          echo "=== Symlinks remaining ==="
-          find deploy-pkg -type l | head -5 || echo "None"
           echo "=== node_modules contents ==="
           ls deploy-pkg/node_modules/ | head -20
           echo "=== next package check ==="
