@@ -60,6 +60,25 @@ next-env.d.ts
 # demo videos
 demo-video/
 
+# deployment artifacts
+deploy.zip
+create-zip.ps1
+
+# azure logs
+azure-logs*.zip
+azure-logs*/
+
+# test screenshots & audio
+test-*.png
+test-*.mp3
+Devfoundrytest-*.png
+
+# temporary data files
+tmp-*.json
+
+# batch files
+tmp-batch*.json
+
 # RAG ingest directory (keep README only)
 /ingest/*
 !/ingest/README.txt
