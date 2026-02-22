@@ -1,5 +1,18 @@
 #!/bin/bash
 
+# Restore node_modules if Oryx moved them
+# Oryx startup script: extracts node_modules.tar.gz to /node_modules,
+# renames original ./node_modules to ./_del_node_modules,
+# then symlinks ./node_modules -> /node_modules
+# We need to undo this because standalone build has its own node_modules
+if [ -d _del_node_modules ]; then
+    echo "Restoring original node_modules (undoing Oryx node_modules extraction)..."
+    rm -rf node_modules 2>/dev/null || unlink node_modules 2>/dev/null
+    mv _del_node_modules node_modules
+    echo "Restored node_modules from _del_node_modules"
+    ls node_modules/ | head -10
+fi
+
 # Create data directory
 mkdir -p /home/data
 
