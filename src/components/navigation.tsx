@@ -2,26 +2,28 @@
 
 import { useApp, TabType } from "@/contexts/AppContext";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { LanguageSwitcher } from "@/components/language-switcher";
 import { useState, useEffect } from "react";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 
 interface TabItem {
   id: TabType;
-  label: string;
+  labelKey: string;
 }
 
 // ツール固有の導入タブ
-const introTab: TabItem = { id: "intro", label: "はじめに" };
+const introTab: TabItem = { id: "intro", labelKey: "intro" };
 
 // 個別設定（ユーザーごと）
 const personalTabs: TabItem[] = [
-  { id: "score", label: "スコア設定" },
-  { id: "explore", label: "勝ち筋探索" },
-  { id: "ranking", label: "ランキング" },
-  { id: "strategies", label: "シン・勝ち筋の探求" },
-  { id: "insights", label: "インサイト" },
-  { id: "summary", label: "まとめ" },
-  { id: "history", label: "探索履歴" },
+  { id: "score", labelKey: "score" },
+  { id: "explore", labelKey: "explore" },
+  { id: "ranking", labelKey: "ranking" },
+  { id: "strategies", labelKey: "strategies" },
+  { id: "insights", labelKey: "insights" },
+  { id: "summary", labelKey: "summary" },
+  { id: "history", labelKey: "history" },
 ];
 
 // ビューポート幅に基づくフォントサイズを計算（タブが1行に収まるよう調整）
@@ -75,9 +77,13 @@ interface NavigationProps {
   title?: string;
 }
 
-export function Navigation({ title = "勝ち筋ファインダー" }: NavigationProps) {
+export function Navigation({ title }: NavigationProps) {
   const { activeTab, setActiveTab, explorationStatus, evolveStatus, autoExploreStatus, metaAnalysisStatus } = useApp();
   const fontSizes = useResponsiveFontSize();
+  const t = useTranslations("finderNav");
+  const tn = useTranslations("nav");
+  const tc = useTranslations("common");
+  const displayTitle = title || tn("finder");
 
   return (
     <header className="border-b border-blue-300 dark:border-blue-800 bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-800 dark:to-blue-900">
@@ -118,17 +124,17 @@ export function Navigation({ title = "勝ち筋ファインダー" }: Navigation
                   <path d="M11 20.5c0-1.5 0.5-2 1-3 0.5 1 1 1.5 1 3" fill="url(#flameNavInner)" stroke="none" />
                 </svg>
               </span>
-              <span className="text-white text-sm font-medium hidden sm:inline group-hover:-translate-x-0.5 transition-transform">← 戻る</span>
+              <span className="text-white text-sm font-medium hidden sm:inline group-hover:-translate-x-0.5 transition-transform">{tc("back")}</span>
             </Link>
             <button
               onClick={() => setActiveTab("explore")}
               className="text-left hover:opacity-80"
             >
               <p className="text-blue-100 dark:text-blue-200 text-xs">
-                企業の勝ち筋をAIで探索する
+                {tn("finderSubtitle")}
               </p>
               <p className="font-bold text-white dark:text-white text-lg whitespace-nowrap">
-                {title}
+                {displayTitle}
               </p>
             </button>
           </div>
@@ -145,7 +151,7 @@ export function Navigation({ title = "勝ち筋ファインダー" }: Navigation
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
-              <span className="text-slate-100 whitespace-nowrap">共通設定</span>
+              <span className="text-slate-100 whitespace-nowrap">{tn("commonSettings")}</span>
             </Link>
 
             {/* セパレーター */}
@@ -161,7 +167,7 @@ export function Navigation({ title = "勝ち筋ファインダー" }: Navigation
               }`}
               style={{ fontSize: fontSizes.tabFont, paddingLeft: fontSizes.tabPadding, paddingRight: fontSizes.tabPadding }}
             >
-              {introTab.label}
+              {t(introTab.labelKey)}
             </button>
 
             {/* セパレーター */}
@@ -172,7 +178,7 @@ export function Navigation({ title = "勝ち筋ファインダー" }: Navigation
               <span
                 className="text-yellow-200 dark:text-yellow-300 px-1 whitespace-nowrap"
                 style={{ fontSize: fontSizes.labelFont }}
-              >個人</span>
+              >{tn("personal")}</span>
               {personalTabs.map((item) => {
                 const isActive = activeTab === item.id;
                 const isExploring = item.id === "explore" && explorationStatus === "running";
@@ -191,7 +197,7 @@ export function Navigation({ title = "勝ち筋ファインダー" }: Navigation
                     }`}
                     style={{ fontSize: fontSizes.tabFont, paddingLeft: fontSizes.tabPadding, paddingRight: fontSizes.tabPadding }}
                   >
-                    {item.label}
+                    {t(item.labelKey)}
                     {showIndicator && (
                       <span className="absolute -top-1 -right-1 flex h-3 w-3">
                         <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${
@@ -207,7 +213,8 @@ export function Navigation({ title = "勝ち筋ファインダー" }: Navigation
               })}
             </div>
 
-            <div className="ml-2">
+            <div className="ml-2 flex items-center gap-1">
+              <LanguageSwitcher />
               <ThemeToggle />
             </div>
           </nav>

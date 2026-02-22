@@ -338,10 +338,9 @@ export async function GET(req: NextRequest) {
       orderBy: { startedAt: "desc" },
     });
 
-    // 全バッチ一覧
+    // 全バッチ一覧（全件返却）
     const batches = await prisma.metaFinderBatch.findMany({
       orderBy: { startedAt: "desc" },
-      take: 10,
       select: {
         id: true,
         status: true,

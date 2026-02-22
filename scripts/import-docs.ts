@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import crypto from "crypto";
 import pdfParse from "pdf-parse";
 import JSZip from "jszip";
 import { PrismaClient } from "../src/generated/prisma";
@@ -66,6 +67,7 @@ async function importDocument(filePath: string) {
 
   const doc = await prisma.rAGDocument.create({
     data: {
+      id: crypto.randomUUID(),
       filename,
       fileType: ext,
       content,

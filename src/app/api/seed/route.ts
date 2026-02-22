@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import crypto from "crypto";
 import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import fs from "fs";
@@ -94,6 +95,7 @@ export async function POST(request: NextRequest) {
           for (const doc of documents) {
             await prisma.rAGDocument.create({
               data: {
+                id: crypto.randomUUID(),
                 filename: doc.filename,
                 fileType: doc.fileType,
                 content: doc.content,
@@ -172,6 +174,7 @@ export async function POST(request: NextRequest) {
             for (const asset of seedData.coreAssets) {
               await prisma.coreAsset.create({
                 data: {
+                  id: crypto.randomUUID(),
                   name: asset.name,
                   type: asset.type,
                   description: asset.description,
@@ -186,6 +189,7 @@ export async function POST(request: NextRequest) {
             for (const service of seedData.coreServices) {
               await prisma.coreService.create({
                 data: {
+                  id: crypto.randomUUID(),
                   name: service.name,
                   category: service.category,
                   description: service.description,

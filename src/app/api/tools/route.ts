@@ -5,7 +5,8 @@ import type { FinderConfig, DrafterConfig, SimulatorConfig } from '@foundry/core
 
 type ToolType = 'finders' | 'drafters' | 'simulators';
 
-function loadConfigs<T extends { order?: number }>(type: ToolType): T[] {
+// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-constraint
+function loadConfigs<T>(type: ToolType): T[] {
   const configDir = path.join(process.cwd(), 'src', 'configs', type);
 
   if (!fs.existsSync(configDir)) {
@@ -20,7 +21,7 @@ function loadConfigs<T extends { order?: number }>(type: ToolType): T[] {
   });
 
   // Sort by order property (ascending), items without order go last
-  return configs.sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
+  return configs.sort((a, b) => ((a as any).order ?? 999) - ((b as any).order ?? 999));
 }
 
 export async function GET() {

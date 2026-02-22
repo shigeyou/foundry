@@ -16,12 +16,14 @@ type AudioState = {
   isPlaying: boolean;
   isPaused: boolean;
   currentSection: string | null;
+  error: string | null;
   // キュー状態
   queueStatus: {
     total: number;
     ready: number;
     generating: number;
     pending: number;
+    error: number;
   };
 };
 
@@ -39,7 +41,8 @@ class OreNaviAudioManager {
     isPlaying: false,
     isPaused: false,
     currentSection: null,
-    queueStatus: { total: 0, ready: 0, generating: 0, pending: 0 },
+    error: null,
+    queueStatus: { total: 0, ready: 0, generating: 0, pending: 0, error: 0 },
   };
   private listeners: Set<StateListener> = new Set();
   private speechSpeed: number = 140;
@@ -66,11 +69,12 @@ class OreNaviAudioManager {
   }
 
   private updateQueueStatus() {
-    let ready = 0, generating = 0, pending = 0;
+    let ready = 0, generating = 0, pending = 0, error = 0;
     for (const status of this.sectionStatus.values()) {
       if (status === "ready") ready++;
       else if (status === "generating") generating++;
       else if (status === "pending") pending++;
+      else if (status === "error") error++;
     }
     this.updateState({
       queueStatus: {
@@ -78,6 +82,7 @@ class OreNaviAudioManager {
         ready,
         generating,
         pending,
+        error,
       },
     });
   }
@@ -183,6 +188,8 @@ class OreNaviAudioManager {
     await this.runWithConcurrency(tasks, this.concurrencyLimit);
   }
 
+  private lastGenerationError: string | null = null;
+
   private async generateAudio(text: string): Promise<string | null> {
     try {
       const res = await fetch("/api/speech", {
@@ -191,11 +198,23 @@ class OreNaviAudioManager {
         body: JSON.stringify({ text, rate: this.speechSpeed }),
       });
 
-      if (!res.ok) return null;
+      if (!res.ok) {
+        try {
+          const errorData = await res.json();
+          this.lastGenerationError = errorData.error || `HTTP ${res.status}`;
+        } catch {
+          this.lastGenerationError = `HTTP ${res.status}`;
+        }
+        console.error(`[OreNaviAudio] Speech generation failed: ${this.lastGenerationError}`);
+        return null;
+      }
 
+      this.lastGenerationError = null;
       const blob = await res.blob();
       return URL.createObjectURL(blob);
-    } catch {
+    } catch (err) {
+      this.lastGenerationError = err instanceof Error ? err.message : "ネットワークエラー";
+      console.error(`[OreNaviAudio] Speech generation error:`, err);
       return null;
     }
   }
@@ -203,7 +222,10 @@ class OreNaviAudioManager {
   private async streamingPlayback() {
     if (!this.audio) return;
 
-    this.updateState({ isPlaying: true });
+    this.updateState({ isPlaying: true, error: null });
+
+    let consecutiveErrors = 0;
+    let playedAny = false;
 
     while (this.currentIndex < this.sections.length && !this.stopRequested) {
       const section = this.sections[this.currentIndex];
@@ -212,12 +234,36 @@ class OreNaviAudioManager {
       let url = this.audioCache.get(section);
 
       if (!url) {
+        // セクションのステータスを確認 - errorなら待たずにスキップ
+        const sectionStatus = this.sectionStatus.get(section);
+        if (sectionStatus === "error") {
+          consecutiveErrors++;
+          // 全セクションがエラーの場合は早期停止
+          if (consecutiveErrors >= this.sections.length) {
+            const errorMsg = this.lastGenerationError || "音声生成に失敗しました";
+            console.error(`[OreNaviAudio] All sections failed: ${errorMsg}`);
+            this.updateState({
+              isPlaying: false,
+              isPaused: false,
+              currentSection: null,
+              error: errorMsg,
+            });
+            return;
+          }
+          this.currentIndex++;
+          continue;
+        }
+
         // 生成完了を待つ（ポーリング）
         const maxWait = 60000; // 最大60秒待機
         const pollInterval = 100;
         let waited = 0;
 
         while (!url && waited < maxWait && !this.stopRequested) {
+          // エラーになったら待機中止
+          const currentStatus = this.sectionStatus.get(section);
+          if (currentStatus === "error") break;
+
           await new Promise((resolve) => setTimeout(resolve, pollInterval));
           url = this.audioCache.get(section);
           waited += pollInterval;
@@ -226,12 +272,29 @@ class OreNaviAudioManager {
 
       if (url && !this.stopRequested) {
         this.updateState({ currentSection: section });
+        consecutiveErrors = 0;
+        playedAny = true;
 
         // 再生完了を待つ
         const playbackComplete = await this.playAndWaitForEnd(url);
 
         if (!playbackComplete && this.stopRequested) {
           break;
+        }
+      } else if (!this.stopRequested) {
+        consecutiveErrors++;
+        // 連続3セクション失敗 or 全セクションエラーで早期停止
+        const { error: errorCount } = this.state.queueStatus;
+        if (consecutiveErrors >= 3 || errorCount >= this.sections.length) {
+          const errorMsg = this.lastGenerationError || "音声生成に失敗しました";
+          console.error(`[OreNaviAudio] Too many errors, stopping: ${errorMsg}`);
+          this.updateState({
+            isPlaying: false,
+            isPaused: false,
+            currentSection: null,
+            error: errorMsg,
+          });
+          return;
         }
       }
 
@@ -316,7 +379,8 @@ class OreNaviAudioManager {
       isPlaying: false,
       isPaused: false,
       currentSection: null,
-      queueStatus: { total: 0, ready: 0, generating: 0, pending: 0 },
+      error: null,
+      queueStatus: { total: 0, ready: 0, generating: 0, pending: 0, error: 0 },
     });
   }
 

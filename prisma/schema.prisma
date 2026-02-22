@@ -326,6 +326,21 @@ model MetaFinderIdea {
   @@index([score])
 }
 
+// メタファインダー レポート
+model MetaFinderReport {
+  id        String   @id
+  batchId   String
+  scope     String   // "all" | 部門ID
+  scopeName String   // "全社" | 部門名
+  sections  String   // JSON: { executiveSummary, issues, solutions, strategies }
+  status    String   @default("pending") // pending, generating, completed, failed
+  error     String?
+  createdAt DateTime @default(now())
+
+  @@index([batchId])
+  @@index([scope])
+}
+
 // メタファインダー AIチャット保存
 model MetaFinderChat {
   id        String   @id @default(cuid())

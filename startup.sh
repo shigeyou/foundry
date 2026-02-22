@@ -4,13 +4,13 @@
 mkdir -p /home/data
 
 # Copy initial database if not exists
-if [ ! -f /home/data/kachisuji.db ]; then
-    cp data/dev.db /home/data/kachisuji.db
+if [ ! -f /home/data/foundry.db ]; then
+    cp data/dev.db /home/data/foundry.db
     echo "Copied initial database"
 fi
 
 # Set database URL for the app
-export DATABASE_URL="file:/home/data/kachisuji.db"
+export DATABASE_URL="file:/home/data/foundry.db"
 
 # Sync database schema (ignore errors)
 # Use node_modules directly to avoid permission issues with npx

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import crypto from "crypto";
 import { prisma } from "@/lib/db";
 
 export async function GET() {
@@ -30,6 +31,7 @@ export async function POST(request: NextRequest) {
 
     const service = await prisma.coreService.create({
       data: {
+        id: crypto.randomUUID(),
         name: name.trim(),
         category: category?.trim() || null,
         description: description?.trim() || null,

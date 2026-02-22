@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import crypto from "crypto";
 import { prisma } from "@/lib/db";
 
 // CSVをパース
@@ -65,6 +66,7 @@ export async function POST(request: NextRequest) {
         }
         await prisma.coreService.create({
           data: {
+            id: crypto.randomUUID(),
             name: row.name.trim(),
             category: row.category?.trim() || null,
             description: row.description?.trim() || null,
@@ -82,6 +84,7 @@ export async function POST(request: NextRequest) {
         }
         await prisma.coreAsset.create({
           data: {
+            id: crypto.randomUUID(),
             name: row.name.trim(),
             type: row.type.trim(),
             description: row.description?.trim() || null,

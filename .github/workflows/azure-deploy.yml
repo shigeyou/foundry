@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 env:
-  AZURE_WEBAPP_NAME: kachisuji-finder
+  AZURE_WEBAPP_NAME: molmat-foundry
   NODE_VERSION: '20.x'
 
 jobs:
@@ -72,7 +72,7 @@ jobs:
           cp startup.sh .next/standalone/startup.sh
           chmod +x .next/standalone/startup.sh
           # Create package.json for Azure App Service
-          echo '{"name":"kachisuji-finder","version":"1.0.0","scripts":{"start":"node server.js"}}' > .next/standalone/package.json
+          echo '{"name":"foundry","version":"1.0.0","scripts":{"start":"node server.js"}}' > .next/standalone/package.json
 
       - name: Create deployment package
         run: |
@@ -93,7 +93,7 @@ jobs:
           az webapp config appsettings set \
             --resource-group rg-ocreader-japaneast \
             --name ${{ env.AZURE_WEBAPP_NAME }} \
-            --settings DATABASE_URL="file:/home/data/kachisuji.db" SCM_DO_BUILD_DURING_DEPLOYMENT="false"
+            --settings DATABASE_URL="file:/home/data/foundry.db" SCM_DO_BUILD_DURING_DEPLOYMENT="false"
 
       - name: Wait for SCM to stabilize
         run: |
@@ -118,7 +118,7 @@ jobs:
           echo "Waiting for site to start..."
           sleep 60
           for i in {1..10}; do
-            STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://kachisuji-finder.azurewebsites.net/)
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://molmat-foundry.azurewebsites.net/)
             # Accept 200 (OK), 401 (Auth required), 302 (Redirect to login) as valid responses
             if [ "$STATUS" = "200" ] || [ "$STATUS" = "401" ] || [ "$STATUS" = "302" ]; then
               echo "Site is up! Status: $STATUS (401/302 expected when Azure AD auth is enabled)"

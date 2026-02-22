@@ -211,7 +211,8 @@ function MeetingOverviewInput({ value, onChange }: MeetingOverviewInputProps) {
   const [error, setError] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [isListening, setIsListening] = useState(false);
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const recognitionRef = useRef<any>(null);
   const valueRef = useRef(value);
   valueRef.current = value;
 
@@ -236,7 +237,7 @@ function MeetingOverviewInput({ value, onChange }: MeetingOverviewInputProps) {
 
     let finalTranscript = valueRef.current;
 
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
+    recognition.onresult = (event: any) => {
       let interim = "";
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const transcript = event.results[i][0].transcript;

@@ -2,7 +2,7 @@
 # Azure Web App startup script
 # Ensures database exists before starting the server
 
-DB_PATH="/home/data/kachisuji.db"
+DB_PATH="/home/data/foundry.db"
 DATA_DIR="/home/data"
 SEED_DB="data/dev.db"
 

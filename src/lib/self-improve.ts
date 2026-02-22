@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import { prisma } from "@/lib/db";
 
 // スコアの型（finder毎にキーが異なるため動的）
@@ -141,6 +142,7 @@ export async function recordBaseline(runId?: string) {
   // 新しいベースラインを作成
   const baseline = await prisma.scoreBaseline.create({
     data: {
+      id: crypto.randomUUID(),
       runId,
       topScore,
       avgScore,

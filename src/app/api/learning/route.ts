@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import crypto from "crypto";
 import { prisma } from "@/lib/db";
 import { AzureOpenAI } from "openai";
 import { getCurrentUserId } from "@/lib/auth";
@@ -228,7 +229,6 @@ export async function POST(request: NextRequest) {
       const existing = await prisma.learningMemory.findFirst({
         where: {
           userId,
-          finderId,
           type: pattern.type,
           category: pattern.category,
           pattern: { contains: pattern.pattern.substring(0, 20) },
@@ -253,6 +253,7 @@ export async function POST(request: NextRequest) {
         // 新規パターンを作成（ユーザー情報・ファインダー情報付き）
         await prisma.learningMemory.create({
           data: {
+            id: crypto.randomUUID(),
             type: pattern.type,
             category: pattern.category,
             pattern: pattern.pattern,
@@ -261,7 +262,6 @@ export async function POST(request: NextRequest) {
             confidence: pattern.confidence,
             isActive: true,
             userId,
-            finderId,
           },
         });
         savedCount++;
@@ -304,7 +304,7 @@ export async function GET(request: NextRequest) {
     step = "get-userId";
     const userId = await getCurrentUserId();
 
-    const where: Record<string, unknown> = { userId, finderId };
+    const where: Record<string, unknown> = { userId };
     if (type) where.type = type;
     if (activeOnly) where.isActive = true;
 
@@ -327,8 +327,8 @@ export async function GET(request: NextRequest) {
     let failurePatternCount = 0;
     try {
       [successPatternCount, failurePatternCount] = await Promise.all([
-        prisma.learningMemory.count({ where: { userId, finderId, isActive: true, type: "success_pattern" } }),
-        prisma.learningMemory.count({ where: { userId, finderId, isActive: true, type: "failure_pattern" } }),
+        prisma.learningMemory.count({ where: { userId, isActive: true, type: "success_pattern" } }),
+        prisma.learningMemory.count({ where: { userId, isActive: true, type: "failure_pattern" } }),
       ]);
     } catch (e) {
       console.error(`Learning GET: count patterns failed (${String(e)})`);

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import crypto from "crypto";
 import { prisma } from "@/lib/db";
 import pdfParse from "pdf-parse";
 import mammoth from "mammoth";
@@ -68,6 +69,7 @@ export async function POST(request: NextRequest) {
       for (const doc of documents) {
         const created = await prisma.rAGDocument.create({
           data: {
+            id: crypto.randomUUID(),
             filename: doc.filename,
             fileType: doc.fileType,
             content: doc.content,
@@ -166,6 +168,7 @@ export async function POST(request: NextRequest) {
     // DBに保存
     const doc = await prisma.rAGDocument.create({
       data: {
+        id: crypto.randomUUID(),
         filename,
         fileType,
         content,

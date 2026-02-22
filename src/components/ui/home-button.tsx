@@ -1,6 +1,7 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 
 export interface HomeButtonProps {
@@ -9,6 +10,7 @@ export interface HomeButtonProps {
 }
 
 export function HomeButton({ variant = "default", className }: HomeButtonProps) {
+  const tc = useTranslations("common");
   if (variant === "text") {
     return (
       <Link
@@ -28,7 +30,7 @@ export function HomeButton({ variant = "default", className }: HomeButtonProps) 
           <rect x="5" y="12" width="14" height="9" fill="currentColor" opacity="0.2" />
           <path d="M5 12v9h14v-9" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
-        <span className="text-sm font-medium group-hover:-translate-x-0.5 transition-transform">← 戻る</span>
+        <span className="text-sm font-medium group-hover:-translate-x-0.5 transition-transform">{tc("back")}</span>
       </Link>
     );
   }
@@ -54,7 +56,7 @@ export function HomeButton({ variant = "default", className }: HomeButtonProps) 
             <path d="M5 12v9h14v-9" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </div>
-        <span className="text-sm font-medium text-blue-700 dark:text-blue-300 group-hover:-translate-x-0.5 transition-transform">← 戻る</span>
+        <span className="text-sm font-medium text-blue-700 dark:text-blue-300 group-hover:-translate-x-0.5 transition-transform">{tc("back")}</span>
       </Link>
     );
   }
@@ -82,7 +84,7 @@ export function HomeButton({ variant = "default", className }: HomeButtonProps) 
           </svg>
         </div>
       </div>
-      <span className="text-sm font-bold group-hover:-translate-x-0.5 transition-transform">← 戻る</span>
+      <span className="text-sm font-bold group-hover:-translate-x-0.5 transition-transform">{tc("back")}</span>
     </Link>
   );
 }

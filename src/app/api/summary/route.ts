@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import crypto from "crypto";
 import { prisma } from "@/lib/db";
 import { AzureOpenAI } from "openai";
 import { getCurrentUserId } from "@/lib/auth";
@@ -10,9 +11,9 @@ export async function GET(request: Request) {
     const finderId = searchParams.get("finderId") || null;
     const userId = await getCurrentUserId();
 
-    // 最新のまとめを取得（ファインダー別）
+    // 最新のまとめを取得
     const summary = await prisma.exploreSummary.findFirst({
-      where: { userId, finderId },
+      where: { userId },
       orderBy: { createdAt: "desc" },
     });
 
@@ -192,8 +193,8 @@ ${rejectedStrategies.slice(0, 10).map((d) => `- ${d.strategyName}`).join("\n") |
 
     const savedSummary = await prisma.exploreSummary.create({
       data: {
+        id: crypto.randomUUID(),
         userId,
-        finderId,
         content: JSON.stringify(parsedContent),
         stats: JSON.stringify(stats),
       },
@@ -225,7 +226,7 @@ export async function DELETE(request: Request) {
     const userId = await getCurrentUserId();
 
     await prisma.exploreSummary.deleteMany({
-      where: { userId, finderId },
+      where: { userId },
     });
 
     return NextResponse.json({ success: true });

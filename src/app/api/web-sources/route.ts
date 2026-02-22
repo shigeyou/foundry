@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import crypto from "crypto";
 import { prisma } from "@/lib/db";
 
 // GET: 全てのネット情報を取得
@@ -43,6 +44,7 @@ export async function POST(request: NextRequest) {
 
     const webSource = await prisma.webSource.create({
       data: {
+        id: crypto.randomUUID(),
         name,
         url,
         description: description || null,

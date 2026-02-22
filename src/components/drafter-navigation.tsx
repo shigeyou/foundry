@@ -1,43 +1,49 @@
 "use client";
 
 import { useDrafter, DrafterTabType } from "@/contexts/DrafterContext";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
+import { LanguageSwitcher } from "@/components/language-switcher";
 
 interface TabItem {
   id: DrafterTabType;
-  label: string;
+  labelKey: string;
 }
 
 // ツール固有の導入タブ
-const introTab: TabItem = { id: "intro", label: "はじめに" };
+const introTab: TabItem = { id: "intro", labelKey: "intro" };
 
 // テンプレート設定（ドラフター固有）
-const templateTab: TabItem = { id: "template", label: "テンプレート" };
+const templateTab: TabItem = { id: "template", labelKey: "template" };
 
 // 議事録ドラフター用タブ（統合ワークフロー）
 const minutesTabs: TabItem[] = [
-  { id: "workflow", label: "入力・生成・保存" },
+  { id: "workflow", labelKey: "minutesWorkflow" },
 ];
 
 // 報告書ドラフター用タブ（統合ワークフロー）
 const reportTabs: TabItem[] = [
-  { id: "workflow", label: "素材投入・生成・保存" },
+  { id: "workflow", labelKey: "reportWorkflow" },
 ];
 
 // その他のドラフター用タブ（従来フロー）
 const defaultPersonalTabs: TabItem[] = [
-  { id: "input", label: "入力情報" },
-  { id: "generate", label: "下書き生成" },
-  { id: "edit", label: "編集・レビュー" },
-  { id: "output", label: "出力" },
+  { id: "input", labelKey: "input" },
+  { id: "generate", labelKey: "generate" },
+  { id: "edit", labelKey: "edit" },
+  { id: "output", labelKey: "output" },
 ];
 
 interface DrafterNavigationProps {
   title?: string;
 }
 
-export function DrafterNavigation({ title = "ドラフター" }: DrafterNavigationProps) {
+export function DrafterNavigation({ title }: DrafterNavigationProps) {
   const { activeTab, setActiveTab, generateStatus, drafterId } = useDrafter();
+  const t = useTranslations("drafterNav");
+  const tn = useTranslations("nav");
+  const tc = useTranslations("common");
+  const displayTitle = title || tn("drafter");
 
   const isMinutesDrafter = drafterId === "minutes";
   const isReportDrafter = drafterId === "report";
@@ -70,10 +76,10 @@ export function DrafterNavigation({ title = "ドラフター" }: DrafterNavigati
               className="text-left hover:opacity-80"
             >
               <p className="text-green-100 dark:text-green-200 text-xs">
-                文書をAIで自動生成する
+                {tn("drafterSubtitle")}
               </p>
               <p className="font-bold text-white dark:text-white text-lg whitespace-nowrap">
-                {title}
+                {displayTitle}
               </p>
             </Link>
           </div>
@@ -89,7 +95,7 @@ export function DrafterNavigation({ title = "ドラフター" }: DrafterNavigati
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
-              <span className="text-slate-100 whitespace-nowrap">共通設定</span>
+              <span className="text-slate-100 whitespace-nowrap">{tn("commonSettings")}</span>
             </Link>
 
             {/* セパレーター */}
@@ -112,7 +118,7 @@ export function DrafterNavigation({ title = "ドラフター" }: DrafterNavigati
                           : "text-green-100 dark:text-green-200 hover:bg-white/20 dark:hover:bg-green-700/50"
                       }`}
                     >
-                      {item.label}
+                      {t(item.labelKey)}
                       {isGenerating && (
                         <span className="absolute -top-1 -right-1 flex h-3 w-3">
                           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
@@ -135,7 +141,7 @@ export function DrafterNavigation({ title = "ドラフター" }: DrafterNavigati
                       : "text-green-100 dark:text-green-200 hover:bg-white/20 dark:hover:bg-green-700/50"
                   }`}
                 >
-                  {introTab.label}
+                  {t(introTab.labelKey)}
                 </button>
 
                 {/* テンプレートタブ */}
@@ -147,7 +153,7 @@ export function DrafterNavigation({ title = "ドラフター" }: DrafterNavigati
                       : "text-green-100 dark:text-green-200 hover:bg-white/20 dark:hover:bg-green-700/50"
                   }`}
                 >
-                  {templateTab.label}
+                  {t(templateTab.labelKey)}
                 </button>
 
                 {/* セパレーター */}
@@ -155,7 +161,7 @@ export function DrafterNavigation({ title = "ドラフター" }: DrafterNavigati
 
                 {/* 個別設定グループ */}
                 <div className="flex items-center gap-1 px-2 py-1 bg-green-400/30 dark:bg-green-950/50 rounded-lg flex-shrink-0">
-                  <span className="text-yellow-200 dark:text-yellow-300 text-xs px-1 whitespace-nowrap">個人</span>
+                  <span className="text-yellow-200 dark:text-yellow-300 text-xs px-1 whitespace-nowrap">{tn("personal")}</span>
                   {defaultPersonalTabs.map((item) => {
                     const isActive = activeTab === item.id;
                     const isGenerating = item.id === "generate" && generateStatus === "running";
@@ -170,7 +176,7 @@ export function DrafterNavigation({ title = "ドラフター" }: DrafterNavigati
                             : "text-green-100 dark:text-green-200 hover:bg-white/20 dark:hover:bg-green-700/50"
                         }`}
                       >
-                        {item.label}
+                        {t(item.labelKey)}
                         {isGenerating && (
                           <span className="absolute -top-1 -right-1 flex h-3 w-3">
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>

@@ -38,7 +38,7 @@ export function GenerateTab() {
                   入力情報とRAGデータを元に、AIが下書きを生成します
                 </p>
                 <button
-                  onClick={generateDraft}
+                  onClick={() => generateDraft()}
                   className="px-8 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors text-lg"
                 >
                   下書きを生成する
@@ -79,7 +79,7 @@ export function GenerateTab() {
                 </div>
                 <p className="text-red-600 dark:text-red-400 font-medium mb-4">生成に失敗しました</p>
                 <button
-                  onClick={generateDraft}
+                  onClick={() => generateDraft()}
                   className="px-6 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors"
                 >
                   再試行

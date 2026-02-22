@@ -33,7 +33,7 @@ async function synthesizeChunk(
 ): Promise<ArrayBuffer> {
   const ssml = `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="ja-JP">
   <voice name="ja-JP-NanamiNeural">
-    <prosody rate="${speedRate}" pitch="-0.3st">
+    <prosody rate="${speedRate}" pitch="-5%">
       ${escapeXml(text)}
     </prosody>
   </voice>
@@ -113,8 +113,18 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("[Speech API] Error:", error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+
+    // Azure認証エラーの場合は明確なメッセージを返す
+    if (errorMessage.includes("401")) {
+      return NextResponse.json(
+        { error: "Azure Speech APIキーが無効です。キーを更新してください。" },
+        { status: 401 }
+      );
+    }
+
     return NextResponse.json(
-      { error: "音声APIエラー" },
+      { error: `音声APIエラー: ${errorMessage}` },
       { status: 500 }
     );
   }

@@ -1,35 +1,40 @@
 "use client";
 
 import { useSimulator, SimulatorTabType } from "@/contexts/SimulatorContext";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
+import { LanguageSwitcher } from "@/components/language-switcher";
 
 interface TabItem {
   id: SimulatorTabType;
-  label: string;
+  labelKey: string;
 }
 
 // ツール固有の導入タブ
-const introTab: TabItem = { id: "intro", label: "はじめに" };
+const introTab: TabItem = { id: "intro", labelKey: "intro" };
 
 // 前提条件設定（シミュレーター固有）
-const preconditionsTab: TabItem = { id: "preconditions", label: "前提条件" };
+const preconditionsTab: TabItem = { id: "preconditions", labelKey: "preconditions" };
 
 // 個別設定
 const personalTabs: TabItem[] = [
-  { id: "scenario", label: "シナリオ設定" },
-  { id: "simulation", label: "シミュレーション" },
-  { id: "analysis", label: "結果分析" },
-  { id: "compare", label: "シナリオ比較" },
-  { id: "report", label: "レポート" },
-  { id: "history", label: "履歴" },
+  { id: "scenario", labelKey: "scenario" },
+  { id: "simulation", labelKey: "simulation" },
+  { id: "analysis", labelKey: "analysis" },
+  { id: "compare", labelKey: "compare" },
+  { id: "report", labelKey: "report" },
+  { id: "history", labelKey: "history" },
 ];
 
 interface SimulatorNavigationProps {
   title?: string;
 }
 
-export function SimulatorNavigation({ title = "シミュレーター" }: SimulatorNavigationProps) {
+export function SimulatorNavigation({ title }: SimulatorNavigationProps) {
   const { activeTab, setActiveTab, simulationStatus } = useSimulator();
+  const t = useTranslations("simulatorNav");
+  const tn = useTranslations("nav");
+  const displayTitle = title || tn("simulator");
 
   return (
     <header className="border-b border-purple-300 dark:border-purple-800 bg-gradient-to-r from-purple-600 to-purple-700 dark:from-purple-800 dark:to-purple-900">
@@ -57,10 +62,10 @@ export function SimulatorNavigation({ title = "シミュレーター" }: Simulat
               className="text-left hover:opacity-80"
             >
               <p className="text-purple-100 dark:text-purple-200 text-xs">
-                将来の可能性をAIで予測する
+                {tn("simulatorSubtitle")}
               </p>
               <p className="font-bold text-white dark:text-white text-lg whitespace-nowrap">
-                {title}
+                {displayTitle}
               </p>
             </Link>
           </div>
@@ -76,7 +81,7 @@ export function SimulatorNavigation({ title = "シミュレーター" }: Simulat
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
-              <span className="text-slate-100 whitespace-nowrap">共通設定</span>
+              <span className="text-slate-100 whitespace-nowrap">{tn("commonSettings")}</span>
             </Link>
 
             {/* セパレーター */}
@@ -91,7 +96,7 @@ export function SimulatorNavigation({ title = "シミュレーター" }: Simulat
                   : "text-purple-100 dark:text-purple-200 hover:bg-white/20 dark:hover:bg-purple-700/50"
               }`}
             >
-              {introTab.label}
+              {t(introTab.labelKey)}
             </button>
 
             {/* 前提条件タブ */}
@@ -103,7 +108,7 @@ export function SimulatorNavigation({ title = "シミュレーター" }: Simulat
                   : "text-purple-100 dark:text-purple-200 hover:bg-white/20 dark:hover:bg-purple-700/50"
               }`}
             >
-              {preconditionsTab.label}
+              {t(preconditionsTab.labelKey)}
             </button>
 
             {/* セパレーター */}
@@ -111,7 +116,7 @@ export function SimulatorNavigation({ title = "シミュレーター" }: Simulat
 
             {/* 個別設定グループ */}
             <div className="flex items-center gap-1 px-2 py-1 bg-purple-400/30 dark:bg-purple-950/50 rounded-lg flex-shrink-0">
-              <span className="text-yellow-200 dark:text-yellow-300 text-xs px-1 whitespace-nowrap">個人</span>
+              <span className="text-yellow-200 dark:text-yellow-300 text-xs px-1 whitespace-nowrap">{tn("personal")}</span>
               {personalTabs.map((item) => {
                 const isActive = activeTab === item.id;
                 const isRunning = item.id === "simulation" && simulationStatus === "running";
@@ -126,7 +131,7 @@ export function SimulatorNavigation({ title = "シミュレーター" }: Simulat
                         : "text-purple-100 dark:text-purple-200 hover:bg-white/20 dark:hover:bg-purple-700/50"
                     }`}
                   >
-                    {item.label}
+                    {t(item.labelKey)}
                     {isRunning && (
                       <span className="absolute -top-1 -right-1 flex h-3 w-3">
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>

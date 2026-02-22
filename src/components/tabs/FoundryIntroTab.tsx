@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 
 export function FoundryIntroTab() {
   return (
@@ -156,7 +156,7 @@ export function FoundryIntroTab() {
       <section className="mb-8">
         <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2">
           <span className="w-1 h-6 bg-green-500 rounded"></span>
-          メタファインダー
+          勝ち筋ファインダー
         </h2>
         <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-5">
           <div className="flex items-start gap-4">
@@ -165,7 +165,7 @@ export function FoundryIntroTab() {
             </div>
             <div>
               <p className="text-slate-700 dark:text-slate-300 leading-relaxed mb-3">
-                <strong>メタファインダー</strong>は、社内ドキュメントを分析して「作るべきAIアプリ」の可能性を発見するアドバイザーです。
+                <strong>勝ち筋ファインダー</strong>は、社内ドキュメントを分析して本質的な課題と打ち手を探索するアドバイザーです。
               </p>
               <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
                 RAGに登録されたドキュメントから、業務課題やAI活用の機会を自動的に特定し、
@@ -176,7 +176,7 @@ export function FoundryIntroTab() {
                 href="/meta-finder"
                 className="inline-flex items-center gap-2 mt-3 px-4 py-2 bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-500/30 transition-colors text-sm font-medium"
               >
-                メタファインダーを開く
+                勝ち筋ファインダーを開く
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
