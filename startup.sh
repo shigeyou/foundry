@@ -1,28 +1,32 @@
 #!/bin/bash
+set -e
+
+echo "=== Foundry startup ==="
+echo "PWD: $(pwd)"
+echo "node_modules type: $(stat -c %F node_modules 2>/dev/null || echo 'missing')"
 
 # Undo Oryx node_modules extraction
 # Oryx: extracts node_modules.tar.gz to /node_modules, moves original to _del_node_modules,
 # symlinks ./node_modules -> /node_modules, sets NODE_PATH="/node_modules"
-# We must undo ALL of this for standalone build to work correctly
 if [ -d _del_node_modules ]; then
-    echo "Restoring original node_modules (undoing Oryx node_modules extraction)..."
-    rm -rf node_modules 2>/dev/null || unlink node_modules 2>/dev/null
+    echo "Restoring original node_modules..."
+    # Remove symlink (not -rf, which would follow it)
+    if [ -L node_modules ]; then
+        unlink node_modules
+    elif [ -e node_modules ]; then
+        rm -rf node_modules
+    fi
     mv _del_node_modules node_modules
-    echo "Restored node_modules from _del_node_modules"
-    ls node_modules/ | head -10
+    echo "Restored. Contents:"
+    ls node_modules/ | head -15
 fi
 
-# Clear Oryx's /node_modules to prevent NODE_PATH conflicts
-# Oryx sets NODE_PATH="/node_modules" which causes Node to find incomplete packages there
-if [ -d /node_modules ] && [ -d node_modules ]; then
-    echo "Clearing Oryx /node_modules to prevent NODE_PATH conflicts..."
-    rm -rf /node_modules
-    mkdir -p /node_modules
-fi
+# Prevent Oryx from doing this again on next restart
+rm -f node_modules.tar.gz oryx-manifest.toml 2>/dev/null || true
 
-# Reset NODE_PATH to use only local node_modules
-export NODE_PATH="$(pwd)/node_modules"
-export PATH="$(pwd)/node_modules/.bin:$PATH"
+# Override NODE_PATH - Oryx sets it to /node_modules which has incomplete packages
+export NODE_PATH=""
+echo "NODE_PATH cleared. node_modules/next exists: $(ls node_modules/next/package.json 2>/dev/null && echo YES || echo NO)"
 
 # Create data directory
 mkdir -p /home/data
@@ -37,14 +41,12 @@ fi
 export DATABASE_URL="file:/home/data/foundry.db"
 
 # Sync database schema (ignore errors)
-# Use node_modules directly to avoid permission issues with npx
 if [ -f node_modules/prisma/build/index.js ]; then
     node node_modules/prisma/build/index.js db push --schema=prisma/schema.prisma --skip-generate --accept-data-loss 2>&1 || echo "Schema sync skipped"
-elif [ -f node_modules/.bin/prisma ]; then
-    node_modules/.bin/prisma db push --schema=prisma/schema.prisma --skip-generate --accept-data-loss 2>&1 || echo "Schema sync skipped"
 else
-    echo "Prisma not found, schema sync skipped"
+    echo "Prisma CLI not found, schema sync skipped"
 fi
 
 # Start the application
-node server.js
+echo "Starting server.js..."
+exec node server.js
