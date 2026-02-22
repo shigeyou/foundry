@@ -130,10 +130,17 @@ jobs:
           find .next/standalone -type l ! -exec test -e {} \; -delete -print | head -20
           echo "Copying standalone with symlink resolution..."
           cp -rL .next/standalone deploy-pkg
-          # Remove pnpm internal store - not needed at runtime, saves ~100MB
-          rm -rf deploy-pkg/node_modules/.pnpm
+          # Remove Oryx trigger files to prevent node_modules interference
+          rm -f deploy-pkg/oryx-manifest.toml deploy-pkg/node_modules.tar.gz
+          # Remove Windows/macOS native binaries (not needed on Linux Azure)
+          rm -rf deploy-pkg/node_modules/.pnpm/@img+sharp-win32-* 2>/dev/null || true
+          rm -rf deploy-pkg/node_modules/.pnpm/@img+sharp-darwin-* 2>/dev/null || true
+          rm -rf deploy-pkg/node_modules/.pnpm/@img+sharp-linuxmusl-* 2>/dev/null || true
+          # Remove prisma engine caches for non-Linux platforms
+          find deploy-pkg -path "*/.cache/prisma/*/windows" -type d -exec rm -rf {} + 2>/dev/null || true
+          find deploy-pkg -path "*/.cache/prisma/*/darwin*" -type d -exec rm -rf {} + 2>/dev/null || true
           echo "=== node_modules contents ==="
-          ls deploy-pkg/node_modules/ | head -20
+          ls deploy-pkg/node_modules/ | head -30
           echo "=== node_modules size ==="
           du -sh deploy-pkg/node_modules/
           echo "=== next package check ==="
