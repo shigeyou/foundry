@@ -112,34 +112,23 @@ jobs:
           # Create package.json for Azure App Service
           echo '{"name":"foundry","version":"1.0.0","scripts":{"start":"node server.js"}}' > .next/standalone/package.json
 
-      - name: Resolve symlinks in standalone
+      - name: Create deployment package (resolve symlinks)
         run: |
-          echo "=== Checking for symlinks in standalone node_modules ==="
-          find .next/standalone/node_modules -maxdepth 2 -type l 2>/dev/null | head -30
-          echo "=== Resolving all symlinks ==="
-          # Convert all symlinks to real files/directories
-          cd .next/standalone
-          find . -type l | while read link; do
-            target=$(readlink -f "$link")
-            if [ -e "$target" ]; then
-              rm "$link"
-              cp -rL "$target" "$link"
-              echo "Resolved: $link"
-            else
-              echo "WARNING: Broken symlink: $link -> $(readlink "$link")"
-              rm "$link"
-            fi
-          done
+          # Copy standalone to a clean directory, resolving all symlinks
+          # pnpm output tracing leaves symlinks that break when extracted from ZIP
+          echo "Copying standalone with symlink resolution..."
+          cp -rL .next/standalone deploy-pkg
           echo "=== Symlinks remaining ==="
-          find . -type l | head -10 || echo "None"
-          echo "=== node_modules/next check ==="
-          ls -la node_modules/next/ | head -5
-          node -e "try{require.resolve('next',{paths:['$(pwd)']}); console.log('next: resolvable')}catch(e){console.log('next: NOT resolvable', e.message)}"
-
-      - name: Create deployment package
-        run: |
-          cd .next/standalone
-          zip -r ../../deploy.zip .
+          find deploy-pkg -type l | head -5 || echo "None"
+          echo "=== node_modules contents ==="
+          ls deploy-pkg/node_modules/ | head -20
+          echo "=== next package check ==="
+          ls deploy-pkg/node_modules/next/package.json && echo "next: OK" || echo "next: MISSING"
+          echo "Creating ZIP..."
+          cd deploy-pkg
+          zip -r ../deploy.zip .
+          cd ..
+          echo "ZIP size: $(du -h deploy.zip | cut -f1)"
 
       - name: Login to Azure
         uses: azure/login@v2
