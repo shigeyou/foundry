@@ -147,24 +147,41 @@ jobs:
             --settings \
               DATABASE_URL="file:/home/data/foundry.db" \
               SCM_DO_BUILD_DURING_DEPLOYMENT="false" \
-              WEBSITE_RUN_FROM_PACKAGE="1"
+              WEBSITE_RUN_FROM_PACKAGE="0"
 
       - name: Wait for SCM to stabilize
         run: |
           echo "Waiting 90 seconds for SCM container to stabilize after config changes..."
           sleep 90
 
+      - name: Clean wwwroot before deploy
+        run: |
+          # Delete everything in wwwroot to remove stale symlinks
+          # Kudu VFS API: DELETE on directory with recursive=1
+          KUDU_URL="https://${{ env.AZURE_WEBAPP_NAME }}.scm.azurewebsites.net"
+          TOKEN=$(az account get-access-token --resource https://management.azure.com/ --query accessToken -o tsv)
+          # Delete wwwroot contents
+          curl -s -X DELETE "${KUDU_URL}/api/vfs/site/wwwroot/?recursive=true" \
+            -H "Authorization: Bearer ${TOKEN}" \
+            -H "If-Match: *" \
+            -w "\nHTTP Status: %{http_code}\n" || echo "VFS cleanup failed (non-fatal)"
+          # Recreate empty wwwroot
+          curl -s -X PUT "${KUDU_URL}/api/vfs/site/wwwroot/" \
+            -H "Authorization: Bearer ${TOKEN}" \
+            -w "\nHTTP Status: %{http_code}\n" || true
+
       - name: Deploy ZIP package
         run: |
-          # WEBSITE_RUN_FROM_PACKAGE=1: Azure mounts the ZIP directly as wwwroot
-          # No Oryx build, no symlink issues, no node_modules extraction
           az webapp deploy \
             --resource-group rg-ocreader-japaneast \
             --name ${{ env.AZURE_WEBAPP_NAME }} \
             --src-path deploy.zip \
             --type zip \
+            --clean true \
             --restart true \
-            --timeout 1800
+            --async true \
+            --timeout 1800 \
+            --track-status false
 
       - name: Wait for site to be ready
         run: |
