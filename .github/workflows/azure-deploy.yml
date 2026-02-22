@@ -82,12 +82,16 @@ jobs:
             echo "Copying next package and its deps to standalone..."
             cp -rL node_modules/next .next/standalone/node_modules/
           fi
-          # Copy styled-jsx (next dependency)
-          if [ ! -d ".next/standalone/node_modules/styled-jsx" ]; then
-            cp -rL node_modules/styled-jsx .next/standalone/node_modules/ 2>/dev/null || \
-            cp -rL node_modules/.pnpm/styled-jsx*/node_modules/styled-jsx .next/standalone/node_modules/ 2>/dev/null || \
-            echo "styled-jsx not found"
-          fi
+          # Copy next's peer/dependencies that may be missing in standalone
+          for dep in styled-jsx @swc/helpers @swc/counter caniuse-lite; do
+            if [ ! -e ".next/standalone/node_modules/$dep" ]; then
+              if [ -e "node_modules/$dep" ]; then
+                mkdir -p ".next/standalone/node_modules/$(dirname $dep)"
+                cp -rL "node_modules/$dep" ".next/standalone/node_modules/$dep"
+                echo "Copied next dep: $dep"
+              fi
+            fi
+          done
           # Copy prisma for schema sync on startup (follow pnpm symlinks)
           for pkg in prisma @prisma; do
             if [ -e "node_modules/$pkg" ] && [ ! -e ".next/standalone/node_modules/$pkg" ]; then
