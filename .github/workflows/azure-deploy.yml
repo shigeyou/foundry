@@ -39,8 +39,12 @@ jobs:
       - name: Create empty database with schema
         run: |
           pnpm exec prisma db push --skip-generate
-          ls -la
-          ls -la prisma/
+          ls -la dev.db || echo "dev.db not in root"
+          ls -la prisma/dev.db || echo "dev.db not in prisma/"
+          # Ensure dev.db is in project root for later copy
+          if [ ! -f dev.db ] && [ -f prisma/dev.db ]; then
+            cp prisma/dev.db dev.db
+          fi
         env:
           DATABASE_URL: file:./dev.db
 
@@ -67,7 +71,13 @@ jobs:
           cp -r src/generated .next/standalone/src/
           # Copy database file (used as seed for first deploy)
           mkdir -p .next/standalone/data
-          cp dev.db .next/standalone/data/dev.db
+          if [ -f dev.db ]; then
+            cp dev.db .next/standalone/data/dev.db
+          else
+            echo "WARNING: dev.db not found, creating empty seed database"
+            DATABASE_URL="file:./dev.db" pnpm exec prisma db push --skip-generate
+            cp dev.db .next/standalone/data/dev.db
+          fi
           # Remove oryx-manifest.toml to prevent Oryx from extracting node_modules.tar.gz
           # (standalone build has its own node_modules with proper dependencies)
           rm -f .next/standalone/oryx-manifest.toml
