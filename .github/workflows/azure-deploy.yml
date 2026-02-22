@@ -160,7 +160,8 @@ jobs:
             --name ${{ env.AZURE_WEBAPP_NAME }} \
             --settings \
               DATABASE_URL="file:/home/data/foundry.db" \
-              SCM_DO_BUILD_DURING_DEPLOYMENT="false"
+              SCM_DO_BUILD_DURING_DEPLOYMENT="false" \
+              ENABLE_ORYX_BUILD="false"
 
       - name: Wait for SCM to stabilize
         run: |

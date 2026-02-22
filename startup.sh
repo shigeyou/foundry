@@ -3,67 +3,69 @@ set -e
 
 echo "=== Foundry startup ==="
 echo "PWD: $(pwd)"
-echo "=== wwwroot contents ==="
-ls -la | head -25
-echo "=== node_modules check ==="
-echo "node_modules type: $(stat -c %F node_modules 2>/dev/null || echo 'missing')"
-if [ -L node_modules ]; then
-    echo "node_modules symlink target: $(readlink node_modules)"
-    echo "target exists: $(test -d "$(readlink node_modules)" && echo YES || echo NO)"
-fi
 
-# Handle Oryx node_modules extraction
-# Oryx may: extract node_modules.tar.gz to /node_modules, move original to _del_node_modules,
-# symlink ./node_modules -> /node_modules, set NODE_PATH="/node_modules"
-if [ -d _del_node_modules ]; then
-    echo "Restoring original node_modules from _del_node_modules..."
-    if [ -L node_modules ]; then
-        unlink node_modules
-    elif [ -e node_modules ]; then
-        rm -rf node_modules
-    fi
-    mv _del_node_modules node_modules
-    echo "Restored. Contents:"
-    ls node_modules/ | head -15
-elif [ -L node_modules ]; then
-    echo "WARNING: node_modules is a stale symlink -> $(readlink node_modules)"
-    unlink node_modules
-    echo "Removed stale symlink"
-fi
+# ===== CRITICAL: Undo Oryx interference FIRST =====
+# Oryx (Azure's build system) may run BEFORE this script and:
+# 1. Extract node_modules.tar.gz to /node_modules
+# 2. Move our node_modules to _del_node_modules
+# 3. Create symlink: ./node_modules -> /node_modules
+# 4. Set NODE_PATH="/node_modules"
+# We must undo ALL of this.
 
-# Prevent Oryx from doing this again
-rm -f node_modules.tar.gz oryx-manifest.toml 2>/dev/null || true
-
-# Override NODE_PATH
+# Clear NODE_PATH to prevent loading modules from /node_modules
 export NODE_PATH=""
 
-# Verify
+# Remove Oryx artifacts to prevent re-triggering
+rm -f oryx-manifest.toml node_modules.tar.gz 2>/dev/null || true
+
+# Restore our original node_modules
+if [ -d _del_node_modules ]; then
+    echo "Oryx moved our node_modules -> restoring from _del_node_modules..."
+    rm -rf node_modules 2>/dev/null || unlink node_modules 2>/dev/null || true
+    mv _del_node_modules node_modules
+    echo "Restored node_modules"
+elif [ -L node_modules ]; then
+    echo "Removing Oryx symlink: $(readlink node_modules)"
+    unlink node_modules
+    echo "ERROR: Original node_modules was lost. Deployment is broken."
+    exit 1
+fi
+
+# Clean up Oryx's /node_modules extraction
+rm -rf /node_modules 2>/dev/null || true
+
+# ===== Verification =====
+echo "=== node_modules check ==="
 if [ -f node_modules/next/package.json ]; then
-    echo "node_modules/next: OK"
+    echo "next: OK"
 else
     echo "ERROR: node_modules/next not found!"
-    ls node_modules/ 2>/dev/null | head -15 || echo "node_modules dir is missing"
+    ls node_modules/ 2>/dev/null | head -10 || echo "node_modules is missing entirely"
+    exit 1
 fi
 
-# Create data directory (persistent across deploys)
+# ===== Database setup =====
 mkdir -p /home/data
 
-# Copy initial database if not exists
 if [ ! -f /home/data/foundry.db ]; then
-    cp data/dev.db /home/data/foundry.db
-    echo "Copied initial database"
+    if [ -f data/dev.db ]; then
+        cp data/dev.db /home/data/foundry.db
+        echo "Copied initial database"
+    else
+        echo "WARNING: No seed database found"
+    fi
 fi
 
-# Set database URL
 export DATABASE_URL="file:/home/data/foundry.db"
 
 # Sync database schema
 if [ -f node_modules/prisma/build/index.js ]; then
-    node node_modules/prisma/build/index.js db push --schema=prisma/schema.prisma --skip-generate --accept-data-loss 2>&1 || echo "Schema sync skipped"
+    echo "Syncing database schema..."
+    node node_modules/prisma/build/index.js db push --schema=prisma/schema.prisma --skip-generate --accept-data-loss 2>&1 || echo "Schema sync failed (non-fatal)"
 else
     echo "Prisma CLI not found, schema sync skipped"
 fi
 
-# Start the application
+# ===== Start application =====
 echo "Starting server.js..."
 exec node server.js
