@@ -68,30 +68,39 @@ jobs:
           # Copy database file (used as seed for first deploy)
           mkdir -p .next/standalone/data
           cp dev.db .next/standalone/data/dev.db
-          # Debug: check standalone node_modules
+          # Remove oryx-manifest.toml to prevent Oryx from extracting node_modules.tar.gz
+          # (standalone build has its own node_modules with proper dependencies)
+          rm -f .next/standalone/oryx-manifest.toml
+          rm -f .next/standalone/node_modules.tar.gz
+          # Verify standalone node_modules has next
           echo "=== Standalone node_modules check ==="
           ls .next/standalone/node_modules/ | head -20 || echo "No node_modules in standalone"
           ls .next/standalone/node_modules/next/package.json 2>/dev/null && echo "next: OK" || echo "next: MISSING"
           echo "=== End check ==="
-          # Ensure next is in standalone (pnpm symlinks may not be followed by Next.js output tracing)
+          # Ensure next and its deps are in standalone (pnpm output tracing may miss some)
           if [ ! -f ".next/standalone/node_modules/next/package.json" ]; then
-            echo "Copying next package to standalone..."
+            echo "Copying next package and its deps to standalone..."
             cp -rL node_modules/next .next/standalone/node_modules/
           fi
-          # Copy prisma for schema sync on startup (pnpm uses symlinks)
+          # Copy styled-jsx (next dependency)
+          if [ ! -d ".next/standalone/node_modules/styled-jsx" ]; then
+            cp -rL node_modules/styled-jsx .next/standalone/node_modules/ 2>/dev/null || \
+            cp -rL node_modules/.pnpm/styled-jsx*/node_modules/styled-jsx .next/standalone/node_modules/ 2>/dev/null || \
+            echo "styled-jsx not found"
+          fi
+          # Copy prisma for schema sync on startup (follow pnpm symlinks)
           for pkg in prisma @prisma; do
-            if [ -e "node_modules/$pkg" ]; then
-              if [ ! -e ".next/standalone/node_modules/$pkg" ]; then
-                mkdir -p ".next/standalone/node_modules/$(dirname $pkg)"
-                cp -rL "node_modules/$pkg" ".next/standalone/node_modules/$pkg"
-                echo "Copied $pkg to standalone"
-              fi
+            if [ -e "node_modules/$pkg" ] && [ ! -e ".next/standalone/node_modules/$pkg" ]; then
+              mkdir -p ".next/standalone/node_modules/$(dirname $pkg)"
+              cp -rL "node_modules/$pkg" ".next/standalone/node_modules/$pkg"
+              echo "Copied $pkg"
             fi
           done
-          # Copy .prisma generated client if it exists
-          if [ -d "node_modules/.prisma" ] && [ ! -d ".next/standalone/node_modules/.prisma" ]; then
-            cp -rL node_modules/.prisma .next/standalone/node_modules/
-            echo "Copied .prisma"
+          # Copy @prisma/engines for prisma CLI
+          if [ -e "node_modules/@prisma/engines" ] && [ ! -e ".next/standalone/node_modules/@prisma/engines" ]; then
+            mkdir -p ".next/standalone/node_modules/@prisma"
+            cp -rL "node_modules/@prisma/engines" ".next/standalone/node_modules/@prisma/engines"
+            echo "Copied @prisma/engines"
           fi
           # Copy startup script
           cp startup.sh .next/standalone/startup.sh
