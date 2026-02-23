@@ -262,44 +262,53 @@ export default function ReportPage() {
     return parts;
   }, []);
 
-  // 概要読み上げ用セクション構築（カードごとにタイトルだけ読み上げ→ハイライト＆スクロール）
+  // 概要読み上げ用セクション構築（タイトル＋1行要約でハイライト＆スクロール）
   const buildSummarySpeechSections = useCallback((s: ReportSections, name: string, scopeId: string) => {
     const prefix = `dept:${scopeId}:`;
     const parts: { section: string; text: string }[] = [];
+    // テキストを最初の1文（句点区切り）に切り詰めるヘルパー
+    const firstSentence = (text: string) => {
+      if (!text) return "";
+      const end = text.search(/[。！？.!?]/);
+      return end >= 0 ? text.slice(0, end + 1) : text.slice(0, 80) + (text.length > 80 ? "…" : "");
+    };
     // エグゼクティブサマリー
     parts.push({ section: `${prefix}summary`, text: `${name}の概要です。${s.executiveSummary}` });
-    // 課題：セクション導入→各カードのタイトルを1枚ずつ読み上げ
+    // 課題：タイトル＋challenge1文
     if (s.issues?.items) {
       parts.push({ section: `${prefix}issues-header`, text: `課題整理、全${s.issues.items.length}件です。` });
       s.issues.items.forEach((item: ReportIssueItem, i: number) => {
         const sev = item.severity === "high" ? "重要度高" : item.severity === "medium" ? "重要度中" : "重要度低";
         const label = item.title || item.challenge;
+        const summary = item.title ? firstSentence(item.challenge) : "";
         parts.push({
           section: `${prefix}issue-${i}`,
-          text: `${sev}。${item.category}。${label}`,
+          text: `${sev}。${item.category}。${label}${summary ? "。" + summary : ""}`,
         });
       });
     }
-    // 解決策：各カードのタイトルと優先度のみ
+    // 解決策：タイトル＋description1文
     if (s.solutions?.items) {
       parts.push({ section: `${prefix}solutions-header`, text: `解決策策定、全${s.solutions.items.length}件です。` });
       s.solutions.items.forEach((item: ReportSolutionItem, i: number) => {
         const pri = item.priority === "immediate" ? "即時対応" : item.priority === "short-term" ? "短期" : "中期";
         const label = item.title || item.solution;
+        const summary = firstSentence(item.description);
         parts.push({
           section: `${prefix}solution-${i}`,
-          text: `${pri}。${label}`,
+          text: `${pri}。${label}${summary ? "。" + summary : ""}`,
         });
       });
     }
-    // 勝ち筋：名前とスコアのみ
+    // 勝ち筋：名前＋description1文＋スコア
     if (s.strategies?.items) {
       parts.push({ section: `${prefix}strategies-header`, text: `勝ち筋提案、全${s.strategies.items.length}件です。` });
       s.strategies.items.forEach((item: ReportStrategyItem, i: number) => {
         const avg = item.bscScores ? ((item.bscScores.financial + item.bscScores.customer + item.bscScores.process + item.bscScores.growth) / 4).toFixed(1) : "?";
+        const summary = firstSentence(item.description);
         parts.push({
           section: `${prefix}strategy-${i}`,
-          text: `${item.name}。総合スコア${avg}`,
+          text: `${item.name}${summary ? "。" + summary : ""}。総合スコア${avg}`,
         });
       });
     }
