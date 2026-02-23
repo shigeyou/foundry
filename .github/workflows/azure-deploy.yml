@@ -189,12 +189,16 @@ jobs:
             --resource-group rg-ocreader-japaneast \
             --name ${{ env.AZURE_WEBAPP_NAME }} \
             --startup-file "bash startup.sh"
+          # Delete WEBSITE_RUN_FROM_PACKAGE to ensure normal zipdeploy mode (not run-from-package)
+          az webapp config appsettings delete \
+            --resource-group rg-ocreader-japaneast \
+            --name ${{ env.AZURE_WEBAPP_NAME }} \
+            --setting-names WEBSITE_RUN_FROM_PACKAGE 2>/dev/null || true
           az webapp config appsettings set \
             --resource-group rg-ocreader-japaneast \
             --name ${{ env.AZURE_WEBAPP_NAME }} \
             --settings \
               DATABASE_URL="file:/home/data/foundry.db" \
-              WEBSITE_RUN_FROM_PACKAGE="0" \
               SCM_DO_BUILD_DURING_DEPLOYMENT="false" \
               ENABLE_ORYX_BUILD="false"
 
@@ -207,9 +211,8 @@ jobs:
             --name ${{ env.AZURE_WEBAPP_NAME }} \
             --src-path deploy.zip \
             --type zip \
-            --async false \
-            --timeout 600
-          echo "Deployment complete"
+            --async true
+          echo "Deployment submitted"
 
       - name: Wait for site to be ready
         run: |
