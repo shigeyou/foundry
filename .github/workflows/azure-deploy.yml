@@ -157,6 +157,14 @@ jobs:
             -type d -exec rm -rf {} + 2>/dev/null || true
           echo "node_modules size after cleanup: $(du -sh .next/standalone/node_modules/ | cut -f1)"
 
+          # Create node_modules.tar.gz from the real-file node_modules.
+          # Oryx startup script extracts this to /node_modules and symlinks ./node_modules -> /node_modules.
+          # Having BOTH node_modules/ directory AND node_modules.tar.gz triggers Oryx to generate
+          # the tar.gz extraction startup script (required for correct dep resolution at runtime).
+          echo "=== Creating node_modules.tar.gz ==="
+          tar -czf .next/standalone/node_modules.tar.gz -C .next/standalone/node_modules .
+          echo "node_modules.tar.gz: $(du -sh .next/standalone/node_modules.tar.gz | cut -f1)"
+
       - name: Create deployment ZIP
         run: |
           cd .next/standalone
@@ -169,13 +177,16 @@ jobs:
         run: |
           ZIP_SIZE=$(du -h deploy.zip | cut -f1)
           echo "Deploying ZIP ($ZIP_SIZE) to Azure App Service..."
+          # Note: az webapp deploy --async true polls until site starts (up to ~1010s timeout).
+          # We add '|| true' so a CLI polling timeout doesn't fail the step - the actual
+          # deployment continues on Azure and the next step verifies site health.
           az webapp deploy \
             --resource-group rg-ocreader-japaneast \
             --name ${{ env.AZURE_WEBAPP_NAME }} \
             --src-path deploy.zip \
             --type zip \
-            --async true
-          echo "Deployment submitted"
+            --async true || true
+          echo "Deployment submitted (site may still be starting)"
 
       - name: Wait for site to be ready
         run: |
