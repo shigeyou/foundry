@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useTranslations } from "next-intl";
+import { useRouter } from "@/i18n/navigation";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { exportMetaFinderPdf } from "@/lib/export-pdf";
@@ -154,6 +155,7 @@ ${themeAngle}
 export default function MetaFinderPage() {
   const t = useTranslations("metaFinder");
   const tc = useTranslations("common");
+  const router = useRouter();
 
   // カテゴリラベルを翻訳で解決
   const themeCategories = themeCategoryDefs.map(cat => ({
@@ -192,6 +194,7 @@ export default function MetaFinderPage() {
   const [batchActiveTab, setBatchActiveTab] = useState<"top" | "theme" | "dept">("top");
   const [batchExpandedIdea, setBatchExpandedIdea] = useState<string | null>(null);
   const [selectedBatchId, setSelectedBatchId] = useState<string | null>(null);
+  const [generatingReportBatchId, setGeneratingReportBatchId] = useState<string | null>(null);
 
   // AIチャット用の状態
   const [chatIdea, setChatIdea] = useState<IdeaChatTarget | null>(null);
@@ -612,6 +615,29 @@ export default function MetaFinderPage() {
     }
   };
 
+  // 探索結果からレポートを手動生成してレポートページへ遷移
+  const generateReport = async (targetBatchId: string) => {
+    if (generatingReportBatchId) return;
+    setGeneratingReportBatchId(targetBatchId);
+    try {
+      const res = await fetch("/api/meta-finder/report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ batchId: targetBatchId }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        alert(data.error || "レポート生成の開始に失敗しました");
+        return;
+      }
+      router.push(`/meta-finder/report?batchId=${targetBatchId}`);
+    } catch {
+      alert("レポート生成の開始に失敗しました");
+    } finally {
+      setGeneratingReportBatchId(null);
+    }
+  };
+
   // 全履歴を削除
   const clearAllHistory = async () => {
     const confirmed = confirm(t("batch.confirmClearAll"));
@@ -944,6 +970,20 @@ export default function MetaFinderPage() {
                 </h3>
                 {batchSummary && (
                   <>
+                    <button
+                      onClick={() => generateReport(batchSummary.batch.id)}
+                      disabled={generatingReportBatchId !== null}
+                      className="px-2 py-1 text-xs bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white rounded transition-colors flex items-center gap-1"
+                    >
+                      {generatingReportBatchId === batchSummary.batch.id ? (
+                        <>
+                          <span className="inline-block w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          生成中...
+                        </>
+                      ) : (
+                        <>📝 レポート手動作成</>
+                      )}
+                    </button>
                     <a
                       href={`/meta-finder/report?batchId=${batchSummary.batch.id}`}
                       className="px-2 py-1 text-xs bg-indigo-100 hover:bg-indigo-200 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 rounded transition-colors"
