@@ -30,6 +30,31 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
 
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Configure Azure App Service
+        run: |
+          az webapp config set \
+            --resource-group rg-ocreader-japaneast \
+            --name ${{ env.AZURE_WEBAPP_NAME }} \
+            --startup-file "bash startup.sh"
+          # Delete WEBSITE_RUN_FROM_PACKAGE to ensure normal zipdeploy mode (not run-from-package)
+          az webapp config appsettings delete \
+            --resource-group rg-ocreader-japaneast \
+            --name ${{ env.AZURE_WEBAPP_NAME }} \
+            --setting-names WEBSITE_RUN_FROM_PACKAGE 2>/dev/null || true
+          az webapp config appsettings set \
+            --resource-group rg-ocreader-japaneast \
+            --name ${{ env.AZURE_WEBAPP_NAME }} \
+            --settings \
+              DATABASE_URL="file:/home/data/foundry.db" \
+              SCM_DO_BUILD_DURING_DEPLOYMENT="false" \
+              ENABLE_ORYX_BUILD="false"
+          echo "App Service configured. SCM container will restart - build steps will give it time to settle."
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
@@ -177,30 +202,6 @@ jobs:
           zip -r ../../deploy.zip . -x "*.map"
           cd ../..
           echo "ZIP size: $(du -h deploy.zip | cut -f1)"
-
-      - name: Login to Azure
-        uses: azure/login@v2
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      - name: Configure Azure App Service
-        run: |
-          az webapp config set \
-            --resource-group rg-ocreader-japaneast \
-            --name ${{ env.AZURE_WEBAPP_NAME }} \
-            --startup-file "bash startup.sh"
-          # Delete WEBSITE_RUN_FROM_PACKAGE to ensure normal zipdeploy mode (not run-from-package)
-          az webapp config appsettings delete \
-            --resource-group rg-ocreader-japaneast \
-            --name ${{ env.AZURE_WEBAPP_NAME }} \
-            --setting-names WEBSITE_RUN_FROM_PACKAGE 2>/dev/null || true
-          az webapp config appsettings set \
-            --resource-group rg-ocreader-japaneast \
-            --name ${{ env.AZURE_WEBAPP_NAME }} \
-            --settings \
-              DATABASE_URL="file:/home/data/foundry.db" \
-              SCM_DO_BUILD_DURING_DEPLOYMENT="false" \
-              ENABLE_ORYX_BUILD="false"
 
       - name: Deploy ZIP to Azure
         run: |
