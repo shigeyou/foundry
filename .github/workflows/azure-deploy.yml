@@ -117,23 +117,25 @@ jobs:
 
       - name: Prepare node_modules for deployment
         run: |
-          # Problem: pnpm uses a virtual store (.pnpm/) where top-level node_modules entries
-          # are symlinks into .pnpm/. The standalone output has dangling symlinks (no .pnpm store).
-          # Oryx startup script ALWAYS runs 'tar -xzf node_modules.tar.gz -C /node_modules' and
-          # symlinks ./node_modules -> /node_modules, overriding whatever we deploy.
-          # Solution: ship node_modules.tar.gz with the FULL pnpm structure (including .pnpm/ store)
-          # so Oryx extracts it correctly and Node.js can resolve all transitive deps.
+          # Problem: pnpm uses a virtual store (.pnpm/) where top-level node_modules/ entries
+          # are relative symlinks into .pnpm/. The standalone output has DANGLING symlinks
+          # (the .pnpm store is missing from standalone output).
+          # Node.js resolves transitive deps (e.g. @next/env from within next) via the pnpm
+          # virtual store path: .pnpm/next@x.x.x/node_modules/@next/env
+          # Solution: copy the FULL pnpm node_modules (with .pnpm store) preserving symlinks.
+          # ZIP preserves symlinks on Linux; Azure zipdeploy extracts them correctly.
 
-          echo "=== Copying full pnpm node_modules (with .pnpm store) ==="
+          echo "=== Copying full pnpm node_modules (symlinks + .pnpm store) ==="
           rm -rf .next/standalone/node_modules
-          # Preserve symlinks (no --copy-links) - the .pnpm store is included so symlinks resolve
+          # rsync without --copy-links: preserves symlinks as symlinks
+          # .pnpm/ store is included so all symlinks resolve correctly
           rsync -a node_modules/ .next/standalone/node_modules/
 
           echo "=== Checking key packages ==="
-          # next symlink -> .pnpm/next@.../node_modules/next/package.json
           ls .next/standalone/node_modules/next/package.json && echo "next: OK" || echo "next: MISSING"
-          ls -la .next/standalone/node_modules/@next/ 2>/dev/null | head -5 || echo "@next: not hoisted (in .pnpm store - OK)"
-          du -sh .next/standalone/node_modules/ .next/standalone/node_modules/.pnpm/ 2>/dev/null || true
+          # @next/env is a dep of next, in .pnpm/next@x.x.x/node_modules/@next/env
+          ls .next/standalone/node_modules/.pnpm/next*/node_modules/@next/env/package.json 2>/dev/null && echo "@next/env: OK (in .pnpm store)" || echo "@next/env: MISSING from .pnpm store!"
+          du -sh .next/standalone/node_modules/
 
           echo "=== Cleaning up non-essential files ==="
           find .next/standalone/node_modules -path "*/sharp-win32*" -exec rm -rf {} + 2>/dev/null || true
@@ -148,18 +150,12 @@ jobs:
             -type d -exec rm -rf {} + 2>/dev/null || true
           echo "node_modules size after cleanup: $(du -sh .next/standalone/node_modules/ | cut -f1)"
 
-          echo "=== Creating node_modules.tar.gz for Oryx ==="
-          # Archive CONTENTS so Oryx extracts packages directly into /node_modules/
-          # Symlinks are preserved in the archive (no --dereference)
-          tar -czf .next/standalone/node_modules.tar.gz -C .next/standalone/node_modules .
-          echo "node_modules.tar.gz: $(du -sh .next/standalone/node_modules.tar.gz | cut -f1)"
-          rm -rf .next/standalone/node_modules
-
       - name: Create deployment ZIP
         run: |
           cd .next/standalone
-          echo "Creating ZIP..."
-          zip -r ../../deploy.zip . -x "*.map"
+          echo "Creating ZIP (with pnpm symlinks preserved)..."
+          # -y: store symlinks as symlinks (default on Linux zip)
+          zip -ry ../../deploy.zip . -x "*.map"
           cd ../..
           echo "ZIP size: $(du -h deploy.zip | cut -f1)"
 
