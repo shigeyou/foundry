@@ -52,7 +52,9 @@ jobs:
             --settings \
               DATABASE_URL="file:/home/data/foundry.db" \
               SCM_DO_BUILD_DURING_DEPLOYMENT="false" \
-              ENABLE_ORYX_BUILD="false"
+              ENABLE_ORYX_BUILD="false" \
+              AZURE_SPEECH_KEY="${{ secrets.AZURE_SPEECH_KEY }}" \
+              AZURE_SPEECH_REGION="japaneast"
           echo "App Service configured. SCM container will restart - build steps will give it time to settle."
 
       - name: Install dependencies
@@ -84,6 +86,7 @@ jobs:
           AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
           AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
           AZURE_OPENAI_DEPLOYMENT: ${{ secrets.AZURE_OPENAI_DEPLOYMENT }}
+          NEXT_PUBLIC_KAEDE_URL: https://kaede-frontend.azurewebsites.net
 
       - name: Prepare standalone deployment
         run: |
