@@ -640,13 +640,13 @@ export interface ExecutiveSummaryInput {
 
 export async function exportExecutiveSummaryPdf(data: ExecutiveSummaryInput): Promise<void> {
   const container = document.createElement("div");
-  // 横向きA4: 297mm × 3.78px/mm ≈ 1122px
+  // 縦向きA4: 210mm × 3.78px/mm ≈ 794px
   container.style.cssText = `
     position: absolute;
     left: -9999px;
     top: 0;
-    width: 1122px;
-    padding: 24px 28px 20px;
+    width: 794px;
+    padding: 18px 20px 14px;
     background: white;
     font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
     color: #1a1a1a;
@@ -679,14 +679,14 @@ export async function exportExecutiveSummaryPdf(data: ExecutiveSummaryInput): Pr
       const order = { high: 0, medium: 1, low: 2 };
       return (order[a.severity] ?? 1) - (order[b.severity] ?? 1);
     });
-    const shown = sorted.slice(0, 4);
+    const shown = sorted.slice(0, 3);
     const rest = sorted.length - shown.length;
     return shown.map(i => `
-      <div style="display:flex;align-items:flex-start;gap:4px;margin-bottom:4px;">
+      <div style="display:flex;align-items:flex-start;gap:3px;margin-bottom:3px;">
         ${sevBadge(i.severity)}
-        <span style="font-size:10px;color:#1e293b;line-height:1.3;">${escapeHtml(i.title)}</span>
+        <span style="font-size:9px;color:#1e293b;line-height:1.3;">${escapeHtml(i.title)}</span>
       </div>
-    `).join("") + (rest > 0 ? `<div style="font-size:9px;color:#94a3b8;margin-top:2px;">他 ${rest}件</div>` : "");
+    `).join("") + (rest > 0 ? `<div style="font-size:8px;color:#94a3b8;margin-top:1px;">他 ${rest}件</div>` : "");
   };
 
   const renderSolutions = (items: { title: string; priority: string }[]) => {
@@ -694,62 +694,62 @@ export async function exportExecutiveSummaryPdf(data: ExecutiveSummaryInput): Pr
       const order: Record<string, number> = { immediate: 0, "short-term": 1, "mid-term": 2 };
       return (order[a.priority] ?? 1) - (order[b.priority] ?? 1);
     });
-    const shown = sorted.slice(0, 4);
+    const shown = sorted.slice(0, 3);
     const rest = sorted.length - shown.length;
     return shown.map(s => {
       const [bg, color, label] = priLabel(s.priority);
       return `
-        <div style="display:flex;align-items:flex-start;gap:4px;margin-bottom:4px;">
-          <span style="display:inline-block;background:${bg};color:${color};font-size:9px;font-weight:bold;padding:1px 5px;border-radius:3px;border:1px solid ${color};white-space:nowrap;">${label}</span>
-          <span style="font-size:10px;color:#1e293b;line-height:1.3;">${escapeHtml(s.title)}</span>
+        <div style="display:flex;align-items:flex-start;gap:3px;margin-bottom:3px;">
+          <span style="display:inline-block;background:${bg};color:${color};font-size:8px;font-weight:bold;padding:1px 4px;border-radius:3px;border:1px solid ${color};white-space:nowrap;">${label}</span>
+          <span style="font-size:9px;color:#1e293b;line-height:1.3;">${escapeHtml(s.title)}</span>
         </div>
       `;
-    }).join("") + (rest > 0 ? `<div style="font-size:9px;color:#94a3b8;margin-top:2px;">他 ${rest}件</div>` : "");
+    }).join("") + (rest > 0 ? `<div style="font-size:8px;color:#94a3b8;margin-top:1px;">他 ${rest}件</div>` : "");
   };
 
   const renderStrategies = (items: { name: string; score: number }[]) => {
     const sorted = [...items].sort((a, b) => b.score - a.score);
-    const shown = sorted.slice(0, 4);
+    const shown = sorted.slice(0, 3);
     const rest = sorted.length - shown.length;
     return shown.map(s => {
       const c = scoreColor(s.score);
       return `
-        <div style="display:flex;align-items:flex-start;gap:4px;margin-bottom:4px;">
-          <span style="display:inline-block;background:white;color:${c};font-size:9px;font-weight:bold;padding:1px 5px;border-radius:3px;border:1px solid ${c};white-space:nowrap;">${s.score.toFixed(1)}</span>
-          <span style="font-size:10px;color:#1e293b;line-height:1.3;">${escapeHtml(s.name)}</span>
+        <div style="display:flex;align-items:flex-start;gap:3px;margin-bottom:3px;">
+          <span style="display:inline-block;background:white;color:${c};font-size:8px;font-weight:bold;padding:1px 4px;border-radius:3px;border:1px solid ${c};white-space:nowrap;">${s.score.toFixed(1)}</span>
+          <span style="font-size:9px;color:#1e293b;line-height:1.3;">${escapeHtml(s.name)}</span>
         </div>
       `;
-    }).join("") + (rest > 0 ? `<div style="font-size:9px;color:#94a3b8;margin-top:2px;">他 ${rest}件</div>` : "");
+    }).join("") + (rest > 0 ? `<div style="font-size:8px;color:#94a3b8;margin-top:1px;">他 ${rest}件</div>` : "");
   };
 
   const rowBg = (i: number) => i % 2 === 0 ? "#ffffff" : "#f8fafc";
-  const cellStyle = `padding:8px 10px;border:1px solid #e2e8f0;vertical-align:top;`;
-  const deptCellStyle = `${cellStyle}background:#eef2ff;font-weight:bold;font-size:11px;color:#3730a3;text-align:center;vertical-align:middle;`;
+  const cellStyle = `padding:6px 8px;border:1px solid #e2e8f0;vertical-align:top;`;
+  const deptCellStyle = `${cellStyle}background:#eef2ff;font-weight:bold;font-size:10px;color:#3730a3;text-align:center;vertical-align:middle;`;
 
   container.innerHTML = `
     <!-- ヘッダー -->
-    <div style="display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid #4f46e5;padding-bottom:10px;margin-bottom:14px;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid #4f46e5;padding-bottom:8px;margin-bottom:10px;">
       <div>
-        <h1 style="font-size:18px;font-weight:bold;margin:0 0 3px;color:#1e293b;">📋 エグゼクティブサマリー</h1>
-        <p style="font-size:12px;color:#4f46e5;font-weight:bold;margin:0;">${escapeHtml(data.companyName)}</p>
+        <h1 style="font-size:15px;font-weight:bold;margin:0 0 2px;color:#1e293b;">📋 エグゼクティブサマリー</h1>
+        <p style="font-size:11px;color:#4f46e5;font-weight:bold;margin:0;">${escapeHtml(data.companyName)}</p>
       </div>
-      <p style="font-size:9px;color:#64748b;margin:0;">探索日: ${escapeHtml(data.batchDate)} ｜ 生成: ${escapeHtml(generatedAt)}</p>
+      <p style="font-size:8px;color:#64748b;margin:0;">探索日: ${escapeHtml(data.batchDate)} ｜ 生成: ${escapeHtml(generatedAt)}</p>
     </div>
 
     <!-- 表 -->
-    <table style="width:100%;border-collapse:collapse;font-size:11px;table-layout:fixed;">
+    <table style="width:100%;border-collapse:collapse;font-size:10px;table-layout:fixed;">
       <colgroup>
-        <col style="width:110px;">
-        <col style="width:337px;">
-        <col style="width:337px;">
-        <col style="width:338px;">
+        <col style="width:82px;">
+        <col style="width:222px;">
+        <col style="width:224px;">
+        <col style="width:226px;">
       </colgroup>
       <thead>
         <tr>
-          <th style="${cellStyle}background:#1e293b;color:white;font-size:11px;text-align:center;">部門</th>
-          <th style="${cellStyle}background:#dc2626;color:white;font-size:11px;text-align:center;">① 課題</th>
-          <th style="${cellStyle}background:#2563eb;color:white;font-size:11px;text-align:center;">② 解決策</th>
-          <th style="${cellStyle}background:#059669;color:white;font-size:11px;text-align:center;">③ 勝ち筋</th>
+          <th style="${cellStyle}background:#1e293b;color:white;font-size:10px;text-align:center;">部門</th>
+          <th style="${cellStyle}background:#dc2626;color:white;font-size:10px;text-align:center;">① 課題</th>
+          <th style="${cellStyle}background:#2563eb;color:white;font-size:10px;text-align:center;">② 解決策</th>
+          <th style="${cellStyle}background:#059669;color:white;font-size:10px;text-align:center;">③ 勝ち筋</th>
         </tr>
       </thead>
       <tbody>
@@ -765,8 +765,8 @@ export async function exportExecutiveSummaryPdf(data: ExecutiveSummaryInput): Pr
     </table>
 
     <!-- フッター -->
-    <div style="margin-top:10px;text-align:center;">
-      <p style="font-size:8px;color:#94a3b8;margin:0;">勝ち筋ファインダー エグゼクティブサマリー | AI分析 | ${escapeHtml(generatedAt)}</p>
+    <div style="margin-top:6px;text-align:center;">
+      <p style="font-size:7px;color:#94a3b8;margin:0;">勝ち筋ファインダー エグゼクティブサマリー | AI分析 | ${escapeHtml(generatedAt)}</p>
     </div>
   `;
 
@@ -778,19 +778,19 @@ export async function exportExecutiveSummaryPdf(data: ExecutiveSummaryInput): Pr
       useCORS: true,
       logging: false,
       backgroundColor: "#ffffff",
-      width: 1122,
-      windowWidth: 1122,
+      width: 794,
+      windowWidth: 794,
     });
 
-    // 横向きA4でPDF生成
+    // 縦向きA4でPDF生成
     const pdf = new jsPDF({
-      orientation: "landscape",
+      orientation: "portrait",
       unit: "mm",
       format: "a4",
     });
 
-    const pageWidth = pdf.internal.pageSize.getWidth();   // 297mm
-    const pageHeight = pdf.internal.pageSize.getHeight(); // 210mm
+    const pageWidth = pdf.internal.pageSize.getWidth();   // 210mm
+    const pageHeight = pdf.internal.pageSize.getHeight(); // 297mm
     const margin = 0;
     const contentWidth = pageWidth - margin * 2;
     const pxPerMm = canvas.width / contentWidth;
