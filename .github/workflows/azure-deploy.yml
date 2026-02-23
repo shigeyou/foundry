@@ -92,30 +92,26 @@ jobs:
             echo "Copying next package and its deps to standalone..."
             cp -rL node_modules/next .next/standalone/node_modules/
           fi
-          # Copy next's peer/dependencies - replace broken symlinks from standalone tracing
-          for dep in styled-jsx @swc/helpers @swc/counter caniuse-lite; do
+          # Copy ALL next.js dependencies to standalone node_modules (pnpm may not hoist them)
+          NEXT_DEPS="styled-jsx @swc/helpers @swc/counter caniuse-lite @next/env postcss baseline-browser-mapping"
+          for dep in $NEXT_DEPS; do
             if [ -e "node_modules/$dep" ]; then
-              # Remove broken symlink or existing entry first
               rm -rf ".next/standalone/node_modules/$dep" 2>/dev/null || true
               mkdir -p ".next/standalone/node_modules/$(dirname $dep)"
               cp -rL "node_modules/$dep" ".next/standalone/node_modules/$dep"
               echo "Copied next dep: $dep"
             fi
           done
-          # Copy prisma for schema sync on startup (follow pnpm symlinks)
-          for pkg in prisma @prisma; do
-            if [ -e "node_modules/$pkg" ] && [ ! -e ".next/standalone/node_modules/$pkg" ]; then
+          # Copy prisma and all @prisma/* packages for schema sync on startup
+          PRISMA_PKGS="prisma @prisma/client @prisma/engines @prisma/config @prisma/debug @prisma/fetch-engine @prisma/get-platform @prisma/internals @prisma/schema-files-loader"
+          for pkg in $PRISMA_PKGS; do
+            if [ -e "node_modules/$pkg" ]; then
+              rm -rf ".next/standalone/node_modules/$pkg" 2>/dev/null || true
               mkdir -p ".next/standalone/node_modules/$(dirname $pkg)"
               cp -rL "node_modules/$pkg" ".next/standalone/node_modules/$pkg"
               echo "Copied $pkg"
             fi
           done
-          # Copy @prisma/engines for prisma CLI
-          if [ -e "node_modules/@prisma/engines" ] && [ ! -e ".next/standalone/node_modules/@prisma/engines" ]; then
-            mkdir -p ".next/standalone/node_modules/@prisma"
-            cp -rL "node_modules/@prisma/engines" ".next/standalone/node_modules/@prisma/engines"
-            echo "Copied @prisma/engines"
-          fi
           # Copy startup script
           cp startup.sh .next/standalone/startup.sh
           chmod +x .next/standalone/startup.sh
