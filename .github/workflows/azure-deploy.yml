@@ -196,14 +196,17 @@ jobs:
           ZIP_SIZE=$(du -h deploy.zip | cut -f1)
           echo "Uploading ZIP ($ZIP_SIZE) to SitePackages..."
 
-          # Get publishing credentials
-          CREDS=$(az webapp deployment list-publishing-credentials \
+          # Get publishing credentials separately
+          SCM_USER=$(az webapp deployment list-publishing-credentials \
             --resource-group rg-ocreader-japaneast \
             --name ${{ env.AZURE_WEBAPP_NAME }} \
-            --query "{user:publishingUserName,pass:publishingPassword}" -o tsv)
-          SCM_USER=$(echo "$CREDS" | cut -f1)
-          SCM_PASS=$(echo "$CREDS" | cut -f2)
+            --query "publishingUserName" -o tsv)
+          SCM_PASS=$(az webapp deployment list-publishing-credentials \
+            --resource-group rg-ocreader-japaneast \
+            --name ${{ env.AZURE_WEBAPP_NAME }} \
+            --query "publishingPassword" -o tsv)
           SCM_URL="https://${{ env.AZURE_WEBAPP_NAME }}.scm.azurewebsites.net"
+          echo "SCM user: $SCM_USER"
 
           # Ensure SitePackages directory exists
           curl -s -X PUT \
