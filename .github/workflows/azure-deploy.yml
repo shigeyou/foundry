@@ -80,6 +80,15 @@ jobs:
           chmod +x .next/standalone/startup.sh
           # Create package.json for Azure App Service
           echo '{"name":"foundry","version":"1.0.0","scripts":{"start":"node server.js"}}' > .next/standalone/package.json
+          # Create oryx-manifest.toml to prevent Oryx from restructuring node_modules at startup
+          cat > .next/standalone/oryx-manifest.toml << 'EOF'
+OperationId = "00000000-0000-0000-0000-000000000000"
+SourceDirectoryCommitId = ""
+PlatformName = "nodejs"
+PlatformVersion = "20.20.0"
+BuildCommandsFileName = ""
+CompressedVirtualFileSystems = ""
+EOF
 
       - name: Create flat node_modules for deployment
         run: |
@@ -146,8 +155,8 @@ jobs:
       - name: Create deployment ZIP
         run: |
           cd .next/standalone
-          # Remove any Oryx trigger files
-          rm -f oryx-manifest.toml node_modules.tar.gz
+          # Remove Oryx build trigger files (keep oryx-manifest.toml - it prevents Oryx from restructuring node_modules)
+          rm -f node_modules.tar.gz
           # Remove unnecessary platform binaries
           find node_modules -path "*/sharp-win32*" -exec rm -rf {} + 2>/dev/null || true
           find node_modules -path "*/sharp-darwin*" -exec rm -rf {} + 2>/dev/null || true
@@ -185,63 +194,22 @@ jobs:
             --name ${{ env.AZURE_WEBAPP_NAME }} \
             --settings \
               DATABASE_URL="file:/home/data/foundry.db" \
-              WEBSITE_RUN_FROM_PACKAGE="1" \
+              WEBSITE_RUN_FROM_PACKAGE="0" \
               SCM_DO_BUILD_DURING_DEPLOYMENT="false" \
               ENABLE_ORYX_BUILD="false"
 
-      - name: Deploy ZIP to SitePackages
+      - name: Deploy ZIP to Azure
         run: |
-          # Upload ZIP directly to /home/data/SitePackages/ via Kudu VFS API
-          # This avoids Oryx build entirely - no zipdeploy, no build trigger
           ZIP_SIZE=$(du -h deploy.zip | cut -f1)
-          echo "Uploading ZIP ($ZIP_SIZE) to SitePackages..."
-
-          # Use Azure AD Bearer token for Kudu API authentication
-          TOKEN=$(az account get-access-token --resource "https://management.azure.com/" --query "accessToken" -o tsv)
-          SCM_URL="https://${{ env.AZURE_WEBAPP_NAME }}.scm.azurewebsites.net"
-
-          # Ensure SitePackages directory exists
-          curl -s -X PUT \
-            -H "Authorization: Bearer $TOKEN" \
-            "$SCM_URL/api/vfs/data/SitePackages/" \
-            -H "If-Match: *" || true
-
-          # Upload ZIP file
-          echo "Uploading deploy.zip..."
-          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
-            -X PUT \
-            -H "Authorization: Bearer $TOKEN" \
-            "$SCM_URL/api/vfs/data/SitePackages/deploy.zip" \
-            -H "If-Match: *" \
-            --data-binary @deploy.zip \
-            --max-time 600)
-          echo "Upload status: $HTTP_CODE"
-          if [ "$HTTP_CODE" != "200" ] && [ "$HTTP_CODE" != "201" ] && [ "$HTTP_CODE" != "204" ]; then
-            echo "ERROR: Upload failed with status $HTTP_CODE"
-            # Show response for debugging
-            curl -s -X PUT \
-              -H "Authorization: Bearer $TOKEN" \
-              "$SCM_URL/api/vfs/data/SitePackages/deploy.zip" \
-              -H "If-Match: *" \
-              --data-binary @deploy.zip \
-              --max-time 600 2>&1 | head -5
-            exit 1
-          fi
-
-          # Write packagename.txt to tell Azure which ZIP to use
-          echo -n "deploy.zip" | curl -s -X PUT \
-            -H "Authorization: Bearer $TOKEN" \
-            "$SCM_URL/api/vfs/data/SitePackages/packagename.txt" \
-            -H "If-Match: *" \
-            --data-binary @-
-          echo "packagename.txt written"
-
-      - name: Restart app
-        run: |
-          az webapp restart \
+          echo "Deploying ZIP ($ZIP_SIZE) to Azure App Service..."
+          az webapp deploy \
             --resource-group rg-ocreader-japaneast \
-            --name ${{ env.AZURE_WEBAPP_NAME }}
-          echo "App restart triggered"
+            --name ${{ env.AZURE_WEBAPP_NAME }} \
+            --src-path deploy.zip \
+            --type zip \
+            --async false \
+            --timeout 600
+          echo "Deployment complete"
 
       - name: Wait for site to be ready
         run: |
