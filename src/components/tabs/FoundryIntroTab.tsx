@@ -33,15 +33,15 @@ export function FoundryIntroTab() {
         </div>
       </section>
 
-      {/* 3つのアプリタイプ */}
+      {/* 利用できるツール */}
       <section className="mb-8">
         <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2">
           <span className="w-1 h-6 bg-indigo-500 rounded"></span>
-          3つのアプリタイプ
+          利用できるツール
         </h2>
         <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-5">
           <p className="text-slate-700 dark:text-slate-300 leading-relaxed mb-4">
-            Foundryは3種類のAIアプリを提供しています。それぞれ異なるタスクに最適化されています。
+            Foundryは3種類のAIアプリと、AIアバターアシスタントを提供しています。
           </p>
 
           <div className="space-y-4">
@@ -56,6 +56,7 @@ export function FoundryIntroTab() {
               </p>
               <ul className="text-sm text-slate-600 dark:text-slate-400 space-y-1">
                 <li>・ユースケースに応じて様々なファインダーを構築可能</li>
+                <li>・現在提供中：<strong>勝ち筋ファインダー</strong>（企業の課題と勝ち筋をAIで探索）</li>
               </ul>
             </div>
 
@@ -88,6 +89,21 @@ export function FoundryIntroTab() {
                 <li>・リスクシナリオの洗い出し</li>
               </ul>
             </div>
+
+            {/* AIアバターアシスタント */}
+            <div className="p-4 bg-teal-50 dark:bg-teal-900/30 rounded-lg border border-teal-200 dark:border-teal-800">
+              <div className="flex items-center gap-3 mb-2">
+                <span className="text-2xl">🤖</span>
+                <p className="font-bold text-teal-800 dark:text-teal-200">AIアバターアシスタント</p>
+              </div>
+              <p className="text-sm text-teal-700 dark:text-teal-300 mb-2">
+                VRアバターと自然な会話ができる外部連携AIアシスタントです。
+              </p>
+              <ul className="text-sm text-slate-600 dark:text-slate-400 space-y-1">
+                <li>・現在提供中：<strong>ライフ・ナビ</strong>（VRアバターとのAI会話）</li>
+                <li>・Foundryダッシュボードからシームレスにアクセス可能</li>
+              </ul>
+            </div>
           </div>
         </div>
       </section>
@@ -104,7 +120,20 @@ export function FoundryIntroTab() {
             一度設定すれば、どのアプリでも同じ情報を参照できます。
           </p>
 
-          <div className="grid md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Link
+              href="/settings?tab=intro"
+              className="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-lg border border-slate-200 dark:border-slate-600 hover:border-slate-400 dark:hover:border-slate-500 hover:shadow-md transition-all group"
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xl">📖</span>
+                <p className="font-medium text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400">はじめに</p>
+              </div>
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                Foundryの概要と基本的な使い方を説明しています。
+              </p>
+            </Link>
+
             <Link
               href="/settings?tab=company"
               className="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-lg border border-slate-200 dark:border-slate-600 hover:border-slate-400 dark:hover:border-slate-500 hover:shadow-md transition-all group"
@@ -173,7 +202,7 @@ export function FoundryIntroTab() {
               <div>
                 <p className="font-medium text-slate-800 dark:text-slate-200">アプリを選択</p>
                 <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                  ホーム画面から目的に合ったアプリ（ファインダー/ドラフター/シミュレーター）を選びます。
+                  ホーム画面から目的に合ったツール（ファインダー/ドラフター/シミュレーター/ライフ・ナビ）を選びます。
                 </p>
               </div>
             </li>
