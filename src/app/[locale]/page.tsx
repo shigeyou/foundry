@@ -281,7 +281,7 @@ export default function FoundryDashboard() {
                       className="block px-4 py-4 bg-gradient-to-r from-teal-500 via-cyan-500 to-sky-500 rounded-xl shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 group/item"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-base font-bold text-white">かえで</span>
+                        <span className="text-base font-bold text-white">ライフ・ナビ</span>
                         <svg className="w-5 h-5 text-white/70 group-hover/item:text-white group-hover/item:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                         </svg>
