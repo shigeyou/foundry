@@ -117,23 +117,27 @@ jobs:
 
       - name: Resolve pnpm symlinks for deployment
         run: |
-          # pnpm uses symlinks and .pnpm store which breaks on Azure.
-          # Solution: use rsync --copy-links to resolve all pnpm symlinks to real files.
-          cd .next/standalone
+          # pnpm standalone creates DANGLING symlinks in .next/standalone/node_modules
+          # (the .pnpm virtual store is incomplete in standalone output).
+          # Solution: copy ALL packages from the main project's fully-installed node_modules,
+          # resolving pnpm symlinks to real files using rsync --copy-links.
+          # The main project's node_modules has complete .pnpm store with real files.
 
-          echo "=== Resolving pnpm symlinks with rsync ==="
-          # Copy node_modules following all symlinks, excluding the .pnpm virtual store
-          # (the symlinks point INTO .pnpm, rsync --copy-links follows them and copies real files)
-          rsync -a --copy-links --exclude='.pnpm' node_modules/ /tmp/flat_nm/
-          rm -rf node_modules
-          mv /tmp/flat_nm node_modules
+          echo "=== Resolving pnpm symlinks from main project's node_modules ==="
+          # Remove standalone's dangling-symlink node_modules
+          rm -rf .next/standalone/node_modules
+
+          # Copy from main project's node_modules (resolving all pnpm symlinks to real files)
+          # --copy-links: follow symlinks and copy as real files
+          # --exclude='.pnpm': skip the virtual store itself (resolved packages are enough)
+          rsync -a --copy-links --exclude='.pnpm' node_modules/ .next/standalone/node_modules/
 
           echo "=== Resolved node_modules check ==="
-          ls node_modules/ | head -30
-          ls node_modules/next/package.json && echo "next: OK ($(node -e "console.log(require('./node_modules/next/package.json').version)"))" || echo "next: MISSING"
-          ls node_modules/@libsql/client/package.json 2>/dev/null && echo "@libsql/client: OK" || echo "@libsql/client: MISSING"
-          ls node_modules/@libsql/core/package.json 2>/dev/null && echo "@libsql/core: OK" || echo "@libsql/core: MISSING"
-          du -sh node_modules/
+          ls .next/standalone/node_modules/ | head -30
+          ls .next/standalone/node_modules/next/package.json && echo "next: OK" || echo "next: MISSING"
+          ls .next/standalone/node_modules/@libsql/client/package.json 2>/dev/null && echo "@libsql/client: OK" || echo "@libsql/client: MISSING"
+          ls .next/standalone/node_modules/@libsql/core/package.json 2>/dev/null && echo "@libsql/core: OK" || echo "@libsql/core: MISSING"
+          du -sh .next/standalone/node_modules/
 
       - name: Create deployment ZIP
         run: |
