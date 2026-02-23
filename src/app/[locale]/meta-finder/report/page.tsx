@@ -85,6 +85,30 @@ export default function ReportPage() {
   const [loadingBatches, setLoadingBatches] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
 
+  const [deletingBatchId, setDeletingBatchId] = useState<string | null>(null);
+
+  const handleDeleteBatch = useCallback(async (targetId: string) => {
+    if (!confirm("この探索履歴を削除しますか？レポートも同時に削除されます。")) return;
+    setDeletingBatchId(targetId);
+    try {
+      const res = await fetch(`/api/meta-finder/batch?id=${targetId}`, { method: "DELETE" });
+      if (!res.ok) {
+        const data = await res.json();
+        alert(data.error || "削除に失敗しました");
+        return;
+      }
+      setAllBatches(prev => prev.filter(b => b.id !== targetId));
+      // 現在表示中のバッチを削除した場合はトップへリダイレクト
+      if (targetId === batchId) {
+        router.replace("/meta-finder/report");
+      }
+    } catch {
+      alert("削除に失敗しました");
+    } finally {
+      setDeletingBatchId(null);
+    }
+  }, [batchId, router]);
+
   // バッチ一覧を取得（履歴用 + batchId未指定時のリダイレクト用）
   useEffect(() => {
     setLoadingBatches(true);
@@ -168,10 +192,9 @@ export default function ReportPage() {
   };
 
   const handlePdfExport = async () => {
-    if (!printRef.current) return;
     try {
-      const { exportReportPdf } = await import("@/lib/export-pdf");
-      await exportReportPdf("report-print-area");
+      const { exportFullReportPdfFromData } = await import("@/lib/export-pdf");
+      await exportFullReportPdfFromData(reports, batch ? { totalIdeas: batch.totalIdeas, startedAt: batch.startedAt } : undefined);
     } catch (err) {
       console.error("[PDF] Export failed:", err);
     }
@@ -469,6 +492,18 @@ export default function ReportPage() {
                         >
                           {t("generateReport")}
                         </button>
+                        <button
+                          onClick={() => handleDeleteBatch(b.id)}
+                          disabled={deletingBatchId === b.id}
+                          className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors disabled:opacity-50"
+                          title="削除"
+                        >
+                          {deletingBatchId === b.id ? (
+                            <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                          ) : (
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                          )}
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -569,31 +604,45 @@ export default function ReportPage() {
                       allBatches.map((b, index) => {
                         const date = new Date(b.startedAt);
                         const isCurrentBatch = b.id === batchId;
+                        const isDeleting = deletingBatchId === b.id;
                         return (
-                          <a
-                            key={b.id}
-                            href={`/meta-finder/report?batchId=${b.id}`}
-                            onClick={() => setShowHistory(false)}
-                            className={`flex items-center justify-between px-3 py-2 rounded-lg text-xs transition-colors ${
-                              isCurrentBatch
-                                ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300"
-                                : "hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
-                            }`}
-                          >
-                            <div>
-                              <div className="font-semibold">
-                                {index === 0 ? "最新" : `#${allBatches.length - index}`}
-                                {isCurrentBatch && <span className="ml-1 text-indigo-500">← 表示中</span>}
+                          <div key={b.id} className={`flex items-center gap-1 rounded-lg text-xs ${isCurrentBatch ? "bg-indigo-50 dark:bg-indigo-900/30" : "hover:bg-gray-50 dark:hover:bg-gray-700/50"}`}>
+                            <a
+                              href={`/meta-finder/report?batchId=${b.id}`}
+                              onClick={() => setShowHistory(false)}
+                              className={`flex-1 flex items-center justify-between px-3 py-2 transition-colors ${
+                                isCurrentBatch
+                                  ? "text-indigo-700 dark:text-indigo-300"
+                                  : "text-gray-700 dark:text-gray-300"
+                              }`}
+                            >
+                              <div>
+                                <div className="font-semibold">
+                                  {index === 0 ? "最新" : `#${allBatches.length - index}`}
+                                  {isCurrentBatch && <span className="ml-1 text-indigo-500">← 表示中</span>}
+                                </div>
+                                <div className="text-gray-500 dark:text-gray-400">
+                                  {date.toLocaleDateString("ja-JP")} {date.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}
+                                </div>
                               </div>
-                              <div className="text-gray-500 dark:text-gray-400">
-                                {date.toLocaleDateString("ja-JP")} {date.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}
+                              <div className="text-right text-gray-500 dark:text-gray-400 mr-1">
+                                <div>{b.totalIdeas}件</div>
+                                <div>{b.totalPatterns}パターン</div>
                               </div>
-                            </div>
-                            <div className="text-right text-gray-500 dark:text-gray-400">
-                              <div>{b.totalIdeas}件</div>
-                              <div>{b.totalPatterns}パターン</div>
-                            </div>
-                          </a>
+                            </a>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleDeleteBatch(b.id); }}
+                              disabled={isDeleting}
+                              className="p-1.5 mr-1 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded transition-colors disabled:opacity-50"
+                              title="削除"
+                            >
+                              {isDeleting ? (
+                                <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                              ) : (
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                              )}
+                            </button>
+                          </div>
                         );
                       })
                     )}

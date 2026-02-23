@@ -422,20 +422,23 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: "バッチが見つかりません" }, { status: 404 });
     }
 
-    if (batch.status !== "running") {
-      return NextResponse.json({ error: "実行中のバッチではありません" }, { status: 400 });
+    // 実行中のバッチはキャンセル、それ以外は削除
+    if (batch.status === "running") {
+      await prisma.metaFinderBatch.update({
+        where: { id: batchId },
+        data: {
+          status: "cancelled",
+          completedAt: new Date(),
+        },
+      });
+      return NextResponse.json({ message: "バッチ処理をキャンセルしました" });
     }
 
-    // ステータスをキャンセル済みに更新
-    await prisma.metaFinderBatch.update({
-      where: { id: batchId },
-      data: {
-        status: "cancelled",
-        completedAt: new Date(),
-      },
-    });
+    // 完了済み/キャンセル済み/失敗バッチを削除（Idea・Reportはカスケード削除）
+    await prisma.metaFinderReport.deleteMany({ where: { batchId } });
+    await prisma.metaFinderBatch.delete({ where: { id: batchId } });
 
-    return NextResponse.json({ message: "バッチ処理をキャンセルしました" });
+    return NextResponse.json({ message: "履歴を削除しました" });
 
   } catch (error) {
     console.error("Failed to delete/cancel batch:", error);

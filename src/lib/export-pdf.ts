@@ -749,17 +749,20 @@ export async function exportExecutiveSummaryPdf(data: ExecutiveSummaryInput): Pr
       <h2 style="font-size: 14px; font-weight: bold; color: #1e293b; margin: 0 0 10px 0; border-bottom: 2px solid #e2e8f0; padding-bottom: 4px;">
         🏢 部門別ハイライト
       </h2>
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+      <div style="display: flex; flex-direction: column; gap: 10px;">
         ${data.departments.filter(d => d.name !== "全社").map(dept => {
           const topStrat = dept.topStrategies[0];
           return `
-          <div style="padding: 8px 10px; background: #f8fafc; border-radius: 6px; border: 1px solid #e2e8f0;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px;">
-              <span style="font-size: 11px; font-weight: bold; color: #1e293b;">${escapeHtml(dept.name)}</span>
+          <div style="padding: 10px 12px; background: #f8fafc; border-radius: 6px; border: 1px solid #e2e8f0; border-left: 3px solid #6366f1;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+              <span style="font-size: 12px; font-weight: bold; color: #1e293b;">${escapeHtml(dept.name)}</span>
               <span style="font-size: 9px; color: #94a3b8;">課題${dept.issueCount} 解決策${dept.solutionCount} 勝ち筋${dept.topStrategies.length}</span>
             </div>
+            ${dept.executiveSummary ? `
+              <p style="font-size: 10px; color: #334155; margin: 0 0 5px 0; line-height: 1.5;">${escapeHtml(dept.executiveSummary)}</p>
+            ` : ""}
             ${topStrat ? `
-              <p style="font-size: 10px; color: #4f46e5; margin: 0; font-weight: 500;">
+              <p style="font-size: 10px; color: #4f46e5; margin: 0; font-weight: 500; background: #eef2ff; padding: 3px 6px; border-radius: 4px; display: inline-block;">
                 ★ ${escapeHtml(topStrat.name)}（${topStrat.score.toFixed(1)}）
               </p>
             ` : ""}
@@ -827,6 +830,187 @@ export async function exportExecutiveSummaryPdf(data: ExecutiveSummaryInput): Pr
     const now = new Date();
     const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
     pdf.save(`${dateStr}_エグゼクティブサマリー.pdf`);
+  } finally {
+    document.body.removeChild(container);
+  }
+}
+
+// 全部門レポートPDF（全スコープ分を1ファイルに出力）
+interface FullReportRecord {
+  scope: string;
+  scopeName: string;
+  sections: string; // JSON
+  status: string;
+}
+
+export async function exportFullReportPdfFromData(
+  records: FullReportRecord[],
+  batchInfo?: { totalIdeas: number; startedAt: string }
+): Promise<void> {
+  const container = document.createElement("div");
+  container.style.cssText = `
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    width: 794px;
+    padding: 40px;
+    background: white;
+    font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
+    color: #1a1a1a;
+    line-height: 1.6;
+  `;
+
+  const generatedAt = new Date().toLocaleString("ja-JP");
+  const completedRecords = records.filter(r => r.status === "completed");
+
+  const sevColor = (sev: string) => {
+    if (sev === "high") return { bg: "#fef2f2", text: "#dc2626", border: "#dc2626" };
+    if (sev === "medium") return { bg: "#fffbeb", text: "#d97706", border: "#d97706" };
+    return { bg: "#f0fdf4", text: "#059669", border: "#059669" };
+  };
+  const priLabel = (p: string) => p === "immediate" ? "即時対応" : p === "short-term" ? "短期" : "中期";
+  const priColor = (p: string) => p === "immediate" ? "#dc2626" : p === "short-term" ? "#2563eb" : "#7c3aed";
+
+  const deptHtmlParts = completedRecords.map((record, idx) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let sections: any;
+    try { sections = JSON.parse(record.sections); } catch { return ""; }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const issues: any[] = sections.issues?.items || [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const solutions: any[] = sections.solutions?.items || [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const strategies: any[] = sections.strategies?.items || [];
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const issuesHtml = issues.map((issue: any, i: number) => {
+      const c = sevColor(issue.severity || "medium");
+      const sevLabel = issue.severity === "high" ? "重要度高" : issue.severity === "medium" ? "重要度中" : "重要度低";
+      return `<div style="margin-bottom:8px;padding:9px;background:${c.bg};border-left:4px solid ${c.border};border-radius:4px;">
+        <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px;">
+          <span style="font-size:10px;font-weight:bold;color:${c.text};background:white;padding:1px 6px;border-radius:4px;border:1px solid ${c.border};">${sevLabel}</span>
+          <span style="font-size:10px;color:#64748b;background:#f1f5f9;padding:1px 6px;border-radius:4px;">${escapeHtml(issue.category || "")}</span>
+        </div>
+        ${issue.title ? `<p style="font-size:12px;font-weight:bold;color:#1e293b;margin:0 0 3px 0;">${i + 1}. ${escapeHtml(issue.title)}</p>` : ""}
+        <p style="font-size:11px;color:#334155;margin:0 0 2px 0;">${escapeHtml(issue.challenge || "")}</p>
+        ${issue.evidence ? `<p style="font-size:10px;color:#64748b;margin:0;"><b>根拠:</b> ${escapeHtml(issue.evidence)}</p>` : ""}
+      </div>`;
+    }).join("");
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const solutionsHtml = solutions.map((sol: any, i: number) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const actions = (sol.actions || []).map((a: any) => `<li style="margin-bottom:1px;">${escapeHtml(String(a))}</li>`).join("");
+      return `<div style="margin-bottom:8px;padding:9px;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
+          <span style="font-size:12px;font-weight:bold;color:#1e293b;">${i + 1}. ${escapeHtml(sol.title || sol.solution || "")}</span>
+          <span style="font-size:10px;font-weight:bold;color:${priColor(sol.priority)};white-space:nowrap;margin-left:8px;">${priLabel(sol.priority)}</span>
+        </div>
+        ${sol.title && sol.solution ? `<p style="font-size:10px;color:#64748b;margin:0 0 2px 0;">${escapeHtml(sol.solution)}</p>` : ""}
+        <p style="font-size:10px;color:#64748b;margin:0 0 2px 0;">対応課題: ${escapeHtml(sol.challenge || "")}</p>
+        <p style="font-size:11px;color:#334155;margin:0 0 3px 0;">${escapeHtml(sol.description || "")}</p>
+        ${actions ? `<ul style="margin:3px 0 3px 16px;padding:0;font-size:10px;color:#475569;">${actions}</ul>` : ""}
+        ${sol.expectedOutcome ? `<p style="font-size:10px;color:#059669;margin:0;"><i>期待成果: ${escapeHtml(sol.expectedOutcome)}</i></p>` : ""}
+      </div>`;
+    }).join("");
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const strategiesHtml = strategies.map((strat: any, i: number) => {
+      const bsc = strat.bscScores;
+      const avg = bsc ? ((bsc.financial + bsc.customer + bsc.process + bsc.growth) / 4).toFixed(1) : "?";
+      const sc = parseFloat(avg) >= 4 ? "#059669" : parseFloat(avg) >= 3 ? "#2563eb" : "#d97706";
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const acts = (strat.keyActions || []).map((a: any) => `<li>${escapeHtml(String(a))}</li>`).join("");
+      return `<div style="margin-bottom:8px;padding:9px;background:#faf5ff;border-radius:6px;border:1px solid #e9d5ff;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
+          <span style="font-size:12px;font-weight:bold;color:#1e293b;">${i + 1}. ${escapeHtml(strat.name || "")}</span>
+          <span style="font-size:14px;font-weight:bold;color:${sc};">${avg}</span>
+        </div>
+        <p style="font-size:11px;color:#334155;margin:0 0 3px 0;">${escapeHtml(strat.description || "")}</p>
+        ${bsc ? `<div style="font-size:10px;color:#64748b;margin-bottom:3px;">💰財務${bsc.financial} 👥顧客${bsc.customer} ⚙️業務${bsc.process} 🌱成長${bsc.growth}</div>` : ""}
+        ${acts ? `<ul style="margin:0 0 3px 16px;padding:0;font-size:10px;color:#475569;">${acts}</ul>` : ""}
+        ${strat.kpi ? `<p style="font-size:10px;color:#4f46e5;margin:0;"><b>KPI:</b> ${escapeHtml(strat.kpi)}</p>` : ""}
+      </div>`;
+    }).join("");
+
+    return `
+      ${idx > 0 ? `<div style="margin-top:40px;border-top:3px solid #e2e8f0;padding-top:24px;"></div>` : ""}
+      <div style="border-bottom:2px solid #4f46e5;padding-bottom:10px;margin-bottom:14px;">
+        <h2 style="font-size:20px;font-weight:bold;margin:0;color:#1e293b;">${escapeHtml(record.scopeName)}</h2>
+      </div>
+      <div style="background:#eef2ff;border:1px solid #c7d2fe;border-radius:8px;padding:12px;margin-bottom:14px;">
+        <h3 style="font-size:12px;font-weight:bold;color:#4338ca;margin:0 0 6px 0;">📋 エグゼクティブサマリー</h3>
+        <p style="font-size:12px;color:#1e293b;margin:0;line-height:1.6;">${escapeHtml(sections.executiveSummary || "")}</p>
+      </div>
+      <div style="margin-bottom:14px;">
+        <h3 style="font-size:13px;font-weight:bold;color:#dc2626;margin:0 0 8px 0;border-bottom:2px solid #fecaca;padding-bottom:4px;">1. 課題整理（${issues.length}件）</h3>
+        ${sections.issues?.summary ? `<p style="font-size:10px;color:#64748b;margin:0 0 8px 0;border-left:3px solid #e2e8f0;padding-left:8px;">${escapeHtml(sections.issues.summary)}</p>` : ""}
+        ${issuesHtml}
+      </div>
+      <div style="margin-bottom:14px;">
+        <h3 style="font-size:13px;font-weight:bold;color:#2563eb;margin:0 0 8px 0;border-bottom:2px solid #bfdbfe;padding-bottom:4px;">2. 解決策策定（${solutions.length}件）</h3>
+        ${sections.solutions?.summary ? `<p style="font-size:10px;color:#64748b;margin:0 0 8px 0;border-left:3px solid #e2e8f0;padding-left:8px;">${escapeHtml(sections.solutions.summary)}</p>` : ""}
+        ${solutionsHtml}
+      </div>
+      <div style="margin-bottom:20px;">
+        <h3 style="font-size:13px;font-weight:bold;color:#7c3aed;margin:0 0 8px 0;border-bottom:2px solid #e9d5ff;padding-bottom:4px;">3. 勝ち筋提案（${strategies.length}件）</h3>
+        ${sections.strategies?.summary ? `<p style="font-size:10px;color:#64748b;margin:0 0 8px 0;border-left:3px solid #e2e8f0;padding-left:8px;">${escapeHtml(sections.strategies.summary)}</p>` : ""}
+        ${strategiesHtml}
+      </div>
+    `;
+  }).join("");
+
+  container.innerHTML = `
+    <div style="text-align:center;padding:60px 0 40px;border-bottom:3px solid #4f46e5;margin-bottom:32px;">
+      <h1 style="font-size:26px;font-weight:bold;color:#1e293b;margin:0 0 10px;">勝ち筋ファインダー レポート</h1>
+      <p style="font-size:14px;color:#4f46e5;margin:0 0 6px;">部門別 課題・解決策・勝ち筋</p>
+      ${batchInfo ? `<p style="font-size:12px;color:#64748b;margin:0 0 4px;">探索日: ${new Date(batchInfo.startedAt).toLocaleDateString("ja-JP")} | ${batchInfo.totalIdeas}件のアイデア</p>` : ""}
+      <p style="font-size:11px;color:#94a3b8;margin:0;">生成: ${generatedAt} | ${completedRecords.length}部門</p>
+    </div>
+    ${deptHtmlParts}
+    <div style="margin-top:32px;padding-top:12px;border-top:1px solid #e2e8f0;text-align:center;">
+      <p style="font-size:9px;color:#94a3b8;margin:0;">勝ち筋ファインダー | AI分析 | ${escapeHtml(generatedAt)}</p>
+    </div>
+  `;
+
+  document.body.appendChild(container);
+
+  try {
+    const canvas = await html2canvas(container, {
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      backgroundColor: "#ffffff",
+      width: 794,
+      windowWidth: 794,
+    });
+
+    const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const margin = 15;
+    const contentWidth = pageWidth - margin * 2;
+    const pxPerMm = canvas.width / contentWidth;
+    const pageHeightPx = Math.floor((pageHeight - margin * 2) * pxPerMm);
+
+    let srcY = 0;
+    let pageIndex = 0;
+    while (srcY < canvas.height) {
+      if (pageIndex > 0) pdf.addPage();
+      const sliceHeight = Math.min(pageHeightPx, canvas.height - srcY);
+      const pageCanvas = document.createElement("canvas");
+      pageCanvas.width = canvas.width;
+      pageCanvas.height = sliceHeight;
+      pageCanvas.getContext("2d")!.drawImage(canvas, 0, srcY, canvas.width, sliceHeight, 0, 0, canvas.width, sliceHeight);
+      pdf.addImage(pageCanvas.toDataURL("image/png"), "PNG", margin, margin, contentWidth, sliceHeight / pxPerMm);
+      srcY += pageHeightPx;
+      pageIndex++;
+    }
+
+    const now = new Date();
+    const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
+    pdf.save(`${dateStr}_勝ち筋ファインダー報告書_全部門.pdf`);
   } finally {
     document.body.removeChild(container);
   }
