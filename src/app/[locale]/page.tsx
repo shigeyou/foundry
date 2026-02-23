@@ -17,6 +17,7 @@ const appTypes = [
     key: "kachisuji" as const,
     icon: "🔍",
     label: "ファインダー型",
+    buttonLabel: "勝ち筋ファインダー",
     description: "データや情報を探索・発見",
     gradient: "from-blue-500 via-blue-600 to-indigo-600",
     lightBg: "bg-blue-100 dark:bg-blue-500/10",
@@ -216,7 +217,7 @@ export default function FoundryDashboard() {
                           className={`block px-4 py-4 bg-gradient-to-r ${type.gradient} rounded-xl shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 group/item`}
                         >
                           <div className="flex items-center justify-between">
-                            <span className="text-base font-bold text-white">{type.label}</span>
+                            <span className="text-base font-bold text-white">{"buttonLabel" in type ? (type as any).buttonLabel : type.label}</span>
                             <svg className="w-5 h-5 text-white/70 group-hover/item:text-white group-hover/item:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                             </svg>
@@ -264,6 +265,10 @@ export default function FoundryDashboard() {
           <div className="mb-8">
             <div className="grid md:grid-cols-3 gap-6">
               <div className="relative bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 transition-all duration-500 hover:shadow-xl">
+                <div className="flex items-center gap-2 mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+                  <span className="text-2xl">🤖</span>
+                  <span className="text-sm font-semibold text-teal-700 dark:text-teal-300 tracking-wide">AIアバターアシスタント</span>
+                </div>
                 <div className="space-y-3 min-h-[80px]">
                   {kaedeUrl ? (
                     <a
