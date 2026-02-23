@@ -672,7 +672,14 @@ export default function MetaFinderPage() {
       {/* Header */}
       <header className="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 px-6 py-4">
         <div className="max-w-full mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4">
+            <a
+              href="/"
+              className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 rounded-lg transition-colors"
+            >
+              <span className="text-sm">🏠</span>
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-200 hidden sm:inline">ホーム</span>
+            </a>
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                 🌱 {t("title")}
@@ -827,10 +834,10 @@ export default function MetaFinderPage() {
                 </span>
               )}
             </div>
-            <div className="flex flex-row gap-2 h-full">
+            <div className="flex flex-row gap-2 items-stretch">
               <button
                 onClick={toggleListening}
-                className={`h-full px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   isListening
                     ? "bg-red-500 hover:bg-red-600 text-white"
                     : "bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 text-gray-700 dark:text-gray-300"
@@ -843,7 +850,7 @@ export default function MetaFinderPage() {
               <button
                 onClick={handleImproveText}
                 disabled={loading || isImproving || !freePrompt.trim()}
-                className="h-full px-3 py-2 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 disabled:opacity-50 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium transition-colors disabled:cursor-not-allowed"
+                className="px-3 py-2 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 disabled:opacity-50 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium transition-colors disabled:cursor-not-allowed"
                 title={t("freePrompt.improveTitle")}
               >
                 {isImproving ? t("freePrompt.improving") : `✨ ${t("freePrompt.improveText")}`}
@@ -851,7 +858,7 @@ export default function MetaFinderPage() {
               <button
                 onClick={handleFreeExplore}
                 disabled={loading || !freePrompt.trim()}
-                className="h-full px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-lg text-sm font-bold shadow-md transition-all disabled:cursor-not-allowed"
+                className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-lg text-sm font-bold shadow-md transition-all disabled:cursor-not-allowed"
               >
                 {loading ? t("freePrompt.exploring") : `🚀 ${t("freePrompt.explore")}`}
               </button>

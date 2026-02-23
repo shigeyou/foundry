@@ -99,9 +99,12 @@ async function runBatchInBackground(batchId: string) {
       return;
     }
 
+    // RAGコンテキスト合計上限: 50,000文字（ドキュメント数が増えても肥大化しないよう均等配分）
+    const RAG_CONTEXT_BUDGET = 50000;
+    const charsPerDoc = Math.max(500, Math.min(2000, Math.floor(RAG_CONTEXT_BUDGET / ragDocuments.length)));
     let documentContext = "## 分析対象ドキュメント\n\n";
     for (const doc of ragDocuments) {
-      documentContext += `### ${doc.filename}\n${doc.content.slice(0, 3000)}\n\n`;
+      documentContext += `### ${doc.filename}\n${doc.content.slice(0, charsPerDoc)}\n\n`;
     }
 
     // SWOT分析結果を取得・注入
@@ -140,9 +143,10 @@ ${swot.summary ? `\n### SWOT総括\n${swot.summary}` : ""}
 
     console.log(`[MetaFinder Batch] ${pendingPatterns.length} patterns remaining`);
 
-    // 並列数: 各パターン約12,500トークン(入力+出力) x 10 = 125,000 TPM
-    // Azure制限を超える場合は6-8に減らすこと
-    const CONCURRENCY = 10;
+    // 並列数: BATCH_CONCURRENCY環境変数で調整可能（デフォルト20）
+    // 各パターン約8,000トークン(入力削減後) x 20 = 160,000 TPM 目安
+    // Azure TPM制限を超える場合は env BATCH_CONCURRENCY=10 などで下げること
+    const CONCURRENCY = parseInt(process.env.BATCH_CONCURRENCY || "20");
 
     // チャンク単位で並列実行
     for (let i = 0; i < pendingPatterns.length; i += CONCURRENCY) {
@@ -180,30 +184,35 @@ ${swot.summary ? `\n### SWOT総括\n${swot.summary}` : ""}
         })
       );
 
-      // 結果をDB保存
+      // 結果をDB一括保存（createManyで高速化）
+      const ideasToInsert: {
+        id: string; batchId: string; themeId: string; themeName: string;
+        deptId: string; deptName: string; name: string; description: string;
+        actions: string | null; reason: string;
+        financial: number; customer: number; process: number; growth: number; score: number;
+      }[] = [];
+
       for (const result of results) {
         if (result.status === "fulfilled") {
           const { theme, dept, needs } = result.value;
           for (const need of needs) {
             const score = (need.financial + need.customer + need.process + need.growth) / 4;
-            await prisma.metaFinderIdea.create({
-              data: {
-                id: `idea-${batchId}-${theme.id}-${dept.id}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-                batchId,
-                themeId: theme.id,
-                themeName: theme.label,
-                deptId: dept.id,
-                deptName: dept.label,
-                name: need.name,
-                description: need.description,
-                actions: need.actions ? JSON.stringify(need.actions) : null,
-                reason: need.reason,
-                financial: need.financial,
-                customer: need.customer,
-                process: need.process,
-                growth: need.growth,
-                score,
-              },
+            ideasToInsert.push({
+              id: `idea-${batchId}-${theme.id}-${dept.id}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+              batchId,
+              themeId: theme.id,
+              themeName: theme.label,
+              deptId: dept.id,
+              deptName: dept.label,
+              name: need.name,
+              description: need.description,
+              actions: need.actions ? JSON.stringify(need.actions) : null,
+              reason: need.reason,
+              financial: need.financial,
+              customer: need.customer,
+              process: need.process,
+              growth: need.growth,
+              score,
             });
             totalIdeas++;
           }
@@ -214,6 +223,10 @@ ${swot.summary ? `\n### SWOT総括\n${swot.summary}` : ""}
           errors.push(errorMsg);
         }
         completedPatterns++;
+      }
+
+      if (ideasToInsert.length > 0) {
+        await prisma.metaFinderIdea.createMany({ data: ideasToInsert });
       }
 
       // チャンク完了後に進捗更新

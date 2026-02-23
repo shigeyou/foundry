@@ -60,7 +60,7 @@ function SettingsContent() {
             {/* Left: Home link + Title */}
             <div className="flex items-center gap-3 flex-shrink-0">
               <Link
-                href="/meta-finder"
+                href="/"
                 className="flex items-center gap-2 px-3 py-1.5 bg-slate-200/60 hover:bg-slate-300/60 dark:bg-slate-700/50 dark:hover:bg-slate-600/50 rounded-lg transition-colors group"
               >
                 <span className="w-7 h-7 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
