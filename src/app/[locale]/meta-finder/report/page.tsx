@@ -80,26 +80,34 @@ export default function ReportPage() {
     }
   }, []);
 
-  // バッチ一覧（batchId未指定時用）
+  // バッチ一覧（履歴ドロップダウン用）
   const [allBatches, setAllBatches] = useState<BatchInfo[]>([]);
   const [loadingBatches, setLoadingBatches] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
 
-  // batchId未指定時: バッチ一覧を取得
+  // バッチ一覧を取得（履歴用 + batchId未指定時のリダイレクト用）
   useEffect(() => {
-    if (batchId) return;
     setLoadingBatches(true);
     fetch("/api/meta-finder/batch")
       .then(res => res.json())
       .then(data => {
         const completed = (data.batches || []).filter((b: BatchInfo) => b.status === "completed");
         setAllBatches(completed);
+        // batchId未指定時: 最新の完了済みバッチへ自動リダイレクト
+        if (!batchId && completed.length > 0) {
+          router.replace(`/meta-finder/report?batchId=${completed[0].id}`);
+        } else if (!batchId) {
+          setLoading(false);
+        }
       })
-      .catch(() => setError(t("fetchFailed")))
+      .catch(() => {
+        setError(t("fetchFailed"));
+        if (!batchId) setLoading(false);
+      })
       .finally(() => {
         setLoadingBatches(false);
-        setLoading(false);
       });
-  }, [batchId]);
+  }, [batchId, router]);
 
   const fetchReports = useCallback(async () => {
     if (!batchId) return;
@@ -527,12 +535,63 @@ export default function ReportPage() {
                 </button>
               </>
             )}
-            <a
-              href="/meta-finder/report"
-              className="px-3 py-1.5 text-xs bg-purple-100 dark:bg-purple-900/30 hover:bg-purple-200 dark:hover:bg-purple-900/50 text-purple-600 dark:text-purple-400 rounded-lg transition-colors"
-            >
-              {t("batchSelect")}
-            </a>
+            {/* 履歴ドロップダウン */}
+            <div className="relative">
+              <button
+                onClick={() => setShowHistory(v => !v)}
+                className="px-3 py-1.5 text-xs bg-purple-100 dark:bg-purple-900/30 hover:bg-purple-200 dark:hover:bg-purple-900/50 text-purple-600 dark:text-purple-400 rounded-lg transition-colors flex items-center gap-1"
+              >
+                <span>🕐 {t("batchSelect")}</span>
+                {allBatches.length > 0 && (
+                  <span className="bg-purple-200 dark:bg-purple-800 px-1 rounded text-purple-700 dark:text-purple-300">
+                    {allBatches.length}
+                  </span>
+                )}
+                <span>{showHistory ? "▴" : "▾"}</span>
+              </button>
+              {showHistory && (
+                <div className="absolute right-0 top-full mt-1 w-72 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl z-50 overflow-hidden">
+                  <div className="p-1 max-h-64 overflow-y-auto">
+                    {loadingBatches ? (
+                      <p className="text-xs text-gray-500 p-3 text-center">読み込み中...</p>
+                    ) : allBatches.length === 0 ? (
+                      <p className="text-xs text-gray-500 p-3 text-center">履歴なし</p>
+                    ) : (
+                      allBatches.map((b, index) => {
+                        const date = new Date(b.startedAt);
+                        const isCurrentBatch = b.id === batchId;
+                        return (
+                          <a
+                            key={b.id}
+                            href={`/meta-finder/report?batchId=${b.id}`}
+                            onClick={() => setShowHistory(false)}
+                            className={`flex items-center justify-between px-3 py-2 rounded-lg text-xs transition-colors ${
+                              isCurrentBatch
+                                ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300"
+                                : "hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+                            }`}
+                          >
+                            <div>
+                              <div className="font-semibold">
+                                {index === 0 ? "最新" : `#${allBatches.length - index}`}
+                                {isCurrentBatch && <span className="ml-1 text-indigo-500">← 表示中</span>}
+                              </div>
+                              <div className="text-gray-500 dark:text-gray-400">
+                                {date.toLocaleDateString("ja-JP")} {date.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })}
+                              </div>
+                            </div>
+                            <div className="text-right text-gray-500 dark:text-gray-400">
+                              <div>{b.totalIdeas}件</div>
+                              <div>{b.totalPatterns}パターン</div>
+                            </div>
+                          </a>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
             <a
               href="/meta-finder"
               className="px-3 py-1.5 text-xs bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg transition-colors"

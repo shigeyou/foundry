@@ -3,6 +3,38 @@ import { prisma } from "@/lib/db";
 import { generateWithClaude } from "@/lib/claude";
 import { departments, deptContext } from "@/lib/meta-finder-prompt";
 
+// 自動レポート生成のトリガー（バッチ完了時に呼び出す）
+export async function triggerReportGeneration(batchId: string): Promise<void> {
+  try {
+    // 既存レポートを削除（再生成）
+    await prisma.metaFinderReport.deleteMany({ where: { batchId } });
+
+    const scopes = departments.map(d => ({ id: d.id, name: d.label, desc: d.description }));
+
+    const reportRecords = scopes.map(s => ({
+      id: `report-${batchId}-${s.id}`,
+      batchId,
+      scope: s.id,
+      scopeName: s.name,
+      sections: "{}",
+      status: "pending",
+    }));
+
+    for (const r of reportRecords) {
+      await prisma.metaFinderReport.create({ data: r });
+    }
+
+    // バックグラウンドで生成開始
+    generateAllReports(batchId, scopes).catch(err => {
+      console.error("[Report] Auto background generation failed:", err);
+    });
+
+    console.log(`[Report] Auto-triggered report generation for batch ${batchId}`);
+  } catch (error) {
+    console.error(`[Report] Failed to trigger auto report generation for ${batchId}:`, error);
+  }
+}
+
 // GET: レポート取得
 export async function GET(req: NextRequest) {
   try {

@@ -10,6 +10,7 @@ import {
   themeAngles,
   deptContext,
 } from "@/lib/meta-finder-prompt";
+import { triggerReportGeneration } from "@/app/api/meta-finder/report/route";
 
 // 単一パターンの探索を実行（テーマ別視点・部門別文脈を注入）
 async function explorePattern(
@@ -253,6 +254,11 @@ ${swot.summary ? `\n### SWOT総括\n${swot.summary}` : ""}
     });
 
     console.log(`[MetaFinder Batch] Completed: ${totalIdeas} ideas from ${completedPatterns} patterns`);
+
+    // 完了後に自動でレポート生成を起動（バックグラウンド）
+    triggerReportGeneration(batchId).catch(err => {
+      console.error("[MetaFinder Batch] Auto report trigger failed:", err);
+    });
 
   } catch (error) {
     console.error(`[MetaFinder Batch] Fatal error:`, error);
