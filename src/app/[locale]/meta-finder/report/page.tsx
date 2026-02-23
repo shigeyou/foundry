@@ -57,6 +57,44 @@ function scoreBg(score: number): string {
   return "bg-red-500";
 }
 
+// エグゼクティブサマリーのテキストを箇条書き対応レンダラーで表示
+function ExecutiveSummaryText({ text }: { text: string }) {
+  const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
+  const hasBullets = lines.some(l => l.startsWith("・") || l.startsWith("•") || l.startsWith("-"));
+
+  if (!hasBullets) {
+    return <p className="text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-wrap">{text}</p>;
+  }
+
+  return (
+    <ul className="space-y-2.5">
+      {lines.map((line, i) => {
+        const cleanLine = line.replace(/^[・•\-]\s*/, "");
+        const colonIdx = cleanLine.indexOf("：");
+        if (colonIdx > 0) {
+          const label = cleanLine.slice(0, colonIdx);
+          const content = cleanLine.slice(colonIdx + 1).trim();
+          return (
+            <li key={i} className="flex gap-2 items-start">
+              <span className="mt-0.5 shrink-0 w-1.5 h-1.5 rounded-full bg-indigo-500 dark:bg-indigo-400 mt-2" />
+              <span className="text-gray-800 dark:text-gray-200 leading-relaxed">
+                <span className="font-semibold text-indigo-700 dark:text-indigo-300">{label}：</span>
+                {content}
+              </span>
+            </li>
+          );
+        }
+        return (
+          <li key={i} className="flex gap-2 items-start">
+            <span className="shrink-0 w-1.5 h-1.5 rounded-full bg-indigo-500 dark:bg-indigo-400 mt-2" />
+            <span className="text-gray-800 dark:text-gray-200 leading-relaxed">{cleanLine}</span>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
 export default function ReportPage() {
   const t = useTranslations("metaFinderReport");
   const tc = useTranslations("common");
@@ -211,17 +249,22 @@ export default function ReportPage() {
         }
         return {
           name: report?.scopeName || dept.label,
-          executiveSummary: parsed?.executiveSummary || "",
-          topStrategies: (parsed?.strategies?.items || []).map(s => ({
+          issues: (parsed?.issues?.items || []).map((i: ReportIssueItem) => ({
+            title: i.title || i.challenge || "",
+            severity: i.severity || "medium" as "high" | "medium" | "low",
+          })),
+          solutions: (parsed?.solutions?.items || []).map((s: ReportSolutionItem) => ({
+            title: s.title || s.solution || "",
+            priority: s.priority || "short-term",
+          })),
+          strategies: (parsed?.strategies?.items || []).map((s: ReportStrategyItem) => ({
             name: s.name,
             score: s.bscScores
               ? (s.bscScores.financial + s.bscScores.customer + s.bscScores.process + s.bscScores.growth) / 4
               : 0,
           })),
-          issueCount: parsed?.issues?.items?.length || 0,
-          solutionCount: parsed?.solutions?.items?.length || 0,
         };
-      }).filter(d => d.executiveSummary);
+      }).filter(d => d.issues.length > 0 || d.solutions.length > 0 || d.strategies.length > 0);
 
       await exportExecutiveSummaryPdf({
         companyName: "商船三井マリテックス株式会社",
@@ -917,9 +960,7 @@ function ReportContent({ sections, scopeName, scopeId, currentSection, setSectio
           <span style={{ fontSize: "1.3em" }}>📋</span>
           {t("executiveSummary")} — {scopeName}
         </h2>
-        <p className="text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-wrap">
-          {sections.executiveSummary}
-        </p>
+        <ExecutiveSummaryText text={sections.executiveSummary} />
       </section>
 
       {/* 1. 課題整理 */}

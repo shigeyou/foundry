@@ -626,157 +626,147 @@ export async function exportReportPdf(elementId: string): Promise<void> {
   }
 }
 
-// エグゼクティブサマリーPDF（全部門の概要を凝縮した経営向けレポート）
+// エグゼクティブサマリーPDF（全部門を1枚の表形式でまとめた経営向けレポート）
 export interface ExecutiveSummaryInput {
   companyName: string;
   batchDate: string;
   departments: {
     name: string;
-    executiveSummary: string;
-    topStrategies: { name: string; score: number }[];
-    issueCount: number;
-    solutionCount: number;
+    issues: { title: string; severity: "high" | "medium" | "low" }[];
+    solutions: { title: string; priority: string }[];
+    strategies: { name: string; score: number }[];
   }[];
 }
 
 export async function exportExecutiveSummaryPdf(data: ExecutiveSummaryInput): Promise<void> {
   const container = document.createElement("div");
+  // 横向きA4: 297mm × 3.78px/mm ≈ 1122px
   container.style.cssText = `
     position: absolute;
     left: -9999px;
     top: 0;
-    width: 794px;
-    padding: 40px;
+    width: 1122px;
+    padding: 24px 28px 20px;
     background: white;
     font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
     color: #1a1a1a;
-    line-height: 1.5;
+    line-height: 1.4;
+    box-sizing: border-box;
   `;
 
   const generatedAt = new Date().toLocaleString("ja-JP");
-  const totalIssues = data.departments.reduce((sum, d) => sum + d.issueCount, 0);
-  const totalSolutions = data.departments.reduce((sum, d) => sum + d.solutionCount, 0);
-  const totalStrategies = data.departments.reduce((sum, d) => sum + d.topStrategies.length, 0);
 
-  // 全社サマリー（allスコープ）を取得
-  const allDept = data.departments.find(d => d.name === "全社");
-  const allSummary = allDept?.executiveSummary || "";
+  const sevBadge = (sev: "high" | "medium" | "low") => {
+    const map = {
+      high: ["#fef2f2", "#dc2626", "高"],
+      medium: ["#fffbeb", "#d97706", "中"],
+      low: ["#f0fdf4", "#059669", "低"],
+    };
+    const [bg, color, label] = map[sev] || map.medium;
+    return `<span style="display:inline-block;background:${bg};color:${color};font-size:9px;font-weight:bold;padding:1px 5px;border-radius:3px;border:1px solid ${color};white-space:nowrap;">${label}</span>`;
+  };
 
-  // 全部門の戦略をスコアでソートしてトップ10を抽出
-  const allStrategies = data.departments.flatMap(d =>
-    d.topStrategies.map(s => ({ ...s, dept: d.name }))
-  ).sort((a, b) => b.score - a.score).slice(0, 10);
+  const priLabel = (p: string) => {
+    if (p === "immediate") return ["#fef2f2", "#dc2626", "即時"];
+    if (p === "short-term") return ["#eff6ff", "#2563eb", "短期"];
+    return ["#faf5ff", "#7c3aed", "中期"];
+  };
+
+  const scoreColor = (s: number) => s >= 4 ? "#059669" : s >= 3 ? "#2563eb" : "#d97706";
+
+  const renderIssues = (items: { title: string; severity: "high" | "medium" | "low" }[]) => {
+    const sorted = [...items].sort((a, b) => {
+      const order = { high: 0, medium: 1, low: 2 };
+      return (order[a.severity] ?? 1) - (order[b.severity] ?? 1);
+    });
+    const shown = sorted.slice(0, 4);
+    const rest = sorted.length - shown.length;
+    return shown.map(i => `
+      <div style="display:flex;align-items:flex-start;gap:4px;margin-bottom:4px;">
+        ${sevBadge(i.severity)}
+        <span style="font-size:10px;color:#1e293b;line-height:1.3;">${escapeHtml(i.title)}</span>
+      </div>
+    `).join("") + (rest > 0 ? `<div style="font-size:9px;color:#94a3b8;margin-top:2px;">他 ${rest}件</div>` : "");
+  };
+
+  const renderSolutions = (items: { title: string; priority: string }[]) => {
+    const sorted = [...items].sort((a, b) => {
+      const order: Record<string, number> = { immediate: 0, "short-term": 1, "mid-term": 2 };
+      return (order[a.priority] ?? 1) - (order[b.priority] ?? 1);
+    });
+    const shown = sorted.slice(0, 4);
+    const rest = sorted.length - shown.length;
+    return shown.map(s => {
+      const [bg, color, label] = priLabel(s.priority);
+      return `
+        <div style="display:flex;align-items:flex-start;gap:4px;margin-bottom:4px;">
+          <span style="display:inline-block;background:${bg};color:${color};font-size:9px;font-weight:bold;padding:1px 5px;border-radius:3px;border:1px solid ${color};white-space:nowrap;">${label}</span>
+          <span style="font-size:10px;color:#1e293b;line-height:1.3;">${escapeHtml(s.title)}</span>
+        </div>
+      `;
+    }).join("") + (rest > 0 ? `<div style="font-size:9px;color:#94a3b8;margin-top:2px;">他 ${rest}件</div>` : "");
+  };
+
+  const renderStrategies = (items: { name: string; score: number }[]) => {
+    const sorted = [...items].sort((a, b) => b.score - a.score);
+    const shown = sorted.slice(0, 4);
+    const rest = sorted.length - shown.length;
+    return shown.map(s => {
+      const c = scoreColor(s.score);
+      return `
+        <div style="display:flex;align-items:flex-start;gap:4px;margin-bottom:4px;">
+          <span style="display:inline-block;background:white;color:${c};font-size:9px;font-weight:bold;padding:1px 5px;border-radius:3px;border:1px solid ${c};white-space:nowrap;">${s.score.toFixed(1)}</span>
+          <span style="font-size:10px;color:#1e293b;line-height:1.3;">${escapeHtml(s.name)}</span>
+        </div>
+      `;
+    }).join("") + (rest > 0 ? `<div style="font-size:9px;color:#94a3b8;margin-top:2px;">他 ${rest}件</div>` : "");
+  };
+
+  const rowBg = (i: number) => i % 2 === 0 ? "#ffffff" : "#f8fafc";
+  const cellStyle = `padding:8px 10px;border:1px solid #e2e8f0;vertical-align:top;`;
+  const deptCellStyle = `${cellStyle}background:#eef2ff;font-weight:bold;font-size:11px;color:#3730a3;text-align:center;vertical-align:middle;`;
 
   container.innerHTML = `
     <!-- ヘッダー -->
-    <div style="border-bottom: 3px solid #4f46e5; padding-bottom: 16px; margin-bottom: 20px;">
-      <div style="display: flex; justify-content: space-between; align-items: flex-end;">
-        <div>
-          <h1 style="font-size: 22px; font-weight: bold; margin: 0 0 4px 0; color: #1e293b;">
-            📋 エグゼクティブサマリー
-          </h1>
-          <p style="font-size: 13px; color: #4f46e5; font-weight: bold; margin: 0;">
-            ${escapeHtml(data.companyName)}
-          </p>
-        </div>
-        <div style="text-align: right;">
-          <p style="font-size: 10px; color: #64748b; margin: 0;">
-            探索日: ${escapeHtml(data.batchDate)} ｜ 生成: ${escapeHtml(generatedAt)}
-          </p>
-        </div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid #4f46e5;padding-bottom:10px;margin-bottom:14px;">
+      <div>
+        <h1 style="font-size:18px;font-weight:bold;margin:0 0 3px;color:#1e293b;">📋 エグゼクティブサマリー</h1>
+        <p style="font-size:12px;color:#4f46e5;font-weight:bold;margin:0;">${escapeHtml(data.companyName)}</p>
       </div>
+      <p style="font-size:9px;color:#64748b;margin:0;">探索日: ${escapeHtml(data.batchDate)} ｜ 生成: ${escapeHtml(generatedAt)}</p>
     </div>
 
-    <!-- KPIサマリー -->
-    <div style="display: flex; gap: 12px; margin-bottom: 20px;">
-      <div style="flex: 1; background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 8px; padding: 10px; text-align: center;">
-        <div style="font-size: 22px; font-weight: bold; color: #7c3aed;">${data.departments.length}</div>
-        <div style="font-size: 10px; color: #6b7280;">分析部門数</div>
-      </div>
-      <div style="flex: 1; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 10px; text-align: center;">
-        <div style="font-size: 22px; font-weight: bold; color: #dc2626;">${totalIssues}</div>
-        <div style="font-size: 10px; color: #6b7280;">課題数</div>
-      </div>
-      <div style="flex: 1; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 10px; text-align: center;">
-        <div style="font-size: 22px; font-weight: bold; color: #2563eb;">${totalSolutions}</div>
-        <div style="font-size: 10px; color: #6b7280;">解決策数</div>
-      </div>
-      <div style="flex: 1; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 10px; text-align: center;">
-        <div style="font-size: 22px; font-weight: bold; color: #059669;">${totalStrategies}</div>
-        <div style="font-size: 10px; color: #6b7280;">勝ち筋数</div>
-      </div>
-    </div>
-
-    <!-- 全社概要 -->
-    ${allSummary ? `
-    <div style="margin-bottom: 20px; padding: 14px; background: #f1f5f9; border-radius: 8px; border-left: 4px solid #4f46e5;">
-      <h3 style="font-size: 13px; font-weight: bold; color: #4f46e5; margin: 0 0 6px 0;">全社概要</h3>
-      <p style="font-size: 11px; color: #334155; margin: 0; line-height: 1.6;">${escapeHtml(allSummary)}</p>
-    </div>
-    ` : ""}
-
-    <!-- トップ10勝ち筋 -->
-    <div style="margin-bottom: 20px;">
-      <h2 style="font-size: 14px; font-weight: bold; color: #1e293b; margin: 0 0 10px 0; border-bottom: 2px solid #e2e8f0; padding-bottom: 4px;">
-        🏆 全社トップ10 勝ち筋
-      </h2>
-      <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
-        <thead>
-          <tr style="background: #f8fafc;">
-            <th style="padding: 6px 8px; text-align: left; border-bottom: 1px solid #e2e8f0; color: #64748b;">#</th>
-            <th style="padding: 6px 8px; text-align: left; border-bottom: 1px solid #e2e8f0; color: #64748b;">勝ち筋</th>
-            <th style="padding: 6px 8px; text-align: left; border-bottom: 1px solid #e2e8f0; color: #64748b;">部門</th>
-            <th style="padding: 6px 8px; text-align: center; border-bottom: 1px solid #e2e8f0; color: #64748b;">スコア</th>
+    <!-- 表 -->
+    <table style="width:100%;border-collapse:collapse;font-size:11px;table-layout:fixed;">
+      <colgroup>
+        <col style="width:110px;">
+        <col style="width:337px;">
+        <col style="width:337px;">
+        <col style="width:338px;">
+      </colgroup>
+      <thead>
+        <tr>
+          <th style="${cellStyle}background:#1e293b;color:white;font-size:11px;text-align:center;">部門</th>
+          <th style="${cellStyle}background:#dc2626;color:white;font-size:11px;text-align:center;">① 課題</th>
+          <th style="${cellStyle}background:#2563eb;color:white;font-size:11px;text-align:center;">② 解決策</th>
+          <th style="${cellStyle}background:#059669;color:white;font-size:11px;text-align:center;">③ 勝ち筋</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${data.departments.map((dept, i) => `
+          <tr style="background:${rowBg(i)};">
+            <td style="${deptCellStyle}">${escapeHtml(dept.name)}</td>
+            <td style="${cellStyle}background:${rowBg(i)};">${renderIssues(dept.issues)}</td>
+            <td style="${cellStyle}background:${rowBg(i)};">${renderSolutions(dept.solutions)}</td>
+            <td style="${cellStyle}background:${rowBg(i)};">${renderStrategies(dept.strategies)}</td>
           </tr>
-        </thead>
-        <tbody>
-          ${allStrategies.map((s, i) => `
-            <tr style="${i % 2 === 0 ? "" : "background: #f8fafc;"}">
-              <td style="padding: 5px 8px; border-bottom: 1px solid #f1f5f9; color: #94a3b8; font-weight: bold;">${i + 1}</td>
-              <td style="padding: 5px 8px; border-bottom: 1px solid #f1f5f9; color: #1e293b; font-weight: ${i < 3 ? "bold" : "normal"};">${escapeHtml(s.name)}</td>
-              <td style="padding: 5px 8px; border-bottom: 1px solid #f1f5f9;">
-                <span style="background: #e0e7ff; color: #4338ca; padding: 1px 6px; border-radius: 4px; font-size: 10px;">${escapeHtml(s.dept)}</span>
-              </td>
-              <td style="padding: 5px 8px; border-bottom: 1px solid #f1f5f9; text-align: center; font-weight: bold; color: ${s.score >= 3.5 ? "#059669" : s.score >= 2.5 ? "#2563eb" : "#d97706"};">${s.score.toFixed(1)}</td>
-            </tr>
-          `).join("")}
-        </tbody>
-      </table>
-    </div>
-
-    <!-- 部門別ハイライト -->
-    <div style="margin-bottom: 16px;">
-      <h2 style="font-size: 14px; font-weight: bold; color: #1e293b; margin: 0 0 10px 0; border-bottom: 2px solid #e2e8f0; padding-bottom: 4px;">
-        🏢 部門別ハイライト
-      </h2>
-      <div style="display: flex; flex-direction: column; gap: 10px;">
-        ${data.departments.filter(d => d.name !== "全社").map(dept => {
-          const topStrat = dept.topStrategies[0];
-          return `
-          <div style="padding: 10px 12px; background: #f8fafc; border-radius: 6px; border: 1px solid #e2e8f0; border-left: 3px solid #6366f1;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-              <span style="font-size: 12px; font-weight: bold; color: #1e293b;">${escapeHtml(dept.name)}</span>
-              <span style="font-size: 9px; color: #94a3b8;">課題${dept.issueCount} 解決策${dept.solutionCount} 勝ち筋${dept.topStrategies.length}</span>
-            </div>
-            ${dept.executiveSummary ? `
-              <p style="font-size: 10px; color: #334155; margin: 0 0 5px 0; line-height: 1.5;">${escapeHtml(dept.executiveSummary)}</p>
-            ` : ""}
-            ${topStrat ? `
-              <p style="font-size: 10px; color: #4f46e5; margin: 0; font-weight: 500; background: #eef2ff; padding: 3px 6px; border-radius: 4px; display: inline-block;">
-                ★ ${escapeHtml(topStrat.name)}（${topStrat.score.toFixed(1)}）
-              </p>
-            ` : ""}
-          </div>
-          `;
-        }).join("")}
-      </div>
-    </div>
+        `).join("")}
+      </tbody>
+    </table>
 
     <!-- フッター -->
-    <div style="margin-top: 20px; padding-top: 12px; border-top: 1px solid #e2e8f0; text-align: center;">
-      <p style="font-size: 9px; color: #94a3b8; margin: 0;">
-        勝ち筋ファインダー エグゼクティブサマリー | AI分析 | ${escapeHtml(generatedAt)}
-      </p>
+    <div style="margin-top:10px;text-align:center;">
+      <p style="font-size:8px;color:#94a3b8;margin:0;">勝ち筋ファインダー エグゼクティブサマリー | AI分析 | ${escapeHtml(generatedAt)}</p>
     </div>
   `;
 
@@ -788,41 +778,34 @@ export async function exportExecutiveSummaryPdf(data: ExecutiveSummaryInput): Pr
       useCORS: true,
       logging: false,
       backgroundColor: "#ffffff",
+      width: 1122,
+      windowWidth: 1122,
     });
 
-    const imgData = canvas.toDataURL("image/png");
+    // 横向きA4でPDF生成
     const pdf = new jsPDF({
-      orientation: "portrait",
+      orientation: "landscape",
       unit: "mm",
       format: "a4",
     });
 
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
-    const margin = 15;
+    const pageWidth = pdf.internal.pageSize.getWidth();   // 297mm
+    const pageHeight = pdf.internal.pageSize.getHeight(); // 210mm
+    const margin = 0;
     const contentWidth = pageWidth - margin * 2;
-    const usableHeight = pageHeight - margin * 2;
-
     const pxPerMm = canvas.width / contentWidth;
-    const pageHeightPx = Math.floor(usableHeight * pxPerMm);
+    const pageHeightPx = Math.floor((pageHeight - margin * 2) * pxPerMm);
 
     let srcY = 0;
     let pageIndex = 0;
-
     while (srcY < canvas.height) {
       if (pageIndex > 0) pdf.addPage();
-
       const sliceHeight = Math.min(pageHeightPx, canvas.height - srcY);
       const pageCanvas = document.createElement("canvas");
       pageCanvas.width = canvas.width;
       pageCanvas.height = sliceHeight;
-      const ctx = pageCanvas.getContext("2d")!;
-      ctx.drawImage(canvas, 0, srcY, canvas.width, sliceHeight, 0, 0, canvas.width, sliceHeight);
-
-      const pageImgData = pageCanvas.toDataURL("image/png");
-      const sliceHeightMm = sliceHeight / pxPerMm;
-      pdf.addImage(pageImgData, "PNG", margin, margin, contentWidth, sliceHeightMm);
-
+      pageCanvas.getContext("2d")!.drawImage(canvas, 0, srcY, canvas.width, sliceHeight, 0, 0, canvas.width, sliceHeight);
+      pdf.addImage(pageCanvas.toDataURL("image/png"), "PNG", margin, margin, contentWidth, sliceHeight / pxPerMm);
       srcY += pageHeightPx;
       pageIndex++;
     }
