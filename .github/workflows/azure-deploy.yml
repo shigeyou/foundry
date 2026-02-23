@@ -196,21 +196,13 @@ jobs:
           ZIP_SIZE=$(du -h deploy.zip | cut -f1)
           echo "Uploading ZIP ($ZIP_SIZE) to SitePackages..."
 
-          # Get publishing credentials separately
-          SCM_USER=$(az webapp deployment list-publishing-credentials \
-            --resource-group rg-ocreader-japaneast \
-            --name ${{ env.AZURE_WEBAPP_NAME }} \
-            --query "publishingUserName" -o tsv)
-          SCM_PASS=$(az webapp deployment list-publishing-credentials \
-            --resource-group rg-ocreader-japaneast \
-            --name ${{ env.AZURE_WEBAPP_NAME }} \
-            --query "publishingPassword" -o tsv)
+          # Use Azure AD Bearer token for Kudu API authentication
+          TOKEN=$(az account get-access-token --resource "https://management.azure.com/" --query "accessToken" -o tsv)
           SCM_URL="https://${{ env.AZURE_WEBAPP_NAME }}.scm.azurewebsites.net"
-          echo "SCM user: $SCM_USER"
 
           # Ensure SitePackages directory exists
           curl -s -X PUT \
-            -u "$SCM_USER:$SCM_PASS" \
+            -H "Authorization: Bearer $TOKEN" \
             "$SCM_URL/api/vfs/data/SitePackages/" \
             -H "If-Match: *" || true
 
@@ -218,7 +210,7 @@ jobs:
           echo "Uploading deploy.zip..."
           HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
             -X PUT \
-            -u "$SCM_USER:$SCM_PASS" \
+            -H "Authorization: Bearer $TOKEN" \
             "$SCM_URL/api/vfs/data/SitePackages/deploy.zip" \
             -H "If-Match: *" \
             --data-binary @deploy.zip \
@@ -226,12 +218,19 @@ jobs:
           echo "Upload status: $HTTP_CODE"
           if [ "$HTTP_CODE" != "200" ] && [ "$HTTP_CODE" != "201" ] && [ "$HTTP_CODE" != "204" ]; then
             echo "ERROR: Upload failed with status $HTTP_CODE"
+            # Show response for debugging
+            curl -s -X PUT \
+              -H "Authorization: Bearer $TOKEN" \
+              "$SCM_URL/api/vfs/data/SitePackages/deploy.zip" \
+              -H "If-Match: *" \
+              --data-binary @deploy.zip \
+              --max-time 600 2>&1 | head -5
             exit 1
           fi
 
           # Write packagename.txt to tell Azure which ZIP to use
           echo -n "deploy.zip" | curl -s -X PUT \
-            -u "$SCM_USER:$SCM_PASS" \
+            -H "Authorization: Bearer $TOKEN" \
             "$SCM_URL/api/vfs/data/SitePackages/packagename.txt" \
             -H "If-Match: *" \
             --data-binary @-
