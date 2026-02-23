@@ -115,51 +115,49 @@ jobs:
             echo 'CompressedVirtualFileSystems = ""'
           } > .next/standalone/oryx-manifest.toml
 
-      - name: Resolve pnpm symlinks for deployment
+      - name: Prepare node_modules for deployment
         run: |
-          # pnpm standalone creates DANGLING symlinks in .next/standalone/node_modules
-          # (the .pnpm virtual store is incomplete in standalone output).
-          # Solution: copy ALL packages from the main project's fully-installed node_modules,
-          # resolving pnpm symlinks to real files using rsync --copy-links.
-          # The main project's node_modules has complete .pnpm store with real files.
+          # Problem: pnpm uses a virtual store (.pnpm/) where top-level node_modules entries
+          # are symlinks into .pnpm/. The standalone output has dangling symlinks (no .pnpm store).
+          # Oryx startup script ALWAYS runs 'tar -xzf node_modules.tar.gz -C /node_modules' and
+          # symlinks ./node_modules -> /node_modules, overriding whatever we deploy.
+          # Solution: ship node_modules.tar.gz with the FULL pnpm structure (including .pnpm/ store)
+          # so Oryx extracts it correctly and Node.js can resolve all transitive deps.
 
-          echo "=== Resolving pnpm symlinks from main project's node_modules ==="
-          # Remove standalone's dangling-symlink node_modules
+          echo "=== Copying full pnpm node_modules (with .pnpm store) ==="
           rm -rf .next/standalone/node_modules
+          # Preserve symlinks (no --copy-links) - the .pnpm store is included so symlinks resolve
+          rsync -a node_modules/ .next/standalone/node_modules/
 
-          # Copy from main project's node_modules (resolving all pnpm symlinks to real files)
-          # --copy-links: follow symlinks and copy as real files
-          # --exclude='.pnpm': skip the virtual store itself (resolved packages are enough)
-          rsync -a --copy-links --exclude='.pnpm' node_modules/ .next/standalone/node_modules/
-
-          echo "=== Resolved node_modules check ==="
-          ls .next/standalone/node_modules/ | head -30
+          echo "=== Checking key packages ==="
+          # next symlink -> .pnpm/next@.../node_modules/next/package.json
           ls .next/standalone/node_modules/next/package.json && echo "next: OK" || echo "next: MISSING"
-          ls .next/standalone/node_modules/@libsql/client/package.json 2>/dev/null && echo "@libsql/client: OK" || echo "@libsql/client: MISSING"
-          ls .next/standalone/node_modules/@libsql/core/package.json 2>/dev/null && echo "@libsql/core: OK" || echo "@libsql/core: MISSING"
-          du -sh .next/standalone/node_modules/
+          ls -la .next/standalone/node_modules/@next/ 2>/dev/null | head -5 || echo "@next: not hoisted (in .pnpm store - OK)"
+          du -sh .next/standalone/node_modules/ .next/standalone/node_modules/.pnpm/ 2>/dev/null || true
+
+          echo "=== Cleaning up non-essential files ==="
+          find .next/standalone/node_modules -path "*/sharp-win32*" -exec rm -rf {} + 2>/dev/null || true
+          find .next/standalone/node_modules -path "*/sharp-darwin*" -exec rm -rf {} + 2>/dev/null || true
+          find .next/standalone/node_modules -path "*/.cache/prisma/*/windows" -type d -exec rm -rf {} + 2>/dev/null || true
+          find .next/standalone/node_modules -path "*/.cache/prisma/*/darwin*" -type d -exec rm -rf {} + 2>/dev/null || true
+          find .next/standalone/node_modules \( -name "*.d.ts" -o -name "*.ts.map" \
+            -o -name "*.flow" -o -name ".npmignore" \) \
+            -type f -delete 2>/dev/null || true
+          find .next/standalone/node_modules \( -name "test" -o -name "tests" -o -name "__tests__" \
+            -o -name "example" -o -name "examples" \) \
+            -type d -exec rm -rf {} + 2>/dev/null || true
+          echo "node_modules size after cleanup: $(du -sh .next/standalone/node_modules/ | cut -f1)"
+
+          echo "=== Creating node_modules.tar.gz for Oryx ==="
+          # Archive CONTENTS so Oryx extracts packages directly into /node_modules/
+          # Symlinks are preserved in the archive (no --dereference)
+          tar -czf .next/standalone/node_modules.tar.gz -C .next/standalone/node_modules .
+          echo "node_modules.tar.gz: $(du -sh .next/standalone/node_modules.tar.gz | cut -f1)"
+          rm -rf .next/standalone/node_modules
 
       - name: Create deployment ZIP
         run: |
           cd .next/standalone
-          # Remove Oryx build trigger files (keep oryx-manifest.toml - it prevents Oryx from restructuring node_modules)
-          rm -f node_modules.tar.gz
-          # Remove unnecessary platform binaries
-          find node_modules -path "*/sharp-win32*" -exec rm -rf {} + 2>/dev/null || true
-          find node_modules -path "*/sharp-darwin*" -exec rm -rf {} + 2>/dev/null || true
-          find node_modules -path "*/.cache/prisma/*/windows" -type d -exec rm -rf {} + 2>/dev/null || true
-          find node_modules -path "*/.cache/prisma/*/darwin*" -type d -exec rm -rf {} + 2>/dev/null || true
-          # Remove docs, tests, and other non-essential files to reduce ZIP size
-          find node_modules \( -name "README*" -o -name "CHANGELOG*" -o -name "LICENSE*" \
-            -o -name "*.md" -o -name "*.d.ts" -o -name "*.ts.map" \
-            -o -name "*.flow" -o -name "Makefile" -o -name ".npmignore" \
-            -o -name ".eslintrc*" -o -name ".prettierrc*" -o -name "tsconfig*" \) \
-            -type f -delete 2>/dev/null || true
-          find node_modules \( -name "test" -o -name "tests" -o -name "__tests__" \
-            -o -name "example" -o -name "examples" -o -name "docs" \) \
-            -type d -exec rm -rf {} + 2>/dev/null || true
-          echo "=== node_modules size after cleanup ==="
-          du -sh node_modules/
           echo "Creating ZIP..."
           zip -r ../../deploy.zip . -x "*.map"
           cd ../..
