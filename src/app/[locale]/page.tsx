@@ -57,6 +57,7 @@ const appTypes = [
 export default function FoundryDashboard() {
   const [tools, setTools] = useState<ToolsData | null>(null);
   const [loading, setLoading] = useState(true);
+  const kaedeUrl = process.env.NEXT_PUBLIC_KAEDE_URL;
 
   useEffect(() => {
     async function fetchData() {
@@ -257,6 +258,45 @@ export default function FoundryDashboard() {
                 </div>
               );
             })}
+          </div>
+
+          {/* 連携アプリ */}
+          <div className="mb-8">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="w-1 h-5 bg-teal-500 rounded"></span>
+              <h2 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">連携アプリ</h2>
+            </div>
+            <div className="grid md:grid-cols-3 gap-6">
+              <div className="relative bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 transition-all duration-500 hover:shadow-xl">
+                <div className="flex items-center gap-2 mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+                  <span className="text-2xl">🤖</span>
+                  <span className="text-sm font-semibold text-teal-700 dark:text-teal-300 tracking-wide">AIアバターアシスタント</span>
+                </div>
+                <div className="space-y-3 min-h-[80px]">
+                  {kaedeUrl ? (
+                    <a
+                      href={kaedeUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block px-4 py-4 bg-gradient-to-r from-teal-500 via-cyan-500 to-sky-500 rounded-xl shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 group/item"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-base font-bold text-white">かえで</span>
+                        <svg className="w-5 h-5 text-white/70 group-hover/item:text-white group-hover/item:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </div>
+                      <p className="text-xs text-white/70 mt-1">VRアバターとのAI会話</p>
+                    </a>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-6 text-center">
+                      <p className="text-sm text-slate-400 dark:text-slate-500">URL未設定</p>
+                      <p className="text-xs text-slate-300 dark:text-slate-600 mt-1">NEXT_PUBLIC_KAEDE_URL</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
 
         </div>
