@@ -16,8 +16,8 @@ const appTypes = [
   {
     key: "kachisuji" as const,
     icon: "🔍",
-    label: "勝ち筋ファインダー",
-    description: "企業の課題と勝ち筋をAIで探索",
+    label: "ファインダー型",
+    description: "データや情報を探索・発見",
     gradient: "from-blue-500 via-blue-600 to-indigo-600",
     lightBg: "bg-blue-100 dark:bg-blue-500/10",
     cardBg: "bg-blue-50 dark:bg-slate-900/80",
