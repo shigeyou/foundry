@@ -56,7 +56,14 @@ jobs:
           echo "App Service configured. SCM container will restart - build steps will give it time to settle."
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: |
+          # shamefully-hoist=true: makes ALL transitive deps available as top-level symlinks.
+          # This is needed because Azure Kudu drops symlinks from ZIP archives - we must use
+          # rsync --copy-links to convert symlinks to real files. With shamefully-hoist, transitive
+          # deps like @next/env appear at node_modules/@next/env (not only in .pnpm store), so
+          # --copy-links makes them real files that survive Azure's ZIP extraction.
+          echo 'shamefully-hoist=true' >> .npmrc
+          pnpm install --frozen-lockfile
 
       - name: Generate Prisma Client
         run: pnpm exec prisma generate
@@ -117,24 +124,24 @@ jobs:
 
       - name: Prepare node_modules for deployment
         run: |
-          # Problem: pnpm uses a virtual store (.pnpm/) where top-level node_modules/ entries
-          # are relative symlinks into .pnpm/. The standalone output has DANGLING symlinks
-          # (the .pnpm store is missing from standalone output).
-          # Node.js resolves transitive deps (e.g. @next/env from within next) via the pnpm
-          # virtual store path: .pnpm/next@x.x.x/node_modules/@next/env
-          # Solution: copy the FULL pnpm node_modules (with .pnpm store) preserving symlinks.
-          # ZIP preserves symlinks on Linux; Azure zipdeploy extracts them correctly.
+          # Azure Kudu (ZIP deploy) does NOT preserve symlinks - it silently drops them.
+          # pnpm normally uses symlinks (node_modules/next -> .pnpm/next@.../node_modules/next).
+          # With shamefully-hoist=true (set in Install step), ALL transitive deps appear as
+          # top-level symlinks. rsync --copy-links follows and copies them as REAL files.
+          # Result: flat node_modules where everything (including @next/env, @libsql/core, etc.)
+          # is a real directory - survives Azure's ZIP extraction correctly.
 
-          echo "=== Copying full pnpm node_modules (symlinks + .pnpm store) ==="
+          echo "=== Creating flat (real files) node_modules for Azure ==="
           rm -rf .next/standalone/node_modules
-          # rsync without --copy-links: preserves symlinks as symlinks
-          # .pnpm/ store is included so all symlinks resolve correctly
-          rsync -a node_modules/ .next/standalone/node_modules/
+          # --copy-links: follow symlinks, copy as real files (survives Azure ZIP extraction)
+          # --exclude='.pnpm': skip the virtual store (real files are at top level from shamefully-hoist)
+          rsync -a --copy-links --exclude='.pnpm' node_modules/ .next/standalone/node_modules/
 
           echo "=== Checking key packages ==="
           ls .next/standalone/node_modules/next/package.json && echo "next: OK" || echo "next: MISSING"
-          # @next/env is a dep of next, in .pnpm/next@x.x.x/node_modules/@next/env
-          ls .next/standalone/node_modules/.pnpm/next*/node_modules/@next/env/package.json 2>/dev/null && echo "@next/env: OK (in .pnpm store)" || echo "@next/env: MISSING from .pnpm store!"
+          ls .next/standalone/node_modules/@next/env/package.json 2>/dev/null && echo "@next/env: OK" || echo "@next/env: MISSING"
+          ls .next/standalone/node_modules/@libsql/client/package.json 2>/dev/null && echo "@libsql/client: OK" || echo "@libsql/client: MISSING"
+          ls .next/standalone/node_modules/@libsql/core/package.json 2>/dev/null && echo "@libsql/core: OK" || echo "@libsql/core: MISSING"
           du -sh .next/standalone/node_modules/
 
           echo "=== Cleaning up non-essential files ==="
@@ -153,9 +160,8 @@ jobs:
       - name: Create deployment ZIP
         run: |
           cd .next/standalone
-          echo "Creating ZIP (with pnpm symlinks preserved)..."
-          # -y: store symlinks as symlinks (default on Linux zip)
-          zip -ry ../../deploy.zip . -x "*.map"
+          echo "Creating ZIP..."
+          zip -r ../../deploy.zip . -x "*.map"
           cd ../..
           echo "ZIP size: $(du -h deploy.zip | cut -f1)"
 
