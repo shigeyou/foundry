@@ -592,6 +592,26 @@ export default function MetaFinderPage() {
     }
   };
 
+  // 1件の履歴を削除
+  const deleteSingleBatch = async (targetId: string) => {
+    if (!confirm("この探索履歴を削除しますか？レポートも同時に削除されます。")) return;
+    try {
+      const res = await fetch(`/api/meta-finder/batch?id=${targetId}`, { method: "DELETE" });
+      const data = await res.json();
+      if (res.ok) {
+        setBatches(prev => prev.filter(b => b.id !== targetId));
+        if (selectedBatchId === targetId) {
+          setSelectedBatchId(null);
+          setBatchSummary(null);
+        }
+      } else {
+        alert(data.error || "削除に失敗しました");
+      }
+    } catch {
+      alert("削除に失敗しました");
+    }
+  };
+
   // 全履歴を削除
   const clearAllHistory = async () => {
     const confirmed = confirm(t("batch.confirmClearAll"));
@@ -854,7 +874,7 @@ export default function MetaFinderPage() {
               {[
                 { label: "洋上風力", prompt: "洋上風力事業において、当社が新規参入または競合優位を確立するための具体的な機会と戦略は何か？" },
                 { label: "脱炭素化", prompt: "当社の事業において脱炭素化を推進するために優先すべき取り組みと、実現に向けたロードマップは？" },
-                { label: "オンサイト事業部営業戦略", prompt: "オンサイト事業部の営業力を強化し、新規顧客獲得および既存顧客との取引拡大を実現するための具体的な戦略・施策は何か？" },
+                { label: "オンサイト営業戦略", prompt: "オンサイト事業部の営業力を強化し、新規顧客獲得および既存顧客との取引拡大を実現するための具体的な戦略・施策は何か？" },
                 { label: "AI活用", prompt: "当社の業務においてAIを導入することで最も効率化・価値創出が期待できる領域はどこか？" },
                 { label: "差別化戦略", prompt: "競合他社と比較した当社の強みを活かし、市場での差別化を実現するための戦略は？" },
                 { label: "新造船収益", prompt: "新造船管理事業における収益性を向上させるための具体的な方策は何か？" },
@@ -972,6 +992,13 @@ export default function MetaFinderPage() {
                       >
                         📊
                       </a>
+                      <button
+                        onClick={() => deleteSingleBatch(batch.id)}
+                        title="削除"
+                        className="px-1 py-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded transition-colors"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                      </button>
                     </div>
                   ))}
                 </div>
