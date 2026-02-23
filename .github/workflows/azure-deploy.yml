@@ -81,14 +81,14 @@ jobs:
           # Create package.json for Azure App Service
           echo '{"name":"foundry","version":"1.0.0","scripts":{"start":"node server.js"}}' > .next/standalone/package.json
           # Create oryx-manifest.toml to prevent Oryx from restructuring node_modules at startup
-          cat > .next/standalone/oryx-manifest.toml << 'EOF'
-OperationId = "00000000-0000-0000-0000-000000000000"
-SourceDirectoryCommitId = ""
-PlatformName = "nodejs"
-PlatformVersion = "20.20.0"
-BuildCommandsFileName = ""
-CompressedVirtualFileSystems = ""
-EOF
+          {
+            echo 'OperationId = "00000000-0000-0000-0000-000000000000"'
+            echo 'SourceDirectoryCommitId = ""'
+            echo 'PlatformName = "nodejs"'
+            echo 'PlatformVersion = "20.20.0"'
+            echo 'BuildCommandsFileName = ""'
+            echo 'CompressedVirtualFileSystems = ""'
+          } > .next/standalone/oryx-manifest.toml
 
       - name: Create flat node_modules for deployment
         run: |
