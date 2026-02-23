@@ -166,28 +166,28 @@ export default function FoundryDashboard() {
                     className="group/item flex items-center gap-1.5 px-3 py-2 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 hover:shadow-md transition-all"
                   >
                     <span className="text-lg">📖</span>
-                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300 group-hover/item:text-slate-900 dark:group-hover/item:text-white">はじめに</span>
+                    <span className="text-xl font-medium text-slate-700 dark:text-slate-300 group-hover/item:text-slate-900 dark:group-hover/item:text-white">はじめに</span>
                   </Link>
                   <Link
                     href="/settings?tab=company"
                     className="group/item flex items-center gap-1.5 px-3 py-2 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 hover:shadow-md transition-all"
                   >
                     <span className="text-lg">🏢</span>
-                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300 group-hover/item:text-slate-900 dark:group-hover/item:text-white">対象企業</span>
+                    <span className="text-xl font-medium text-slate-700 dark:text-slate-300 group-hover/item:text-slate-900 dark:group-hover/item:text-white">対象企業</span>
                   </Link>
                   <Link
                     href="/settings?tab=rag"
                     className="group/item flex items-center gap-1.5 px-3 py-2 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 hover:shadow-md transition-all"
                   >
                     <span className="text-lg">📚</span>
-                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300 group-hover/item:text-slate-900 dark:group-hover/item:text-white">RAG情報</span>
+                    <span className="text-xl font-medium text-slate-700 dark:text-slate-300 group-hover/item:text-slate-900 dark:group-hover/item:text-white">RAG情報</span>
                   </Link>
                   <Link
                     href="/settings?tab=swot"
                     className="group/item flex items-center gap-1.5 px-3 py-2 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-slate-400 dark:hover:border-slate-500 hover:shadow-md transition-all"
                   >
                     <span className="text-lg">📊</span>
-                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300 group-hover/item:text-slate-900 dark:group-hover/item:text-white">SWOT</span>
+                    <span className="text-xl font-medium text-slate-700 dark:text-slate-300 group-hover/item:text-slate-900 dark:group-hover/item:text-white">SWOT</span>
                   </Link>
                 </div>
               </div>
