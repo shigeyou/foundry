@@ -808,7 +808,7 @@ export default function MetaFinderPage() {
 
         {/* ========== フリーテキストプロンプトボックス ========== */}
         <div id="free-prompt-section" className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-4 mb-6">
-          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+          <h2 className="font-semibold text-blue-600 dark:text-blue-400 mb-2" style={{ fontSize: "120%" }}>
             {t("freePrompt.title")}
             <span className="text-xs font-normal text-gray-500 dark:text-gray-400 ml-2">
               {t("freePrompt.desc")}
