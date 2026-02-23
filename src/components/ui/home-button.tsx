@@ -9,8 +9,25 @@ export interface HomeButtonProps {
   className?: string;
 }
 
+// 家+炎アイコン（Foundryロゴ）
+function FoundryHomeIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none">
+      {/* 屋根 */}
+      <path d="M3 11L12 3L21 11" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      {/* 壁 */}
+      <path d="M5 11V20H19V11" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="rgba(255,255,255,0.15)"/>
+      {/* 炎（外） */}
+      <path d="M12 19C12 19 9 16.2 9 13.8C9 12.25 10.35 11 12 11C13.65 11 15 12.25 15 13.8C15 16.2 12 19 12 19Z" fill="#FF8C42"/>
+      {/* 炎（内） */}
+      <path d="M12 17.5C12 17.5 10.5 15.8 10.5 14.5C10.5 13.7 11.15 13 12 13C12.85 13 13.5 13.7 13.5 14.5C13.5 15.8 12 17.5 12 17.5Z" fill="#FFD166"/>
+    </svg>
+  );
+}
+
 export function HomeButton({ variant = "default", className }: HomeButtonProps) {
   const tc = useTranslations("common");
+
   if (variant === "text") {
     return (
       <Link
@@ -20,16 +37,9 @@ export function HomeButton({ variant = "default", className }: HomeButtonProps) 
           className
         )}
       >
-        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          {/* 煙突 */}
-          <rect x="15" y="4" width="4" height="7" rx="0.5" fill="currentColor" opacity="0.3" />
-          <path d="M15 4h4v7h-4V4" strokeLinecap="round" strokeLinejoin="round" />
-          {/* 三角屋根 */}
-          <path d="M3 12l9-8 9 8" strokeLinecap="round" strokeLinejoin="round" />
-          {/* 建物 */}
-          <rect x="5" y="12" width="14" height="9" fill="currentColor" opacity="0.2" />
-          <path d="M5 12v9h14v-9" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
+        <span className="w-5 h-5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded flex items-center justify-center flex-shrink-0">
+          <FoundryHomeIcon className="w-3 h-3" />
+        </span>
         <span className="text-sm font-medium group-hover:-translate-x-0.5 transition-transform">{tc("back")}</span>
       </Link>
     );
@@ -44,18 +54,9 @@ export function HomeButton({ variant = "default", className }: HomeButtonProps) 
           className
         )}
       >
-        <div className="w-5 h-5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded flex items-center justify-center">
-          <svg className="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            {/* 煙突 */}
-            <rect x="15" y="4" width="4" height="7" rx="0.5" fill="currentColor" opacity="0.3" />
-            <path d="M15 4h4v7h-4V4" strokeLinecap="round" strokeLinejoin="round" />
-            {/* 三角屋根 */}
-            <path d="M3 12l9-8 9 8" strokeLinecap="round" strokeLinejoin="round" />
-            {/* 建物 */}
-            <rect x="5" y="12" width="14" height="9" fill="currentColor" opacity="0.2" />
-            <path d="M5 12v9h14v-9" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </div>
+        <span className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center flex-shrink-0">
+          <FoundryHomeIcon className="w-3.5 h-3.5" />
+        </span>
         <span className="text-sm font-medium text-blue-700 dark:text-blue-300 group-hover:-translate-x-0.5 transition-transform">{tc("back")}</span>
       </Link>
     );
@@ -70,20 +71,9 @@ export function HomeButton({ variant = "default", className }: HomeButtonProps) 
         className
       )}
     >
-      <div className="relative">
-        <div className="w-7 h-7 bg-white/20 backdrop-blur rounded-lg flex items-center justify-center">
-          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            {/* 煙突 */}
-            <rect x="15" y="4" width="4" height="7" rx="0.5" fill="currentColor" opacity="0.3" />
-            <path d="M15 4h4v7h-4V4" strokeLinecap="round" strokeLinejoin="round" />
-            {/* 三角屋根 */}
-            <path d="M3 12l9-8 9 8" strokeLinecap="round" strokeLinejoin="round" />
-            {/* 建物 */}
-            <rect x="5" y="12" width="14" height="9" fill="currentColor" opacity="0.2" />
-            <path d="M5 12v9h14v-9" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </div>
-      </div>
+      <span className="w-7 h-7 bg-white/20 backdrop-blur rounded-lg flex items-center justify-center flex-shrink-0">
+        <FoundryHomeIcon className="w-4 h-4" />
+      </span>
       <span className="text-sm font-bold group-hover:-translate-x-0.5 transition-transform">{tc("back")}</span>
     </Link>
   );

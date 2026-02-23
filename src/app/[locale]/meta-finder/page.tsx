@@ -677,7 +677,17 @@ export default function MetaFinderPage() {
               href="/"
               className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 rounded-lg transition-colors"
             >
-              <span className="text-sm">🏠</span>
+              <span className="w-7 h-7 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
+                  {/* 屋根 */}
+                  <path d="M3 11L12 3L21 11" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  {/* 壁 */}
+                  <path d="M5 11V20H19V11" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="rgba(255,255,255,0.15)"/>
+                  {/* 炎 */}
+                  <path d="M12 19C12 19 9 16.2 9 13.8C9 12.25 10.35 11 12 11C13.65 11 15 12.25 15 13.8C15 16.2 12 19 12 19Z" fill="#FF8C42"/>
+                  <path d="M12 17.5C12 17.5 10.5 15.8 10.5 14.5C10.5 13.7 11.15 13 12 13C12.85 13 13.5 13.7 13.5 14.5C13.5 15.8 12 17.5 12 17.5Z" fill="#FFD166"/>
+                </svg>
+              </span>
               <span className="text-sm font-medium text-gray-700 dark:text-gray-200 hidden sm:inline">ホーム</span>
             </a>
             <div>

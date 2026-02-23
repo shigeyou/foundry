@@ -96,32 +96,11 @@ export function Navigation({ title }: NavigationProps) {
               className="flex items-center gap-2 px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg transition-colors group"
             >
               <span className="w-7 h-7 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
-                {/* 工房アイコン（三角屋根＋煙突＋窯＋炎） */}
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-                  <defs>
-                    <linearGradient id="flameNavOuter" x1="0.5" y1="1" x2="0.5" y2="0">
-                      <stop offset="0%" stopColor="#f97316" />
-                      <stop offset="100%" stopColor="#ef4444" />
-                    </linearGradient>
-                    <linearGradient id="flameNavInner" x1="0.5" y1="1" x2="0.5" y2="0">
-                      <stop offset="0%" stopColor="#fbbf24" />
-                      <stop offset="100%" stopColor="#f97316" />
-                    </linearGradient>
-                  </defs>
-                  {/* 煙突 */}
-                  <rect x="15" y="4" width="4" height="7" rx="0.5" fill="white" opacity="0.3" />
-                  <path d="M15 4h4v7h-4V4" strokeLinecap="round" strokeLinejoin="round" />
-                  {/* 三角屋根 */}
-                  <path d="M3 12l9-8 9 8" strokeLinecap="round" strokeLinejoin="round" />
-                  {/* 建物 */}
-                  <rect x="5" y="12" width="14" height="9" fill="white" opacity="0.15" />
-                  <path d="M5 12v9h14v-9" strokeLinecap="round" strokeLinejoin="round" />
-                  {/* 窯（アーチ型開口部） */}
-                  <path d="M8 21v-5a4 4 0 0 1 8 0v5" stroke="white" strokeWidth="1.5" fill="rgba(0,0,0,0.3)" />
-                  {/* 炎（外側） */}
-                  <path d="M10 20.5c0-2.5 1-3.5 2-5 1 1.5 2 2.5 2 5" fill="url(#flameNavOuter)" stroke="none" />
-                  {/* 炎（内側・明るい芯） */}
-                  <path d="M11 20.5c0-1.5 0.5-2 1-3 0.5 1 1 1.5 1 3" fill="url(#flameNavInner)" stroke="none" />
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
+                  <path d="M3 11L12 3L21 11" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M5 11V20H19V11" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="rgba(255,255,255,0.15)"/>
+                  <path d="M12 19C12 19 9 16.2 9 13.8C9 12.25 10.35 11 12 11C13.65 11 15 12.25 15 13.8C15 16.2 12 19 12 19Z" fill="#FF8C42"/>
+                  <path d="M12 17.5C12 17.5 10.5 15.8 10.5 14.5C10.5 13.7 11.15 13 12 13C12.85 13 13.5 13.7 13.5 14.5C13.5 15.8 12 17.5 12 17.5Z" fill="#FFD166"/>
                 </svg>
               </span>
               <span className="text-white text-sm font-medium hidden sm:inline group-hover:-translate-x-0.5 transition-transform">{tc("back")}</span>

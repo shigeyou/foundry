@@ -341,6 +341,17 @@ model MetaFinderReport {
   @@index([scope])
 }
 
+// Webクローラー実行ログ
+model WebCrawlLog {
+  id           String    @id
+  startedAt    DateTime  @default(now())
+  completedAt  DateTime?
+  status       String    @default("running") // "running" | "completed" | "failed"
+  pagesVisited Int       @default(0)
+  docsUpdated  Int       @default(0)
+  errors       String?   // JSON array of error messages
+}
+
 // メタファインダー AIチャット保存
 model MetaFinderChat {
   id        String   @id @default(cuid())

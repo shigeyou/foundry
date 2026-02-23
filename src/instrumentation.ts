@@ -349,6 +349,11 @@ export async function register() {
       void import("@/app/api/meta-finder/batch/route").then(({ resumeRunningBatches }) => {
         resumeRunningBatches().catch((err) => console.error("[MetaFinder] バッチ再開エラー:", err));
       });
+
+      // Webクローラー月次スケジューラーを起動
+      void import("@/lib/web-crawler").then(({ startWebCrawlScheduler }) => {
+        startWebCrawlScheduler().catch((err) => console.error("[WebCrawler] スケジューラー起動エラー:", err));
+      });
     }
   }
 }

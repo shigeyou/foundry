@@ -67,6 +67,10 @@ create-zip.ps1
 # azure logs
 azure-logs*.zip
 azure-logs*/
+azure-app-logs*.zip
+azure-app-logs*/
+azure-foundry-logs*.zip
+azure-foundry-logs*/
 
 # test screenshots & audio
 test-*.png
