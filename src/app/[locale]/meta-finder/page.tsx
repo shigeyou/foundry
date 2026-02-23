@@ -1188,7 +1188,7 @@ export default function MetaFinderPage() {
         {/* Matrix Section */}
         <div id="matrix-section" className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-4 mb-6 overflow-x-auto">
           <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-lg font-semibold text-purple-600 dark:text-purple-400">
               {t("matrix.title")}
               <span className="text-sm font-normal text-gray-500 dark:text-gray-400 ml-2">
                 {t("matrix.desc")}
