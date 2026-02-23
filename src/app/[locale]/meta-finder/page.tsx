@@ -1067,25 +1067,25 @@ export default function MetaFinderPage() {
 
                   {/* 統計カード */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <div className="bg-white dark:bg-slate-800 rounded-lg p-3 text-center">
+                    <div className="bg-white dark:bg-slate-800 rounded-lg p-3">
                       <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                         {batchSummary.stats.totalIdeas}
                       </div>
                       <div className="text-xs text-slate-600 dark:text-slate-400">{t("batch.totalIdeas")}</div>
                     </div>
-                    <div className="bg-white dark:bg-slate-800 rounded-lg p-3 text-center">
+                    <div className="bg-white dark:bg-slate-800 rounded-lg p-3">
                       <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                         {batchSummary.stats.avgScore}
                       </div>
                       <div className="text-xs text-slate-600 dark:text-slate-400">{t("batch.avgScore")}</div>
                     </div>
-                    <div className="bg-white dark:bg-slate-800 rounded-lg p-3 text-center">
+                    <div className="bg-white dark:bg-slate-800 rounded-lg p-3">
                       <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                         {batchSummary.scoreDistribution.excellent}
                       </div>
                       <div className="text-xs text-slate-600 dark:text-slate-400">{t("batch.highScore")}</div>
                     </div>
-                    <div className="bg-white dark:bg-slate-800 rounded-lg p-3 text-center">
+                    <div className="bg-white dark:bg-slate-800 rounded-lg p-3">
                       <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
                         {batchSummary.stats.maxScore?.toFixed(1)}
                       </div>
