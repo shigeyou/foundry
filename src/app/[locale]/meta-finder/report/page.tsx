@@ -359,9 +359,9 @@ export default function ReportPage() {
     return () => clearTimeout(timer);
   }, [audio.currentSection, activeScope]);
 
-  // カードクリックで読み上げジャンプ（再生中のみ反応）
+  // カードクリックで読み上げジャンプ（再生中・一時停止中に反応）
   const handleSectionClick = useCallback((section: string) => {
-    if (audio.isPlaying) {
+    if (audio.isPlaying || audio.isPaused) {
       audio.playFromSection(section);
     }
   }, [audio]);
@@ -794,7 +794,7 @@ export default function ReportPage() {
             {/* 完了済みタブは閲覧可能 */}
             {sections && (
               <div className="mt-8">
-                <ReportContent sections={sections} scopeName={activeReport?.scopeName || ""} scopeId={activeScope} currentSection={audio.currentSection} setSectionRef={setSectionRef} onSectionClick={audio.isPlaying ? handleSectionClick : undefined} t={t} />
+                <ReportContent sections={sections} scopeName={activeReport?.scopeName || ""} scopeId={activeScope} currentSection={audio.currentSection} setSectionRef={setSectionRef} onSectionClick={(audio.isPlaying || audio.isPaused) ? handleSectionClick : undefined} t={t} />
               </div>
             )}
           </div>
