@@ -268,10 +268,6 @@ export default function FoundryDashboard() {
             </div>
             <div className="grid md:grid-cols-3 gap-6">
               <div className="relative bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 transition-all duration-500 hover:shadow-xl">
-                <div className="flex items-center gap-2 mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
-                  <span className="text-2xl">🤖</span>
-                  <span className="text-sm font-semibold text-teal-700 dark:text-teal-300 tracking-wide">AIアバターアシスタント</span>
-                </div>
                 <div className="space-y-3 min-h-[80px]">
                   {kaedeUrl ? (
                     <a
