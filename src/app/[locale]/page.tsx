@@ -102,8 +102,8 @@ export default function FoundryDashboard() {
           <div className="flex items-center justify-between mb-10 py-4 px-6 -mx-6 bg-gradient-to-r from-blue-50/80 via-white/50 to-indigo-50/80 dark:from-blue-950/50 dark:via-slate-900/50 dark:to-indigo-950/50 backdrop-blur-sm border-b border-blue-100 dark:border-blue-900/50">
             <div className="flex items-center gap-5">
               <div className="relative">
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-xl shadow-blue-500/40 hover:shadow-blue-500/60 transition-shadow duration-300 overflow-hidden">
-                  <svg className="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5">
+                <div className="w-20 h-20 bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-xl shadow-blue-500/40 hover:shadow-blue-500/60 transition-shadow duration-300 overflow-hidden">
+                  <svg className="w-12 h-12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5">
                     <defs>
                       <linearGradient id="flameHeroOuter" x1="0.5" y1="1" x2="0.5" y2="0">
                         <stop offset="0%" stopColor="#f97316" />
@@ -127,10 +127,10 @@ export default function FoundryDashboard() {
                 <div className="absolute -inset-3 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-2xl blur-2xl opacity-30 dark:opacity-50 animate-pulse" />
               </div>
               <div>
-                <p className="text-base font-medium text-blue-600 dark:text-blue-400 mb-1">
+                <p className="text-xl font-medium text-blue-600 dark:text-blue-400 mb-1">
                   企業の課題解決をAIで支援する、Foundry（鋳造所）
                 </p>
-                <h1 className="text-4xl sm:text-5xl font-black tracking-tight">
+                <h1 className="text-5xl sm:text-6xl font-black tracking-tight">
                   <span className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-600 dark:from-blue-400 dark:via-blue-500 dark:to-indigo-400 bg-clip-text text-transparent drop-shadow-sm">
                     Foundry
                   </span>
