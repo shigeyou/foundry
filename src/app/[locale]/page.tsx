@@ -18,6 +18,7 @@ const appTypes = [
     icon: "🔍",
     label: "ファインダー型",
     buttonLabel: "勝ち筋ファインダー",
+    buttonDescription: "企業の課題と勝ち筋をAIで探索",
     description: "データや情報を探索・発見",
     gradient: "from-blue-500 via-blue-600 to-indigo-600",
     lightBg: "bg-blue-100 dark:bg-blue-500/10",
@@ -103,7 +104,7 @@ export default function FoundryDashboard() {
             <div className="flex items-center gap-5">
               <div className="relative">
                 <div className="w-20 h-20 bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-xl shadow-blue-500/40 hover:shadow-blue-500/60 transition-shadow duration-300 overflow-hidden">
-                  <svg className="w-12 h-12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5">
+                  <svg className="w-16 h-16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5">
                     <defs>
                       <linearGradient id="flameHeroOuter" x1="0.5" y1="1" x2="0.5" y2="0">
                         <stop offset="0%" stopColor="#f97316" />
@@ -222,6 +223,9 @@ export default function FoundryDashboard() {
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                             </svg>
                           </div>
+                          {"buttonDescription" in type && (type as any).buttonDescription && (
+                            <p className="text-xs text-white/70 mt-1">{(type as any).buttonDescription}</p>
+                          )}
                         </Link>
                       ) : loading ? (
                         <div className="flex items-center justify-center py-8">
@@ -242,6 +246,9 @@ export default function FoundryDashboard() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                               </svg>
                             </div>
+                            {app.description && (
+                              <p className="text-xs text-white/70 mt-1">{app.description}</p>
+                            )}
                           </Link>
                         ))
                       ) : (

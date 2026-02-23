@@ -696,6 +696,79 @@ export default function MetaFinderPage() {
       </header>
 
       <main className="max-w-full mx-auto px-4 py-6">
+        {/* ========== はじめての方へ：操作ガイド ========== */}
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/40 dark:to-indigo-950/40 border border-blue-200 dark:border-blue-800 rounded-xl p-5 mb-5" style={{ zoom: 1.4 }}>
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-xl">🧭</span>
+            <h2 className="text-base font-bold text-blue-900 dark:text-blue-100">このページの使い方</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* ステップ1 */}
+            <div className="bg-white dark:bg-slate-800 rounded-lg p-4 border border-blue-100 dark:border-blue-900 flex flex-col gap-2">
+              <div className="flex items-center gap-2">
+                <span className="w-7 h-7 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 font-bold text-sm flex items-center justify-center flex-shrink-0">1</span>
+                <span className="text-sm font-bold text-slate-800 dark:text-slate-100">まず全探索レポートを読む</span>
+              </div>
+              <p className="text-xs text-slate-600 dark:text-slate-400">
+                AIがすべてのテーマ×部門の組み合わせを自動探索した結果をまとめたレポートがあります。
+                <strong className="text-emerald-700 dark:text-emerald-400">これを読むだけで当社の勝ち筋が把握できます。</strong>
+                まずはレポートを確認してください。
+              </p>
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-auto">↓ ページ上部の緑色バナーから開けます</p>
+            </div>
+            {/* ステップ2 */}
+            <div className="bg-white dark:bg-slate-800 rounded-lg p-4 border border-blue-100 dark:border-blue-900 flex flex-col gap-2">
+              <div className="flex items-center gap-2">
+                <span className="w-7 h-7 rounded-full bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 font-bold text-sm flex items-center justify-center flex-shrink-0">2</span>
+                <span className="text-sm font-bold text-slate-800 dark:text-slate-100">気になるテーマを自由探索</span>
+              </div>
+              <p className="text-xs text-slate-600 dark:text-slate-400">
+                特定のテーマについて深掘りしたいときは、下の<strong className="text-blue-700 dark:text-blue-400">「自由探索プロンプト」</strong>に質問を入力してください。
+                バッジをタップすると例文が自動入力されるので、参考にしてください。
+              </p>
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-auto">↓ テキストボックスにテーマを入力 → 🚀探索ボタン</p>
+            </div>
+            {/* ステップ3 */}
+            <div className="bg-white dark:bg-slate-800 rounded-lg p-4 border border-blue-100 dark:border-blue-900 flex flex-col gap-2">
+              <div className="flex items-center gap-2">
+                <span className="w-7 h-7 rounded-full bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300 font-bold text-sm flex items-center justify-center flex-shrink-0">3</span>
+                <span className="text-sm font-bold text-slate-800 dark:text-slate-100">マトリクスで組み合わせ探索</span>
+              </div>
+              <p className="text-xs text-slate-600 dark:text-slate-400">
+                特定のテーマと部門の組み合わせで探索したい場合は、下の<strong className="text-purple-700 dark:text-purple-400">マトリクス表</strong>のセルをクリックして選択し、探索ボタンを押してください。複数セルの同時選択も可能です。
+              </p>
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-auto">↓ マトリクスのセルをクリック → 🚀探索ボタン</p>
+            </div>
+          </div>
+        </div>
+
+        {/* ========== 全探索レポート誘導バナー ========== */}
+        {batches.some(b => b.status === "completed") && (
+          <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 border border-emerald-300 dark:border-emerald-700 rounded-xl p-4 mb-4">
+            <div className="flex items-start gap-3">
+              <span className="text-2xl flex-shrink-0">📊</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-emerald-800 dark:text-emerald-200 mb-1">
+                  全探索レポートが利用可能です ― まずこちらをご確認ください
+                </p>
+                <p className="text-xs text-emerald-700 dark:text-emerald-300 mb-3">
+                  AIがすべてのテーマ×部門の組み合わせを自動探索した結果をレポートにまとめています。
+                  自分で問いを立てる前に、このレポートを読むだけで当社の勝ち筋が把握できます。
+                </p>
+                <a
+                  href={`/meta-finder/report${batches.find(b => b.status === "completed") ? `?batchId=${batches.find(b => b.status === "completed")!.id}` : ""}`}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-lg transition-colors shadow-sm"
+                >
+                  📋 全探索レポートを見る
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* ========== フリーテキストプロンプトボックス ========== */}
         <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-4 mb-6">
           <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
@@ -704,7 +777,7 @@ export default function MetaFinderPage() {
               {t("freePrompt.desc")}
             </span>
           </h2>
-          <div className="flex gap-3">
+          <div className="flex gap-3 items-stretch">
             <div className="flex-1 relative">
               <textarea
                 value={freePrompt}
@@ -726,10 +799,10 @@ export default function MetaFinderPage() {
                 </span>
               )}
             </div>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-row gap-2 h-full">
               <button
                 onClick={toggleListening}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`h-full px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   isListening
                     ? "bg-red-500 hover:bg-red-600 text-white"
                     : "bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 text-gray-700 dark:text-gray-300"
@@ -742,7 +815,7 @@ export default function MetaFinderPage() {
               <button
                 onClick={handleImproveText}
                 disabled={loading || isImproving || !freePrompt.trim()}
-                className="px-3 py-2 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 disabled:opacity-50 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium transition-colors disabled:cursor-not-allowed"
+                className="h-full px-3 py-2 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 disabled:opacity-50 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium transition-colors disabled:cursor-not-allowed"
                 title={t("freePrompt.improveTitle")}
               >
                 {isImproving ? t("freePrompt.improving") : `✨ ${t("freePrompt.improveText")}`}
@@ -750,10 +823,37 @@ export default function MetaFinderPage() {
               <button
                 onClick={handleFreeExplore}
                 disabled={loading || !freePrompt.trim()}
-                className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-lg text-sm font-bold shadow-md transition-all disabled:cursor-not-allowed"
+                className="h-full px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-lg text-sm font-bold shadow-md transition-all disabled:cursor-not-allowed"
               >
                 {loading ? t("freePrompt.exploring") : `🚀 ${t("freePrompt.explore")}`}
               </button>
+            </div>
+          </div>
+          {/* 例題バッジ */}
+          <div className="mt-2">
+            <p className="text-xs text-gray-400 dark:text-gray-500 mb-1.5">💡 バッジをタップすると問いが自動入力されます</p>
+            <div className="flex flex-wrap gap-1.5">
+              {[
+                { label: "洋上風力", prompt: "洋上風力事業において、当社が新規参入または競合優位を確立するための具体的な機会と戦略は何か？" },
+                { label: "脱炭素化", prompt: "当社の事業において脱炭素化を推進するために優先すべき取り組みと、実現に向けたロードマップは？" },
+                { label: "船員定着", prompt: "船員の離職率を低下させ、優秀な人材を確保・定着させるための実効的な施策は何か？" },
+                { label: "AI活用", prompt: "当社の業務においてAIを導入することで最も効率化・価値創出が期待できる領域はどこか？" },
+                { label: "差別化戦略", prompt: "競合他社と比較した当社の強みを活かし、市場での差別化を実現するための戦略は？" },
+                { label: "新造船収益", prompt: "新造船管理事業における収益性を向上させるための具体的な方策は何か？" },
+                { label: "オフショア拡大", prompt: "オフショア事業において新たな市場・顧客層を開拓し、事業規模を拡大するための機会はどこにあるか？" },
+                { label: "デジタルツイン", prompt: "デジタルツイン技術を当社の業務プロセスに導入することで、どのような価値を創出できるか？" },
+                { label: "訓練事業", prompt: "海技訓練事業の付加価値を高め、収益モデルを多様化するための戦略的オプションは何か？" },
+                { label: "海外展開", prompt: "当社の強みを活かして海外市場に展開する際に、最も有望な地域・領域と参入戦略は？" },
+              ].map(({ label, prompt }) => (
+                <button
+                  key={label}
+                  onClick={() => setFreePrompt(prompt)}
+                  disabled={loading}
+                  className="px-2.5 py-1 text-xs rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors disabled:opacity-50"
+                >
+                  {label}
+                </button>
+              ))}
             </div>
           </div>
           <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
