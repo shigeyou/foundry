@@ -646,7 +646,7 @@ export async function exportExecutiveSummaryPdf(data: ExecutiveSummaryInput): Pr
     left: -9999px;
     top: 0;
     width: 794px;
-    padding: 18px 20px 14px;
+    padding: 14px 20px 10px;
     background: white;
     font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
     color: #1a1a1a;
@@ -682,9 +682,9 @@ export async function exportExecutiveSummaryPdf(data: ExecutiveSummaryInput): Pr
     const shown = sorted.slice(0, 3);
     const rest = sorted.length - shown.length;
     return shown.map(i => `
-      <div style="display:flex;align-items:flex-start;gap:3px;margin-bottom:3px;">
+      <div style="display:flex;align-items:flex-start;gap:3px;margin-bottom:2px;">
         ${sevBadge(i.severity)}
-        <span style="font-size:9px;color:#1e293b;line-height:1.3;">${escapeHtml(i.title)}</span>
+        <span style="font-size:9px;color:#1e293b;line-height:1.2;">${escapeHtml(i.title)}</span>
       </div>
     `).join("") + (rest > 0 ? `<div style="font-size:8px;color:#94a3b8;margin-top:1px;">他 ${rest}件</div>` : "");
   };
@@ -699,9 +699,9 @@ export async function exportExecutiveSummaryPdf(data: ExecutiveSummaryInput): Pr
     return shown.map(s => {
       const [bg, color, label] = priLabel(s.priority);
       return `
-        <div style="display:flex;align-items:flex-start;gap:3px;margin-bottom:3px;">
+        <div style="display:flex;align-items:flex-start;gap:3px;margin-bottom:2px;">
           <span style="display:inline-block;background:${bg};color:${color};font-size:8px;font-weight:bold;padding:1px 4px;border-radius:3px;border:1px solid ${color};white-space:nowrap;">${label}</span>
-          <span style="font-size:9px;color:#1e293b;line-height:1.3;">${escapeHtml(s.title)}</span>
+          <span style="font-size:9px;color:#1e293b;line-height:1.2;">${escapeHtml(s.title)}</span>
         </div>
       `;
     }).join("") + (rest > 0 ? `<div style="font-size:8px;color:#94a3b8;margin-top:1px;">他 ${rest}件</div>` : "");
@@ -714,21 +714,21 @@ export async function exportExecutiveSummaryPdf(data: ExecutiveSummaryInput): Pr
     return shown.map(s => {
       const c = scoreColor(s.score);
       return `
-        <div style="display:flex;align-items:flex-start;gap:3px;margin-bottom:3px;">
+        <div style="display:flex;align-items:flex-start;gap:3px;margin-bottom:2px;">
           <span style="display:inline-block;background:white;color:${c};font-size:8px;font-weight:bold;padding:1px 4px;border-radius:3px;border:1px solid ${c};white-space:nowrap;">${s.score.toFixed(1)}</span>
-          <span style="font-size:9px;color:#1e293b;line-height:1.3;">${escapeHtml(s.name)}</span>
+          <span style="font-size:9px;color:#1e293b;line-height:1.2;">${escapeHtml(s.name)}</span>
         </div>
       `;
     }).join("") + (rest > 0 ? `<div style="font-size:8px;color:#94a3b8;margin-top:1px;">他 ${rest}件</div>` : "");
   };
 
   const rowBg = (i: number) => i % 2 === 0 ? "#ffffff" : "#f8fafc";
-  const cellStyle = `padding:6px 8px;border:1px solid #e2e8f0;vertical-align:top;`;
+  const cellStyle = `padding:4px 7px;border:1px solid #e2e8f0;vertical-align:top;`;
   const deptCellStyle = `${cellStyle}background:#eef2ff;font-weight:bold;font-size:10px;color:#3730a3;text-align:center;vertical-align:middle;`;
 
   container.innerHTML = `
     <!-- ヘッダー -->
-    <div style="display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid #4f46e5;padding-bottom:8px;margin-bottom:10px;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid #4f46e5;padding-bottom:6px;margin-bottom:8px;">
       <div>
         <h1 style="font-size:15px;font-weight:bold;margin:0 0 2px;color:#1e293b;">📋 エグゼクティブサマリー</h1>
         <p style="font-size:11px;color:#4f46e5;font-weight:bold;margin:0;">${escapeHtml(data.companyName)}</p>
