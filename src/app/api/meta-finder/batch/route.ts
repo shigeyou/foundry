@@ -100,8 +100,8 @@ async function runBatchInBackground(batchId: string) {
       return;
     }
 
-    // RAGコンテキスト合計上限: 20,000文字（入力トークン削減で処理速度向上）
-    const RAG_CONTEXT_BUDGET = 20000;
+    // RAGコンテキスト合計上限: 50,000文字（ドキュメント数が増えても肥大化しないよう均等配分）
+    const RAG_CONTEXT_BUDGET = 50000;
     const charsPerDoc = Math.max(500, Math.min(2000, Math.floor(RAG_CONTEXT_BUDGET / ragDocuments.length)));
     let documentContext = "## 分析対象ドキュメント\n\n";
     for (const doc of ragDocuments) {
