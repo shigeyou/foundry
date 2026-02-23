@@ -705,39 +705,66 @@ export default function MetaFinderPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* ステップ1 */}
             <div className="bg-white dark:bg-slate-800 rounded-lg p-4 border border-blue-100 dark:border-blue-900 flex flex-col gap-2">
-              <div className="flex items-center gap-2">
-                <span className="w-7 h-7 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 font-bold text-sm flex items-center justify-center flex-shrink-0">1</span>
-                <span className="text-sm font-bold text-slate-800 dark:text-slate-100">まず全探索レポートを読む</span>
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="w-7 h-7 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 font-bold text-sm flex items-center justify-center flex-shrink-0">1</span>
+                  <span className="text-sm font-bold text-slate-800 dark:text-slate-100">まず全探索レポートを読む</span>
+                </div>
+                {batches.find(b => b.status === "completed") ? (
+                  <a
+                    href={`/meta-finder/report?batchId=${batches.find(b => b.status === "completed")!.id}`}
+                    className="flex-shrink-0 px-2.5 py-1 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors"
+                  >
+                    📋 開く →
+                  </a>
+                ) : (
+                  <span className="flex-shrink-0 px-2.5 py-1 text-xs bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 rounded-lg">
+                    未実施
+                  </span>
+                )}
               </div>
               <p className="text-xs text-slate-600 dark:text-slate-400">
                 AIがすべてのテーマ×部門の組み合わせを自動探索した結果をまとめたレポートがあります。
                 <strong className="text-emerald-700 dark:text-emerald-400">これを読むだけで当社の勝ち筋が把握できます。</strong>
                 まずはレポートを確認してください。
               </p>
-              <p className="text-xs text-slate-400 dark:text-slate-500 mt-auto">↓ ページ上部の緑色バナーから開けます</p>
             </div>
             {/* ステップ2 */}
             <div className="bg-white dark:bg-slate-800 rounded-lg p-4 border border-blue-100 dark:border-blue-900 flex flex-col gap-2">
-              <div className="flex items-center gap-2">
-                <span className="w-7 h-7 rounded-full bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 font-bold text-sm flex items-center justify-center flex-shrink-0">2</span>
-                <span className="text-sm font-bold text-slate-800 dark:text-slate-100">気になるテーマを自由探索</span>
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="w-7 h-7 rounded-full bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 font-bold text-sm flex items-center justify-center flex-shrink-0">2</span>
+                  <span className="text-sm font-bold text-slate-800 dark:text-slate-100">気になるテーマを自由探索</span>
+                </div>
+                <a
+                  href="#free-prompt-section"
+                  className="flex-shrink-0 px-2.5 py-1 text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                >
+                  ✏️ 移動 →
+                </a>
               </div>
               <p className="text-xs text-slate-600 dark:text-slate-400">
                 特定のテーマについて深掘りしたいときは、下の<strong className="text-blue-700 dark:text-blue-400">「自由探索プロンプト」</strong>に質問を入力してください。
                 バッジをタップすると例文が自動入力されるので、参考にしてください。
               </p>
-              <p className="text-xs text-slate-400 dark:text-slate-500 mt-auto">↓ テキストボックスにテーマを入力 → 🚀探索ボタン</p>
             </div>
             {/* ステップ3 */}
             <div className="bg-white dark:bg-slate-800 rounded-lg p-4 border border-blue-100 dark:border-blue-900 flex flex-col gap-2">
-              <div className="flex items-center gap-2">
-                <span className="w-7 h-7 rounded-full bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300 font-bold text-sm flex items-center justify-center flex-shrink-0">3</span>
-                <span className="text-sm font-bold text-slate-800 dark:text-slate-100">マトリクスで組み合わせ探索</span>
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="w-7 h-7 rounded-full bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300 font-bold text-sm flex items-center justify-center flex-shrink-0">3</span>
+                  <span className="text-sm font-bold text-slate-800 dark:text-slate-100">探索マトリックスで組み合わせ探索</span>
+                </div>
+                <a
+                  href="#matrix-section"
+                  className="flex-shrink-0 px-2.5 py-1 text-xs font-bold bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
+                >
+                  📊 移動 →
+                </a>
               </div>
               <p className="text-xs text-slate-600 dark:text-slate-400">
-                特定のテーマと部門の組み合わせで探索したい場合は、下の<strong className="text-purple-700 dark:text-purple-400">マトリクス表</strong>のセルをクリックして選択し、探索ボタンを押してください。複数セルの同時選択も可能です。
+                特定のテーマと部門の組み合わせで探索したい場合は、下の<strong className="text-purple-700 dark:text-purple-400">探索マトリックス</strong>のセルをクリックして選択し、探索ボタンを押してください。複数セルの同時選択も可能です。
               </p>
-              <p className="text-xs text-slate-400 dark:text-slate-500 mt-auto">↓ マトリクスのセルをクリック → 🚀探索ボタン</p>
             </div>
           </div>
         </div>
@@ -770,7 +797,7 @@ export default function MetaFinderPage() {
         )}
 
         {/* ========== フリーテキストプロンプトボックス ========== */}
-        <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-4 mb-6">
+        <div id="free-prompt-section" className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-4 mb-6">
           <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
             {t("freePrompt.title")}
             <span className="text-xs font-normal text-gray-500 dark:text-gray-400 ml-2">
@@ -789,7 +816,8 @@ export default function MetaFinderPage() {
                   }
                 }}
                 placeholder={t("freePrompt.placeholder")}
-                className="w-full h-20 p-3 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 rounded-lg text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-slate-500 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                rows={2}
+                className="w-full p-3 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 rounded-lg text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-slate-500 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 disabled={loading}
               />
               {isListening && (
@@ -1141,7 +1169,7 @@ export default function MetaFinderPage() {
         )}
 
         {/* Matrix Section */}
-        <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-4 mb-6 overflow-x-auto">
+        <div id="matrix-section" className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-4 mb-6 overflow-x-auto">
           <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
               {t("matrix.title")}
