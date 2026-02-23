@@ -786,33 +786,6 @@ export default function MetaFinderPage() {
           </div>
         </div>
 
-        {/* ========== 全探索レポート誘導バナー ========== */}
-        {batches.some(b => b.status === "completed") && (
-          <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 border border-emerald-300 dark:border-emerald-700 rounded-xl p-4 mb-4">
-            <div className="flex items-start gap-3">
-              <span className="text-2xl flex-shrink-0">📊</span>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-emerald-800 dark:text-emerald-200 mb-1">
-                  全探索レポートが利用可能です ― まずこちらをご確認ください
-                </p>
-                <p className="text-xs text-emerald-700 dark:text-emerald-300 mb-3">
-                  AIがすべてのテーマ×部門の組み合わせを自動探索した結果をレポートにまとめています。
-                  自分で問いを立てる前に、このレポートを読むだけで当社の勝ち筋が把握できます。
-                </p>
-                <a
-                  href={`/meta-finder/report${batches.find(b => b.status === "completed") ? `?batchId=${batches.find(b => b.status === "completed")!.id}` : ""}`}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-lg transition-colors shadow-sm"
-                >
-                  📋 全探索レポートを見る
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </a>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* ========== フリーテキストプロンプトボックス ========== */}
         <div id="free-prompt-section" className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-4 mb-6">
           <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
