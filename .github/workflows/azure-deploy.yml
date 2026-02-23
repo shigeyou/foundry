@@ -39,9 +39,6 @@ jobs:
       - name: Create empty database with schema
         run: |
           pnpm exec prisma db push --skip-generate
-          ls -la dev.db || echo "dev.db not in root"
-          ls -la prisma/dev.db || echo "dev.db not in prisma/"
-          # Ensure dev.db is in project root for later copy
           if [ ! -f dev.db ] && [ -f prisma/dev.db ]; then
             cp prisma/dev.db dev.db
           fi
@@ -78,73 +75,87 @@ jobs:
             DATABASE_URL="file:./dev.db" pnpm exec prisma db push --skip-generate
             cp dev.db .next/standalone/data/dev.db
           fi
-          # Remove oryx-manifest.toml to prevent Oryx from extracting node_modules.tar.gz
-          # (standalone build has its own node_modules with proper dependencies)
-          rm -f .next/standalone/oryx-manifest.toml
-          rm -f .next/standalone/node_modules.tar.gz
-          # Verify standalone node_modules has next
-          echo "=== Standalone node_modules check ==="
-          ls .next/standalone/node_modules/ | head -20 || echo "No node_modules in standalone"
-          ls .next/standalone/node_modules/next/package.json 2>/dev/null && echo "next: OK" || echo "next: MISSING"
-          echo "=== End check ==="
-          # Ensure next and its deps are in standalone (pnpm output tracing may miss some)
-          if [ ! -f ".next/standalone/node_modules/next/package.json" ]; then
-            echo "Copying next package and its deps to standalone..."
-            cp -rL node_modules/next .next/standalone/node_modules/
-          fi
-          # Copy ALL next.js dependencies to standalone node_modules (pnpm may not hoist them)
-          NEXT_DEPS="styled-jsx @swc/helpers @swc/counter caniuse-lite @next/env postcss baseline-browser-mapping"
-          for dep in $NEXT_DEPS; do
-            if [ -e "node_modules/$dep" ]; then
-              rm -rf ".next/standalone/node_modules/$dep" 2>/dev/null || true
-              mkdir -p ".next/standalone/node_modules/$(dirname $dep)"
-              cp -rL "node_modules/$dep" ".next/standalone/node_modules/$dep"
-              echo "Copied next dep: $dep"
-            fi
-          done
-          # Copy prisma and all @prisma/* packages for schema sync on startup
-          PRISMA_PKGS="prisma @prisma/client @prisma/engines @prisma/config @prisma/debug @prisma/fetch-engine @prisma/get-platform @prisma/internals @prisma/schema-files-loader"
-          for pkg in $PRISMA_PKGS; do
-            if [ -e "node_modules/$pkg" ]; then
-              rm -rf ".next/standalone/node_modules/$pkg" 2>/dev/null || true
-              mkdir -p ".next/standalone/node_modules/$(dirname $pkg)"
-              cp -rL "node_modules/$pkg" ".next/standalone/node_modules/$pkg"
-              echo "Copied $pkg"
-            fi
-          done
           # Copy startup script
           cp startup.sh .next/standalone/startup.sh
           chmod +x .next/standalone/startup.sh
           # Create package.json for Azure App Service
           echo '{"name":"foundry","version":"1.0.0","scripts":{"start":"node server.js"}}' > .next/standalone/package.json
 
-      - name: Create deployment package (resolve symlinks)
+      - name: Create flat node_modules for deployment
         run: |
-          # pnpm output tracing leaves symlinks that break when extracted from ZIP
-          # First remove broken symlinks, then copy with -rL to resolve valid ones
-          echo "Removing broken symlinks..."
-          find .next/standalone -type l ! -exec test -e {} \; -delete -print | head -20
-          echo "Copying standalone with symlink resolution..."
-          cp -rL .next/standalone deploy-pkg
-          # Remove Oryx trigger files to prevent node_modules interference
-          rm -f deploy-pkg/oryx-manifest.toml deploy-pkg/node_modules.tar.gz
-          # Remove Windows/macOS native binaries (not needed on Linux Azure)
-          rm -rf deploy-pkg/node_modules/.pnpm/@img+sharp-win32-* 2>/dev/null || true
-          rm -rf deploy-pkg/node_modules/.pnpm/@img+sharp-darwin-* 2>/dev/null || true
-          rm -rf deploy-pkg/node_modules/.pnpm/@img+sharp-linuxmusl-* 2>/dev/null || true
-          # Remove prisma engine caches for non-Linux platforms
-          find deploy-pkg -path "*/.cache/prisma/*/windows" -type d -exec rm -rf {} + 2>/dev/null || true
-          find deploy-pkg -path "*/.cache/prisma/*/darwin*" -type d -exec rm -rf {} + 2>/dev/null || true
-          echo "=== node_modules contents ==="
-          ls deploy-pkg/node_modules/ | head -30
-          echo "=== node_modules size ==="
-          du -sh deploy-pkg/node_modules/
-          echo "=== next package check ==="
-          ls deploy-pkg/node_modules/next/package.json && echo "next: OK" || echo "next: MISSING"
+          # pnpm uses symlinks and .pnpm store which breaks on Azure (Oryx interference).
+          # Solution: create a flat node_modules using npm from standalone's traced dependencies.
+          cd .next/standalone
+
+          # Collect all packages that standalone traced (excluding .pnpm internal store)
+          echo "=== Creating package.json from traced dependencies ==="
+          node -e "
+            const fs = require('fs');
+            const path = require('path');
+            const deps = {};
+            const nmDir = './node_modules';
+
+            // Get top-level packages (non-hidden, non .pnpm)
+            const entries = fs.readdirSync(nmDir);
+            for (const entry of entries) {
+              if (entry.startsWith('.')) continue;
+              const pkgPath = entry.startsWith('@')
+                ? fs.readdirSync(path.join(nmDir, entry))
+                    .map(sub => ({ name: entry + '/' + sub, dir: path.join(nmDir, entry, sub) }))
+                : [{ name: entry, dir: path.join(nmDir, entry) }];
+              for (const pkg of pkgPath) {
+                try {
+                  const pj = JSON.parse(fs.readFileSync(path.join(pkg.dir, 'package.json'), 'utf8'));
+                  deps[pkg.name] = pj.version;
+                } catch(e) {}
+              }
+            }
+
+            // Also include next's dependencies explicitly
+            try {
+              const nextPkg = JSON.parse(fs.readFileSync('./node_modules/next/package.json', 'utf8'));
+              for (const [name, ver] of Object.entries(nextPkg.dependencies || {})) {
+                if (!deps[name]) deps[name] = ver.replace(/^\^|~/, '');
+              }
+            } catch(e) {}
+
+            const pkg = { name: 'foundry-deploy', version: '1.0.0', dependencies: deps };
+            fs.writeFileSync('package-deploy.json', JSON.stringify(pkg, null, 2));
+            console.log('Dependencies found:', Object.keys(deps).length);
+            console.log(JSON.stringify(deps, null, 2));
+          "
+
+          # Remove pnpm node_modules entirely
+          rm -rf node_modules
+
+          # Install with npm to get flat, symlink-free node_modules
+          cp package-deploy.json package.json
+          npm install --production --no-optional --ignore-scripts 2>&1 | tail -20
+          rm -f package-deploy.json
+
+          # Restore our custom package.json
+          echo '{"name":"foundry","version":"1.0.0","scripts":{"start":"node server.js"}}' > package.json
+
+          echo "=== Flat node_modules check ==="
+          ls node_modules/ | head -30
+          ls node_modules/next/package.json && echo "next: OK" || echo "next: MISSING"
+          ls node_modules/@next/env/package.json 2>/dev/null && echo "@next/env: OK" || echo "@next/env: MISSING"
+          ls node_modules/styled-jsx/package.json 2>/dev/null && echo "styled-jsx: OK" || echo "styled-jsx: MISSING"
+          du -sh node_modules/
+
+      - name: Create deployment ZIP
+        run: |
+          cd .next/standalone
+          # Remove any Oryx trigger files
+          rm -f oryx-manifest.toml node_modules.tar.gz
+          # Remove unnecessary platform binaries
+          find node_modules -path "*/sharp-win32*" -exec rm -rf {} + 2>/dev/null || true
+          find node_modules -path "*/sharp-darwin*" -exec rm -rf {} + 2>/dev/null || true
+          find node_modules -path "*/.cache/prisma/*/windows" -type d -exec rm -rf {} + 2>/dev/null || true
+          find node_modules -path "*/.cache/prisma/*/darwin*" -type d -exec rm -rf {} + 2>/dev/null || true
           echo "Creating ZIP..."
-          cd deploy-pkg
-          zip -r ../deploy.zip .
-          cd ..
+          zip -r ../../deploy.zip . -x "*.map"
+          cd ../..
           echo "ZIP size: $(du -h deploy.zip | cut -f1)"
 
       - name: Login to Azure
@@ -152,7 +163,7 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Set startup command and environment variables
+      - name: Configure Azure App Service
         run: |
           az webapp config set \
             --resource-group rg-ocreader-japaneast \
@@ -163,71 +174,31 @@ jobs:
             --name ${{ env.AZURE_WEBAPP_NAME }} \
             --settings \
               DATABASE_URL="file:/home/data/foundry.db" \
+              WEBSITE_RUN_FROM_PACKAGE="1" \
               SCM_DO_BUILD_DURING_DEPLOYMENT="false" \
               ENABLE_ORYX_BUILD="false"
 
-      - name: Wait for SCM to stabilize
+      - name: Deploy ZIP package
         run: |
-          echo "Waiting 90 seconds for SCM container to stabilize after config changes..."
-          sleep 90
-
-      - name: Clean wwwroot before deploy
-        run: |
-          # Delete everything in wwwroot to remove stale symlinks
-          # Kudu VFS API: DELETE on directory with recursive=1
-          KUDU_URL="https://${{ env.AZURE_WEBAPP_NAME }}.scm.azurewebsites.net"
-          TOKEN=$(az account get-access-token --resource https://management.azure.com/ --query accessToken -o tsv)
-          # Delete wwwroot contents
-          curl -s -X DELETE "${KUDU_URL}/api/vfs/site/wwwroot/?recursive=true" \
-            -H "Authorization: Bearer ${TOKEN}" \
-            -H "If-Match: *" \
-            -w "\nHTTP Status: %{http_code}\n" || echo "VFS cleanup failed (non-fatal)"
-          # Recreate empty wwwroot
-          curl -s -X PUT "${KUDU_URL}/api/vfs/site/wwwroot/" \
-            -H "Authorization: Bearer ${TOKEN}" \
-            -w "\nHTTP Status: %{http_code}\n" || true
-
-      - name: Deploy ZIP package via Kudu API
-        run: |
-          KUDU_URL="https://${{ env.AZURE_WEBAPP_NAME }}.scm.azurewebsites.net"
-          TOKEN=$(az account get-access-token --resource https://management.azure.com/ --query accessToken -o tsv)
-          echo "Uploading deploy.zip ($(du -h deploy.zip | cut -f1)) to Kudu..."
-          HTTP_STATUS=$(curl -s -w "%{http_code}" -o /tmp/deploy-response.txt \
-            -X POST "${KUDU_URL}/api/zipdeploy?isAsync=true" \
-            -H "Authorization: Bearer ${TOKEN}" \
-            -H "Content-Type: application/zip" \
-            --data-binary @deploy.zip \
-            --max-time 600)
-          echo "Upload HTTP Status: $HTTP_STATUS"
-          cat /tmp/deploy-response.txt || true
-          if [ "$HTTP_STATUS" != "202" ] && [ "$HTTP_STATUS" != "200" ]; then
-            echo "ERROR: ZIP upload failed with status $HTTP_STATUS"
-            exit 1
-          fi
-          # Poll deployment status
-          echo "Polling deployment status..."
-          for i in $(seq 1 60); do
-            sleep 10
-            DEPLOY_STATUS=$(curl -s "${KUDU_URL}/api/deployments/latest" \
-              -H "Authorization: Bearer ${TOKEN}" | jq -r '.status // "unknown"')
-            echo "Attempt $i: Deployment status = $DEPLOY_STATUS"
-            if [ "$DEPLOY_STATUS" = "4" ]; then
-              echo "Deployment succeeded!"
-              break
-            elif [ "$DEPLOY_STATUS" = "3" ]; then
-              echo "ERROR: Deployment failed"
-              curl -s "${KUDU_URL}/api/deployments/latest" -H "Authorization: Bearer ${TOKEN}" | jq .
-              exit 1
-            fi
-          done
+          # Use az webapp deploy which uploads to /home/data/SitePackages/
+          # With WEBSITE_RUN_FROM_PACKAGE=1, Azure mounts the ZIP directly as wwwroot (read-only)
+          # This completely bypasses Oryx since there's no extraction step
+          echo "Deploying ZIP ($(du -h deploy.zip | cut -f1))..."
+          az webapp deploy \
+            --resource-group rg-ocreader-japaneast \
+            --name ${{ env.AZURE_WEBAPP_NAME }} \
+            --src-path deploy.zip \
+            --type zip \
+            --async true
+          echo "Deployment initiated (async). Waiting for site to restart..."
 
       - name: Wait for site to be ready
         run: |
           echo "Waiting for site to start..."
-          sleep 60
-          for i in {1..15}; do
-            STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://molmat-foundry.azurewebsites.net/)
-            if [ "$STATUS" = "200" ] || [ "$STATUS" = "401" ] || [ "$STATUS" = "302" ]; then
+          sleep 120
+          for i in {1..20}; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 https://molmat-foundry.azurewebsites.net/)
+            if [ "$STATUS" = "200" ] || [ "$STATUS" = "401" ] || [ "$STATUS" = "302" ] || [ "$STATUS" = "307" ]; then
               echo "Site is up! Status: $STATUS"
               exit 0
             fi
