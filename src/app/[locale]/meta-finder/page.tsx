@@ -869,7 +869,7 @@ export default function MetaFinderPage() {
           </div>
           {/* 例題バッジ */}
           <div className="mt-2">
-            <p className="text-xs text-gray-400 dark:text-gray-500 mb-1.5">💡 バッジをタップすると問いが自動入力されます</p>
+            <p className="text-sm text-gray-400 dark:text-gray-500 mb-1.5">💡 バッジをタップすると問いが自動入力されます</p>
             <div className="flex flex-wrap gap-1.5">
               {[
                 { label: "洋上風力", prompt: "洋上風力事業において、当社が新規参入または競合優位を確立するための具体的な機会と戦略は何か？" },
@@ -887,7 +887,7 @@ export default function MetaFinderPage() {
                   key={label}
                   onClick={() => setFreePrompt(prompt)}
                   disabled={loading}
-                  className="px-2.5 py-1 text-xs rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors disabled:opacity-50"
+                  className="px-2.5 py-1 text-sm rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-2 border-blue-300 dark:border-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors disabled:opacity-50"
                 >
                   {label}
                 </button>
