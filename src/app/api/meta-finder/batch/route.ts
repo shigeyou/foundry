@@ -100,8 +100,8 @@ async function runBatchInBackground(batchId: string) {
       return;
     }
 
-    // RAGコンテキスト合計上限: 50,000文字（ドキュメント数が増えても肥大化しないよう均等配分）
-    const RAG_CONTEXT_BUDGET = 50000;
+    // RAGコンテキスト合計上限: 20,000文字（入力トークン削減で処理速度向上）
+    const RAG_CONTEXT_BUDGET = 20000;
     const charsPerDoc = Math.max(500, Math.min(2000, Math.floor(RAG_CONTEXT_BUDGET / ragDocuments.length)));
     let documentContext = "## 分析対象ドキュメント\n\n";
     for (const doc of ragDocuments) {
@@ -144,61 +144,55 @@ ${swot.summary ? `\n### SWOT総括\n${swot.summary}` : ""}
 
     console.log(`[MetaFinder Batch] ${pendingPatterns.length} patterns remaining`);
 
-    // 並列数: BATCH_CONCURRENCY環境変数で調整可能（デフォルト20）
-    // 各パターン約8,000トークン(入力削減後) x 20 = 160,000 TPM 目安
-    // Azure TPM制限を超える場合は env BATCH_CONCURRENCY=10 などで下げること
-    const CONCURRENCY = parseInt(process.env.BATCH_CONCURRENCY || "20");
+    // 並列数: BATCH_CONCURRENCY環境変数で調整可能（デフォルト40）
+    // スライディングウィンドウ方式: N件を常に並列稼働し、完了次第次の呼び出しを開始
+    // RAGコンテキスト20,000文字 x 40 = 推定TPM余裕あり
+    // レート制限エラーが出る場合: env BATCH_CONCURRENCY=20 などで下げること
+    const CONCURRENCY = parseInt(process.env.BATCH_CONCURRENCY || "40");
 
-    // チャンク単位で並列実行
-    for (let i = 0; i < pendingPatterns.length; i += CONCURRENCY) {
-      // キャンセルチェック
-      const currentBatch = await prisma.metaFinderBatch.findUnique({
-        where: { id: batchId },
-        select: { status: true },
-      });
-      if (currentBatch?.status === "cancelled") {
-        console.log(`[MetaFinder Batch] Cancelled at ${completedPatterns}/${batch.totalPatterns}`);
-        return;
-      }
+    // DB保存用バッファ（スライディングウィンドウ内の完了済み結果を随時保存）
+    const ideasBuffer: {
+      id: string; batchId: string; themeId: string; themeName: string;
+      deptId: string; deptName: string; name: string; description: string;
+      actions: string | null; reason: string;
+      financial: number; customer: number; process: number; growth: number; score: number;
+    }[] = [];
 
-      const chunk = pendingPatterns.slice(i, i + CONCURRENCY);
+    let cancelledFlag = false;
+    let lastProgressSave = Date.now();
 
-      // 進捗表示（チャンク内の最初のパターン名）
-      const labels = chunk.map((p) => `${p.theme.label}×${p.dept.label}`).join(", ");
-      console.log(`[MetaFinder Batch] Exploring ${chunk.length} patterns in parallel: ${labels}`);
+    // スライディングウィンドウ: N個のワーカーが常に並列稼働
+    let patternIndex = 0;
 
-      await prisma.metaFinderBatch.update({
-        where: { id: batchId },
-        data: {
-          currentTheme: chunk.map((p) => p.theme.label).join(", "),
-          currentDept: chunk.map((p) => p.dept.label).join(", "),
-        },
-      });
+    async function worker() {
+      while (true) {
+        const idx = patternIndex++;
+        if (idx >= pendingPatterns.length) break;
 
-      // 並列実行
-      const results = await Promise.allSettled(
-        chunk.map(async ({ theme, dept }) => {
+        // キャンセルチェック（10パターンごと）
+        if (idx % 10 === 0) {
+          const currentBatch = await prisma.metaFinderBatch.findUnique({
+            where: { id: batchId },
+            select: { status: true },
+          });
+          if (currentBatch?.status === "cancelled") {
+            cancelledFlag = true;
+            return;
+          }
+        }
+
+        if (cancelledFlag) return;
+
+        const { theme, dept } = pendingPatterns[idx];
+
+        try {
           const needs = await explorePattern(
             theme.id, theme.label, dept.id, dept.label, documentContext
           );
-          return { theme, dept, needs };
-        })
-      );
 
-      // 結果をDB一括保存（createManyで高速化）
-      const ideasToInsert: {
-        id: string; batchId: string; themeId: string; themeName: string;
-        deptId: string; deptName: string; name: string; description: string;
-        actions: string | null; reason: string;
-        financial: number; customer: number; process: number; growth: number; score: number;
-      }[] = [];
-
-      for (const result of results) {
-        if (result.status === "fulfilled") {
-          const { theme, dept, needs } = result.value;
           for (const need of needs) {
             const score = (need.financial + need.customer + need.process + need.growth) / 4;
-            ideasToInsert.push({
+            ideasBuffer.push({
               id: `idea-${batchId}-${theme.id}-${dept.id}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
               batchId,
               themeId: theme.id,
@@ -217,29 +211,53 @@ ${swot.summary ? `\n### SWOT総括\n${swot.summary}` : ""}
             });
             totalIdeas++;
           }
-        } else {
-          const pattern = chunk[results.indexOf(result)];
-          const errorMsg = `${pattern.theme.label} × ${pattern.dept.label}: ${result.reason instanceof Error ? result.reason.message : "Unknown error"}`;
+        } catch (err) {
+          const errorMsg = `${theme.label} × ${dept.label}: ${err instanceof Error ? err.message : "Unknown error"}`;
           console.error(`[MetaFinder Batch] Error:`, errorMsg);
           errors.push(errorMsg);
         }
+
         completedPatterns++;
-      }
 
-      if (ideasToInsert.length > 0) {
-        await prisma.metaFinderIdea.createMany({ data: ideasToInsert });
+        // バッファが溜まったら or 5秒経過したら DBに保存
+        const now = Date.now();
+        if (ideasBuffer.length >= 20 || (now - lastProgressSave) >= 5000) {
+          if (ideasBuffer.length > 0) {
+            const toInsert = ideasBuffer.splice(0, ideasBuffer.length);
+            await prisma.metaFinderIdea.createMany({ data: toInsert });
+          }
+          await prisma.metaFinderBatch.update({
+            where: { id: batchId },
+            data: {
+              completedPatterns,
+              totalIdeas,
+              currentTheme: theme.label,
+              currentDept: dept.label,
+              ...(errors.length > 0 && { errors: JSON.stringify(errors) }),
+            },
+          });
+          lastProgressSave = now;
+        }
       }
-
-      // チャンク完了後に進捗更新
-      await prisma.metaFinderBatch.update({
-        where: { id: batchId },
-        data: {
-          completedPatterns,
-          totalIdeas,
-          ...(errors.length > 0 && { errors: JSON.stringify(errors) }),
-        },
-      });
     }
+
+    // N個のワーカーを起動して待機
+    console.log(`[MetaFinder Batch] Starting ${CONCURRENCY} workers (sliding window)`);
+    await Promise.all(Array.from({ length: CONCURRENCY }, worker));
+
+    if (cancelledFlag) {
+      console.log(`[MetaFinder Batch] Cancelled at ${completedPatterns}/${batch.totalPatterns}`);
+      return;
+    }
+
+    // 残バッファをDB保存
+    if (ideasBuffer.length > 0) {
+      await prisma.metaFinderIdea.createMany({ data: ideasBuffer });
+    }
+    await prisma.metaFinderBatch.update({
+      where: { id: batchId },
+      data: { completedPatterns, totalIdeas, ...(errors.length > 0 && { errors: JSON.stringify(errors) }) },
+    });
 
     // 完了
     await prisma.metaFinderBatch.update({
