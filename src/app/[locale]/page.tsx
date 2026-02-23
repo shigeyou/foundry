@@ -262,10 +262,6 @@ export default function FoundryDashboard() {
 
           {/* 連携アプリ */}
           <div className="mb-8">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="w-1 h-5 bg-teal-500 rounded"></span>
-              <h2 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">AIアバターアシスタント</h2>
-            </div>
             <div className="grid md:grid-cols-3 gap-6">
               <div className="relative bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 transition-all duration-500 hover:shadow-xl">
                 <div className="space-y-3 min-h-[80px]">
