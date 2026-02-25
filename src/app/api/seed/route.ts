@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
                 filename: doc.filename,
                 fileType: doc.fileType,
                 content: doc.content,
-                metadata: doc.metadata,
+                metadata: typeof doc.metadata === 'object' && doc.metadata !== null ? JSON.stringify(doc.metadata) : doc.metadata,
               },
             });
           }
