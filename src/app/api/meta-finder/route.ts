@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
     // ドキュメントをプロンプト用にフォーマット
     let documentContext = "## 分析対象ドキュメント\n\n";
     for (const doc of ragDocuments) {
-      documentContext += `### ${doc.filename}\n${doc.content.slice(0, 5000)}\n\n`;
+      documentContext += `### ${doc.filename}\n${doc.content}\n\n`;
     }
 
     // SWOT分析結果を取得・注入

@@ -211,7 +211,7 @@ ${actions.length > 0 ? `アクション: ${actions.join(" / ")}` : ""}`;
     if (engagementDocs.length > 0) {
       engagementContext = `\n## エンゲージメントサーベイ・従業員調査データ\n以下はRAGに格納されたエンゲージメント関連ドキュメントです。レポートの課題分析において、該当部門に関連するサーベイ結果を引用・参照してください。\n\n`;
       for (const doc of engagementDocs) {
-        engagementContext += `### ${doc.filename}\n${doc.content.slice(0, 4000)}\n\n`;
+        engagementContext += `### ${doc.filename}\n${doc.content}\n\n`;
       }
     }
 

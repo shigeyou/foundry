@@ -16,6 +16,16 @@ export const DEFAULT_RAG_SOURCES = {
   },
 };
 
+/**
+ * Smart truncation: keeps head (60%) + tail (40%) to preserve structured data at end of document.
+ */
+export function truncateContent(content: string, maxChars: number): string {
+  if (content.length <= maxChars) return content;
+  const headSize = Math.floor(maxChars * 0.6);
+  const tailSize = maxChars - headSize;
+  return content.slice(0, headSize) + "\n\n...(中略)...\n\n" + content.slice(-tailSize);
+}
+
 // Simple in-memory cache
 const cache: Map<string, { content: string; timestamp: number }> = new Map();
 const CACHE_TTL = 60 * 60 * 1000; // 1 hour
@@ -128,10 +138,15 @@ export async function generateRAGContext(): Promise<string> {
 
   // Add RAG documents from database
   if (ragDocuments.length > 0) {
+    const MAX_TOTAL_RAG_CHARS = 400000;
+    const docCount = ragDocuments.length;
+    // Distribute budget evenly, but floor at 8k and cap at 40k per doc
+    const perDocBudget = Math.max(8000, Math.min(40000, Math.floor(MAX_TOTAL_RAG_CHARS / docCount)));
+
     context += "\n\n## 登録済みドキュメント:\n";
     for (const doc of ragDocuments) {
-      const contentPreview = doc.content.slice(0, 8000); // Limit each doc to 8k chars
-      context += `\n### ${doc.filename} (${doc.fileType.toUpperCase()}):\n${contentPreview}\n`;
+      const content = truncateContent(doc.content, perDocBudget);
+      context += `\n### ${doc.filename} (${doc.fileType.toUpperCase()}):\n${content}\n`;
     }
   }
 

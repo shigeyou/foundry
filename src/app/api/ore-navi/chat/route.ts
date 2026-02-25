@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
 
     let ragContext = "";
     for (const doc of ragDocuments) {
-      ragContext += `### ${doc.filename}\n${doc.content.slice(0, 2000)}\n\n`;
+      ragContext += `### ${doc.filename}\n${doc.content}\n\n`;
     }
 
     // モード修飾子
@@ -81,7 +81,7 @@ ${oreNaviContext.warning ? `- 警告: ${oreNaviContext.warning}` : ""}
 ${insightsSummary}
 
 ## 参考ドキュメント
-${ragContext.slice(0, 5000)}
+${ragContext}
 
 ${modeModifier}
 

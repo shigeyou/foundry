@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
         take: 10,
       });
       const ragContext = ragDocuments.length > 0
-        ? ragDocuments.map(d => `### ${d.filename}\n${d.content.substring(0, 3000)}`).join("\n\n")
+        ? ragDocuments.map(d => `### ${d.filename}\n${d.content}`).join("\n\n")
         : "";
 
       // 対象企業情報を整形

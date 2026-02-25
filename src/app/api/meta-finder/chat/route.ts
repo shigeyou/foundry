@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
 
     let ragContext = "";
     for (const doc of ragDocuments) {
-      ragContext += `### ${doc.filename}\n${doc.content.slice(0, 2000)}\n\n`;
+      ragContext += `### ${doc.filename}\n${doc.content}\n\n`;
     }
 
     const systemPrompt = `あなたはメタファインダーのアイデアについて深掘りするAIアシスタントです。

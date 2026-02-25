@@ -24,7 +24,7 @@ export async function GET() {
     // RAGドキュメントの内容を要約（コンテンツを短縮してAPI応答を高速化）
     const ragContext = ragDocuments
       .slice(0, 5) // 最大5ドキュメントに制限
-      .map((d) => `### ${d.filename}\n${d.content.substring(0, 1000)}`)
+      .map((d) => `### ${d.filename}\n${d.content}`)
       .join("\n\n");
 
     const prompt = `あなたは事業戦略コンサルタントです。以下の会社資料を分析し、この会社にとって「勝ち筋」となりうる戦略的質問を30個生成してください。

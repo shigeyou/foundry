@@ -130,7 +130,7 @@ export async function POST(req: NextRequest) {
     if (sharedDocs.length > 0) {
       companyContext += "## 会社の文脈（RAGドキュメントより）\n\n";
       for (const doc of sharedDocs) {
-        companyContext += `### ${doc.filename}\n${doc.content.slice(0, 3000)}\n\n`;
+        companyContext += `### ${doc.filename}\n${doc.content}\n\n`;
       }
     }
     if (oreNaviDocs.length > 0) {

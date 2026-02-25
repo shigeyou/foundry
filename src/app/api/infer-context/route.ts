@@ -37,7 +37,7 @@ export async function GET() {
       .join("\n");
 
     const ragContent = ragDocs
-      .map((d) => `【${d.filename}】\n${d.content.slice(0, 3000)}`)
+      .map((d) => `【${d.filename}】\n${d.content}`)
       .join("\n\n");
 
     const prompt = `以下の企業情報から、この企業の業界・市場と会社の状況を推論してください。
@@ -49,7 +49,7 @@ ${serviceList || "なし"}
 ${assetList || "なし"}
 
 ## 参考ドキュメント（抜粋）
-${ragContent.slice(0, 8000) || "なし"}
+${ragContent || "なし"}
 
 ## 出力形式（JSON）
 {
