@@ -11,6 +11,7 @@ import {
   deptContext,
 } from "@/lib/meta-finder-prompt";
 import { triggerReportGeneration } from "@/app/api/meta-finder/report/route";
+import { getFinancialSummaryForPrompt } from "@/config/department-financials";
 
 // 単一パターンの探索を実行（テーマ別視点・部門別文脈を注入）
 async function explorePattern(
@@ -100,12 +101,33 @@ async function runBatchInBackground(batchId: string) {
       return;
     }
 
-    // RAGコンテキスト合計上限: 50,000文字（ドキュメント数が増えても肥大化しないよう均等配分）
+    // 予算ドキュメントを優先配置
     const RAG_CONTEXT_BUDGET = 50000;
-    const charsPerDoc = Math.max(500, Math.min(2000, Math.floor(RAG_CONTEXT_BUDGET / ragDocuments.length)));
-    let documentContext = "## 分析対象ドキュメント\n\n";
-    for (const doc of ragDocuments) {
-      documentContext += `### ${doc.filename}\n${doc.content.slice(0, charsPerDoc)}\n\n`;
+    const budgetDocs = ragDocuments.filter(d =>
+      d.filename.includes("予算") || d.filename.includes("取締役会議案書")
+    );
+    const otherDocs = ragDocuments.filter(d => !budgetDocs.includes(d));
+
+    let documentContext = "## 【最重要】FY26期初予算・財務データ\n\n";
+    documentContext += "以下の予算データは最も重要な参照資料です。探索においては各部門の財務状況を最優先で考慮してください。\n";
+    documentContext += "※FY25は着地見込み（未確定）、FY26は期初予算（予測値）であり、いずれも実績確定値ではありません。\n\n";
+
+    // 予算ドキュメント: 全文注入（最大15,000文字）
+    for (const doc of budgetDocs) {
+      documentContext += `### ${doc.filename}\n${doc.content.slice(0, 15000)}\n\n`;
+    }
+
+    // 静的財務サマリーも追加
+    documentContext += getFinancialSummaryForPrompt();
+
+    // その他ドキュメント: 残り予算で均等配分
+    documentContext += "\n\n## その他の分析対象ドキュメント\n\n";
+    const remainingBudget = RAG_CONTEXT_BUDGET - documentContext.length;
+    const charsPerOtherDoc = otherDocs.length > 0
+      ? Math.max(500, Math.min(2000, Math.floor(remainingBudget / otherDocs.length)))
+      : 0;
+    for (const doc of otherDocs) {
+      documentContext += `### ${doc.filename}\n${doc.content.slice(0, charsPerOtherDoc)}\n\n`;
     }
 
     // SWOT分析結果を取得・注入

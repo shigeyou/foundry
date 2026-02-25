@@ -266,6 +266,9 @@
       "desc": "セルをクリックして選択（複数選択可）",
       "majorCategory": "大項目",
       "subCategory": "小項目",
+      "financialRowFy26": "FY26予算",
+      "financialRowFy25": "FY25見込",
+      "financialLabel": "財務指標",
       "fullExplore": "全探索（252通り・約6時間）",
       "running": "実行中",
       "starting": "開始中..."
@@ -346,6 +349,13 @@
   "metaFinderReport": {
     "title": "勝ち筋ファインダー レポート",
     "summary": "総括",
+    "financialAssessment": "財務評価",
+    "operatingProfit": "FY26予算 営業損益",
+    "yoyChange": "FY25見込比",
+    "keyRisks": "主要リスク",
+    "improvementLevers": "改善レバー",
+    "indirectDept": "間接部門（個別P/Lなし）",
+    "profitUnit": "千円",
     "executiveSummary": "エグゼクティブサマリー",
     "issues": "課題",
     "issuesSection": "課題整理",

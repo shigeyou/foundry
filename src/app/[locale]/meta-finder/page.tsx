@@ -13,6 +13,7 @@ import {
   themeAngles,
   deptContext,
 } from "@/lib/meta-finder-prompt";
+import { departmentFinancials, formatProfitLossShort } from "@/config/department-financials";
 
 interface DiscoveredIdea {
   id: string;
@@ -1277,6 +1278,84 @@ export default function MetaFinderPage() {
                 </tr>
               </thead>
               <tbody>
+                {/* 財務指標行（最上行：FY26 + FY25の2行） */}
+                <tr>
+                  <td
+                    rowSpan={2}
+                    className="p-1 border border-gray-200 dark:border-slate-600 text-center font-bold sticky left-0 z-10 bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200"
+                    style={{ writingMode: "vertical-rl", textOrientation: "upright", width: "40px" }}
+                  >
+                    {t("matrix.financialLabel")}
+                  </td>
+                  <td className="p-2 bg-amber-50 dark:bg-amber-900/30 border border-gray-200 dark:border-slate-600 text-sm font-bold text-amber-800 dark:text-amber-200 sticky left-[40px] z-10">
+                    💰 {t("matrix.financialRowFy26")}
+                  </td>
+                  {departments.map((dept) => {
+                    const fin = departmentFinancials.find(f => f.deptId === dept.id);
+                    if (!fin || fin.profitStatus === "na") {
+                      return (
+                        <td
+                          key={`fin26-${dept.id}`}
+                          className="p-1 border border-gray-200 dark:border-slate-600 text-center text-xs bg-gray-100 dark:bg-slate-700 text-gray-400 dark:text-gray-500"
+                        >
+                          —
+                        </td>
+                      );
+                    }
+                    const isProfit = fin.profitStatus === "profit";
+                    const trendArrow = fin.trend === "up" ? "↑" : fin.trend === "down" ? "↓" : "→";
+                    return (
+                      <td
+                        key={`fin26-${dept.id}`}
+                        className={`p-1 border border-gray-200 dark:border-slate-600 text-center text-xs font-bold ${
+                          isProfit
+                            ? "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300"
+                            : "bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300"
+                        }`}
+                        title={`${fin.budgetDeptName}: ${fin.keyNote}`}
+                      >
+                        {formatProfitLossShort(fin.fy26OperatingProfit)}
+                        <span className={`ml-0.5 ${
+                          fin.trend === "up" ? "text-emerald-500" : fin.trend === "down" ? "text-red-500" : "text-gray-400"
+                        }`}>
+                          {trendArrow}
+                        </span>
+                      </td>
+                    );
+                  })}
+                </tr>
+                <tr>
+                  <td className="p-2 bg-amber-50/60 dark:bg-amber-900/20 border border-gray-200 dark:border-slate-600 text-sm font-medium text-amber-700 dark:text-amber-300 sticky left-[40px] z-10">
+                    💰 {t("matrix.financialRowFy25")}
+                  </td>
+                  {departments.map((dept) => {
+                    const fin = departmentFinancials.find(f => f.deptId === dept.id);
+                    if (!fin || fin.profitStatus === "na") {
+                      return (
+                        <td
+                          key={`fin25-${dept.id}`}
+                          className="p-1 border border-gray-200 dark:border-slate-600 text-center text-xs bg-gray-100 dark:bg-slate-700 text-gray-400 dark:text-gray-500"
+                        >
+                          —
+                        </td>
+                      );
+                    }
+                    const fy25Profit = fin.fy25OperatingProfit >= 0;
+                    return (
+                      <td
+                        key={`fin25-${dept.id}`}
+                        className={`p-1 border border-gray-200 dark:border-slate-600 text-center text-xs ${
+                          fy25Profit
+                            ? "bg-emerald-50/60 dark:bg-emerald-900/15 text-emerald-600 dark:text-emerald-400"
+                            : "bg-red-50/60 dark:bg-red-900/15 text-red-600 dark:text-red-400"
+                        }`}
+                        title={`${fin.budgetDeptName} FY25実績`}
+                      >
+                        {formatProfitLossShort(fin.fy25OperatingProfit)}
+                      </td>
+                    );
+                  })}
+                </tr>
                 {themesByCategory.map((category) => (
                   category.themes.map((theme, themeIndex) => (
                     <tr key={theme.id}>

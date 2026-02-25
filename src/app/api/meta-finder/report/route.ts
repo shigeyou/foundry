@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { generateWithClaude } from "@/lib/claude";
 import { departments, deptContext } from "@/lib/meta-finder-prompt";
+import { getDeptFinancial, formatProfitLoss } from "@/config/department-financials";
 
 // 自動レポート生成のトリガー（バッチ完了時に呼び出す）
 export async function triggerReportGeneration(batchId: string): Promise<void> {
@@ -190,6 +191,31 @@ ${actions.length > 0 ? `アクション: ${actions.join(" / ")}` : ""}`;
     // 部門特徴を取得
     const deptCharacteristics = deptContext[scope.id] || "";
 
+    // 財務データを取得
+    const deptFinancial = getDeptFinancial(scope.id);
+    let financialContext = "";
+    if (deptFinancial && deptFinancial.profitStatus !== "na") {
+      const yoy = deptFinancial.fy26OperatingProfit - deptFinancial.fy25OperatingProfit;
+      const yoyPct = deptFinancial.fy25OperatingProfit !== 0
+        ? ((yoy / Math.abs(deptFinancial.fy25OperatingProfit)) * 100).toFixed(1)
+        : "—";
+      financialContext = `\n## 【最重要】財務データ（${deptFinancial.budgetDeptName}）
+※FY25は着地見込み（2026年2月時点の見込値・未確定）、FY26は期初予算（予測値）です。いずれも実績確定値ではありません。
+- FY26予算 営業損益: ${formatProfitLoss(deptFinancial.fy26OperatingProfit)}
+- FY25着地見込 営業損益: ${formatProfitLoss(deptFinancial.fy25OperatingProfit)}
+- 見込→予算の増減: ${formatProfitLoss(yoy)}（${yoyPct}%）
+- FY26予算 売上高: ${deptFinancial.fy26Revenue.toLocaleString("ja-JP")}千円
+- 損益見通し: ${deptFinancial.profitStatus === "profit" ? "黒字予算" : "赤字予算"}
+- 傾向: ${deptFinancial.trend === "up" ? "改善見込↑" : deptFinancial.trend === "down" ? "悪化見込↓" : "横ばい見込→"}
+- 備考: ${deptFinancial.keyNote}
+
+**この予算データを最優先で参照し、レポートの先頭（executiveSummary）で必ず財務評価に言及してください。**
+**「実績」ではなく「予算・見込み」であることを明記し、赤字予算の部門は「黒字化・損益改善」を主軸に、黒字予算の部門は「利益拡大・競争力強化」を主軸に分析してください。**\n`;
+    } else if (deptFinancial) {
+      financialContext = `\n## 財務データ
+${deptFinancial.budgetDeptName}は間接部門のため個別P/Lはありません。\n`;
+    }
+
     // RAGからエンゲージメントサーベイ関連ドキュメントを検索
     const engagementDocs = await prisma.rAGDocument.findMany({
       where: {
@@ -219,6 +245,7 @@ ${actions.length > 0 ? `アクション: ${actions.join(" / ")}` : ""}`;
 
 ## 対象スコープ: ${scope.name}
 ${scope.desc ? `（${scope.desc}）` : ""}
+${financialContext}
 
 ## この部門の特徴
 ${deptCharacteristics || `${scope.name}は全社横断的な視点で課題を捉える対象です。`}
@@ -261,8 +288,20 @@ ${ideasText}
 ## 出力指示
 以下のJSON形式で出力してください。日本語で記述すること。
 
-{
-  "executiveSummary": "以下の4項目を箇条書き形式で記述すること（各行は「・ラベル：内容」の形式）:\n・部門概要：${scope.name}の役割・強み・人員の働き方を1文で\n・エンゲージメント：この部門固有の状況（サーベイデータがあれば個別スコアを引用、なければ業務特性から固有リスクを推論）を1文で\n・主要課題：事業課題と組織内部課題の両面から最重要の問題点を1-2文で\n・重点施策：最も有望な戦略・勝ち筋を1文で",
+{${deptFinancial && deptFinancial.profitStatus !== "na" ? `
+  "financialAssessment": {
+    "fy26OperatingProfit": ${deptFinancial.fy26OperatingProfit},
+    "fy25OperatingProfit": ${deptFinancial.fy25OperatingProfit},
+    "yoyChange": ${deptFinancial.fy26OperatingProfit - deptFinancial.fy25OperatingProfit},
+    "profitStatus": "${deptFinancial.profitStatus}",
+    "assessment": "FY26予算とFY25着地見込みを比較し、2-3文で評価。いずれも予測・見込みであり実績確定値ではない点を踏まえ、予算上の損益要因分析と見通しを記述する",
+    "keyRisks": ["財務上の主要リスクを2-3個"],
+    "improvementLevers": ["損益改善のレバーを2-3個"]
+  },` : ""}
+  "executiveSummary": "${deptFinancial && deptFinancial.profitStatus !== "na"
+    ? `以下の5項目を箇条書き形式で記述すること（各行は「・ラベル：内容」の形式）:\\n・財務評価：FY26予算の営業損益${formatProfitLoss(deptFinancial.fy26OperatingProfit)}（予算値）とFY25着地見込みからの増減分析を1文で。実績ではなく予算・見込みである点に留意\\n・部門概要：${scope.name}の役割・強み・人員の働き方を1文で\\n・エンゲージメント：この部門固有の状況（サーベイデータがあれば個別スコアを引用、なければ業務特性から固有リスクを推論）を1文で\\n・主要課題：事業課題と組織内部課題の両面から最重要の問題点を1-2文で\\n・重点施策：最も有望な戦略・勝ち筋を1文で`
+    : `以下の3項目を箇条書き形式で記述すること（各行は「・ラベル：内容」の形式）:\\n・主要課題：${scope.name}が担う全社横断的な機能において最も重要な課題を1-2文で\\n・改善の方向性：課題に対して取るべきアプローチを1文で\\n・重点施策：最も有望な施策を1文で`
+  }",
   "issues": {
     "items": [
       {
@@ -305,7 +344,10 @@ ${ideasText}
 }
 
 ## 重要な制約
-- executiveSummaryは「・部門概要」「・エンゲージメント」「・主要課題」「・重点施策」の4項目箇条書きで記述し、必ず**この部門固有の**エンゲージメント状況にも触れること
+- ${deptFinancial && deptFinancial.profitStatus !== "na"
+    ? `executiveSummaryは「・財務評価」「・部門概要」「・エンゲージメント」「・主要課題」「・重点施策」の5項目箇条書きで記述し、先頭に必ず財務評価を記述すること\n- financialAssessmentセクションでは、FY26予算データに基づく具体的な財務評価を記述し、keyRisksとimprovementLeversを2-3個ずつ記載すること`
+    : `executiveSummaryは「・主要課題」「・改善の方向性」「・重点施策」の3項目箇条書きで記述すること（コーポレート部門のため財務評価・部門概要・エンゲージメントの項目は不要）`
+  }
 - issuesは6-10件とし、うち3-4件は組織内部課題（組織体制/人材HR/文化/マネジメント/エンゲージメント）とすること
 - エンゲージメント関連の課題を最低1件はissuesに含め、**全社共通の一般論ではなく${scope.name}固有の問題**を述べること
 - severity=highを3-4件含むこと（内部課題にもhighを付けること）
@@ -316,24 +358,43 @@ ${ideasText}
 - サーベイデータがある場合は**この部門の個別数値**を引用すること（全社平均だけの引用は不可）
 - JSONのみを出力し、前後に余分なテキストを付けないこと`;
 
-    const result = await generateWithClaude(prompt, {
-      temperature: 0.4,
-      maxTokens: 8000,
-      jsonMode: true,
-    });
-
-    // JSON解析
+    // 段階的リトライ: 途切れた場合はトークン数を増やして再試行（最大2回）
+    const tokenLevels = [16000, 32000];
     let sections;
-    try {
-      sections = JSON.parse(result);
-    } catch {
-      // JSONブロック抽出を試みる
-      const jsonMatch = result.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        sections = JSON.parse(jsonMatch[0]);
-      } else {
-        throw new Error("AI応答のJSON解析に失敗");
+    let lastError: Error | null = null;
+
+    for (const maxTokens of tokenLevels) {
+      try {
+        const result = await generateWithClaude(prompt, {
+          temperature: 0.4,
+          maxTokens,
+          jsonMode: true,
+        });
+
+        // JSON解析
+        try {
+          sections = JSON.parse(result);
+        } catch {
+          // JSONブロック抽出を試みる
+          const jsonMatch = result.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            sections = JSON.parse(jsonMatch[0]);
+          } else {
+            throw new Error("AI応答のJSON解析に失敗");
+          }
+        }
+
+        // パース成功 → ループ抜ける
+        if (sections) break;
+      } catch (err) {
+        lastError = err instanceof Error ? err : new Error(String(err));
+        console.warn(`[Report] ${scope.name}: maxTokens=${maxTokens} で失敗、リトライ: ${lastError.message}`);
+        continue;
       }
+    }
+
+    if (!sections) {
+      throw lastError || new Error("レポート生成に失敗");
     }
 
     await prisma.metaFinderReport.update({

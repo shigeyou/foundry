@@ -13,10 +13,72 @@ interface SeedDocument {
 }
 
 // GET: シードデータの状態確認
+// ?export=true: RAGドキュメントをseedフォーマット(JSON)でエクスポート（orenavi/web除外）
+// ?export=file: エクスポート結果をseedファイルに直接書き出し
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const detail = searchParams.get("detail") === "true";
+    const exportMode = searchParams.get("export");
+
+    // エクスポートモード: RAGドキュメントをseedフォーマットで返す/書き出す
+    if (exportMode) {
+      const docs = await prisma.rAGDocument.findMany({
+        where: { scope: { notIn: ["orenavi", "web"] } },
+        orderBy: [{ filename: "asc" }, { updatedAt: "desc" }],
+      });
+
+      // 重複除去（同名ファイルは最新を採用）
+      const deduped = new Map<string, typeof docs[0]>();
+      for (const doc of docs) {
+        if (!deduped.has(doc.filename)) {
+          deduped.set(doc.filename, doc);
+        }
+      }
+      const uniqueDocs = Array.from(deduped.values()).sort((a, b) => a.filename.localeCompare(b.filename));
+
+      // DB上の重複レコードも削除
+      const duplicateIds: string[] = [];
+      const seen = new Set<string>();
+      for (const doc of docs) {
+        if (seen.has(doc.filename)) {
+          duplicateIds.push(doc.id);
+        } else {
+          seen.add(doc.filename);
+        }
+      }
+      if (duplicateIds.length > 0) {
+        await prisma.rAGDocument.deleteMany({ where: { id: { in: duplicateIds } } });
+        console.log(`[Seed Export] 重複${duplicateIds.length}件を削除`);
+      }
+
+      const seedData = {
+        documents: uniqueDocs.map((doc) => ({
+          filename: doc.filename,
+          fileType: doc.fileType,
+          content: doc.content,
+          metadata: doc.metadata,
+        })),
+      };
+
+      if (exportMode === "file") {
+        // seedファイルに直接書き出し
+        const seedPath = path.join(process.cwd(), "prisma/seed-data/rag-documents.json");
+        fs.writeFileSync(seedPath, JSON.stringify(seedData, null, 2), "utf-8");
+        const fileSizeMB = (fs.statSync(seedPath).size / 1024 / 1024).toFixed(2);
+        return NextResponse.json({
+          success: true,
+          exported: uniqueDocs.length,
+          duplicatesRemoved: duplicateIds.length,
+          fileSizeMB,
+          path: seedPath,
+          documents: uniqueDocs.map((d) => ({ filename: d.filename, fileType: d.fileType, contentLength: d.content?.length || 0 })),
+        });
+      }
+
+      // JSON応答として返す
+      return NextResponse.json(seedData);
+    }
 
     const [ragCount, explorationCount, topStrategyCount, strategyDecisionCount] = await Promise.all([
       prisma.rAGDocument.count(),

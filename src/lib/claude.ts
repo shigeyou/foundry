@@ -348,6 +348,16 @@ ${learningSection}
   }
 }
 
+// プロンプト長からトークン数を推定（日本語は1文字≒1.5トークン、英語は1文字≒0.3トークン）
+function estimatePromptTokens(prompt: string): number {
+  const jpChars = (prompt.match(/[\u3000-\u9fff\uff00-\uffef]/g) || []).length;
+  const otherChars = prompt.length - jpChars;
+  return Math.ceil(jpChars * 1.5 + otherChars * 0.3);
+}
+
+// モデルの最大コンテキスト長（Azure OpenAI / Claude）
+const MODEL_MAX_TOKENS = parseInt(process.env.MODEL_MAX_TOKENS || "128000");
+
 // Generic Claude/OpenAI generation function
 export async function generateWithClaude(
   prompt: string,
@@ -357,22 +367,35 @@ export async function generateWithClaude(
     jsonMode?: boolean;
   }
 ): Promise<string> {
+  // maxTokens が明示指定されていない場合、プロンプト長から動的に決定
+  // 明示指定されている場合でも、モデル上限を超えないようクランプ
+  const promptTokensEstimate = estimatePromptTokens(prompt);
+  const availableForOutput = MODEL_MAX_TOKENS - promptTokensEstimate - 500; // 500トークンのマージン
+  const requestedMax = options?.maxTokens ?? 4000;
+  const effectiveMaxTokens = Math.min(requestedMax, Math.max(2000, availableForOutput));
+
   const response = await getClient().chat.completions.create({
     model: process.env.AZURE_OPENAI_DEPLOYMENT || "gpt-4",
     messages: [
       { role: "user", content: prompt },
     ],
     temperature: options?.temperature ?? 0.7,
-    max_completion_tokens: options?.maxTokens ?? 4000,
+    max_completion_tokens: effectiveMaxTokens,
     ...(options?.jsonMode && { response_format: { type: "json_object" as const } }),
   });
 
   const choice = response.choices[0];
   const content = choice?.message?.content;
+  const finishReason = choice?.finish_reason ?? "no_choice";
+
   if (!content) {
-    const finishReason = choice?.finish_reason ?? "no_choice";
     console.error(`[generateWithClaude] No content. finish_reason=${finishReason}, prompt length=${prompt.length}`);
     throw new Error(`No response from AI (finish_reason: ${finishReason})`);
+  }
+
+  // finish_reason: length でもコンテンツがあれば警告付きで返す（途切れたJSONを呼び出し元で救済可能に）
+  if (finishReason === "length") {
+    console.warn(`[generateWithClaude] Response truncated (finish_reason: length). content length=${content.length}, maxTokens=${options?.maxTokens}`);
   }
 
   return content;

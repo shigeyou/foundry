@@ -7,8 +7,9 @@ import { useTranslations } from "next-intl";
 import { HomeButton } from "@/components/ui/home-button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { departments } from "@/lib/meta-finder-prompt";
-import type { ReportSections, ReportIssueItem, ReportSolutionItem, ReportStrategyItem } from "@/lib/meta-finder-report-types";
+import type { ReportSections, ReportIssueItem, ReportSolutionItem, ReportStrategyItem, FinancialAssessment } from "@/lib/meta-finder-report-types";
 import { useReportAudio } from "@/hooks/useReportAudio";
+import { formatProfitLoss } from "@/config/department-financials";
 
 interface ReportRecord {
   id: string;
@@ -950,6 +951,75 @@ function ReportContent({ sections, scopeName, scopeId, currentSection, setSectio
 
   return (
     <div className="space-y-8" style={{ fontSize: "19.2px" }}>
+      {/* 財務評価セクション（executiveSummaryの直前） */}
+      {sections.financialAssessment && (
+        <section
+          ref={ref("financial")}
+          onClick={click("financial")}
+          className={`rounded-2xl p-6 border transition-all duration-300 ${onSectionClick ? "cursor-pointer" : ""} ${hl("financial")} ${
+            sections.financialAssessment.profitStatus === "profit"
+              ? "bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 border-emerald-300 dark:border-emerald-700"
+              : "bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border-red-300 dark:border-red-700"
+          }`}
+        >
+          <h2 className={`font-bold mb-4 flex items-center gap-2 ${
+            sections.financialAssessment.profitStatus === "profit"
+              ? "text-emerald-900 dark:text-emerald-200"
+              : "text-red-900 dark:text-red-200"
+          }`} style={{ fontSize: "1.4em" }}>
+            <span style={{ fontSize: "1.3em" }}>💰</span>
+            {t("financialAssessment")} — {scopeName}
+          </h2>
+          <div className="flex flex-wrap items-center gap-6 mb-4">
+            <div>
+              <div className="text-sm text-gray-500 dark:text-gray-400">{t("operatingProfit")}</div>
+              <div className={`text-3xl font-black ${
+                sections.financialAssessment.profitStatus === "profit"
+                  ? "text-emerald-700 dark:text-emerald-300"
+                  : "text-red-700 dark:text-red-300"
+              }`}>
+                {formatProfitLoss(sections.financialAssessment.fy26OperatingProfit)}
+              </div>
+            </div>
+            <div>
+              <div className="text-sm text-gray-500 dark:text-gray-400">{t("yoyChange")}</div>
+              <div className={`text-xl font-bold flex items-center gap-1 ${
+                sections.financialAssessment.yoyChange >= 0
+                  ? "text-emerald-600 dark:text-emerald-400"
+                  : "text-red-600 dark:text-red-400"
+              }`}>
+                {sections.financialAssessment.yoyChange >= 0 ? "↑" : "↓"}
+                {formatProfitLoss(sections.financialAssessment.yoyChange)}
+              </div>
+            </div>
+          </div>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mb-2">※FY25は着地見込み、FY26は期初予算（いずれも予測値・未確定）</p>
+          <p className="text-gray-800 dark:text-gray-200 mb-4 leading-relaxed">{sections.financialAssessment.assessment}</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <div className="text-sm font-semibold text-red-700 dark:text-red-300 mb-2">{t("keyRisks")}</div>
+              <div className="flex flex-wrap gap-2">
+                {sections.financialAssessment.keyRisks.map((risk, i) => (
+                  <span key={i} className="px-3 py-1 bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 rounded-full text-sm">
+                    {risk}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div>
+              <div className="text-sm font-semibold text-emerald-700 dark:text-emerald-300 mb-2">{t("improvementLevers")}</div>
+              <div className="flex flex-wrap gap-2">
+                {sections.financialAssessment.improvementLevers.map((lever, i) => (
+                  <span key={i} className="px-3 py-1 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 rounded-full text-sm">
+                    {lever}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* エグゼクティブサマリー */}
       <section
         ref={ref("summary")}

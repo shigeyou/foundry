@@ -32,7 +32,18 @@ export interface ReportStrategyItem {
   kpi: string;
 }
 
+export interface FinancialAssessment {
+  fy26OperatingProfit: number;
+  fy25OperatingProfit: number;
+  yoyChange: number;
+  profitStatus: "profit" | "loss" | "na";
+  assessment: string;
+  keyRisks: string[];
+  improvementLevers: string[];
+}
+
 export interface ReportSections {
+  financialAssessment?: FinancialAssessment;
   executiveSummary: string;
   issues: {
     items: ReportIssueItem[];
