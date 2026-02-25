@@ -11,8 +11,13 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
 
-  // xlsxパッケージをサーバー外部パッケージとして指定
-  serverExternalPackages: ["xlsx"],
+  // サーバー外部パッケージ（turbopackでバンドルせずnode_modulesから直接ロード）
+  serverExternalPackages: [
+    "xlsx",
+    "@libsql/client",
+    "@libsql/core",
+    "@prisma/adapter-libsql",
+  ],
 
   async redirects() {
     return [

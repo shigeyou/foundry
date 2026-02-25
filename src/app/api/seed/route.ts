@@ -76,6 +76,31 @@ export async function GET(request: NextRequest) {
         });
       }
 
+      if (exportMode === "push") {
+        // AzureのRAG APIに直接push（デプロイ不要）
+        const azureUrl = process.env.NEXT_PUBLIC_AZURE_URL || "https://molmat-foundry.azurewebsites.net";
+        try {
+          const res = await fetch(`${azureUrl}/api/rag`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(seedData),
+          });
+          const result = await res.json();
+          return NextResponse.json({
+            success: true,
+            pushed: uniqueDocs.length,
+            duplicatesRemoved: duplicateIds.length,
+            azureUrl,
+            azureResponse: result,
+          });
+        } catch (err) {
+          return NextResponse.json({
+            error: `Azure push失敗: ${err instanceof Error ? err.message : String(err)}`,
+            azureUrl,
+          }, { status: 502 });
+        }
+      }
+
       // JSON応答として返す
       return NextResponse.json(seedData);
     }

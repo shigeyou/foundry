@@ -67,16 +67,26 @@ export async function POST(request: NextRequest) {
 
       const results = [];
       for (const doc of documents) {
-        const created = await prisma.rAGDocument.create({
-          data: {
-            id: crypto.randomUUID(),
-            filename: doc.filename,
-            fileType: doc.fileType,
-            content: doc.content,
-            metadata: doc.metadata,
-          },
-        });
-        results.push({ id: created.id, filename: created.filename });
+        // upsert: 同名ファイルがあれば更新、なければ作成
+        const existing = await prisma.rAGDocument.findFirst({ where: { filename: doc.filename } });
+        if (existing) {
+          await prisma.rAGDocument.update({
+            where: { id: existing.id },
+            data: { content: doc.content, fileType: doc.fileType, metadata: doc.metadata },
+          });
+          results.push({ id: existing.id, filename: doc.filename, action: "updated" });
+        } else {
+          const created = await prisma.rAGDocument.create({
+            data: {
+              id: crypto.randomUUID(),
+              filename: doc.filename,
+              fileType: doc.fileType,
+              content: doc.content,
+              metadata: doc.metadata,
+            },
+          });
+          results.push({ id: created.id, filename: created.filename, action: "created" });
+        }
       }
 
       return NextResponse.json({
