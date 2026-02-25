@@ -41,21 +41,20 @@ jobs:
             --resource-group rg-ocreader-japaneast \
             --name ${{ env.AZURE_WEBAPP_NAME }} \
             --startup-file "bash startup.sh"
-          # Delete WEBSITE_RUN_FROM_PACKAGE to ensure normal zipdeploy mode (not run-from-package)
-          az webapp config appsettings delete \
-            --resource-group rg-ocreader-japaneast \
-            --name ${{ env.AZURE_WEBAPP_NAME }} \
-            --setting-names WEBSITE_RUN_FROM_PACKAGE 2>/dev/null || true
+          # WEBSITE_RUN_FROM_PACKAGE=1: ZIP is mounted directly as read-only wwwroot.
+          # This skips Oryx processing (no tar.gz extraction, no node_modules manipulation)
+          # resulting in fast, reliable startups (~5s vs ~3min).
           az webapp config appsettings set \
             --resource-group rg-ocreader-japaneast \
             --name ${{ env.AZURE_WEBAPP_NAME }} \
             --settings \
+              WEBSITE_RUN_FROM_PACKAGE="1" \
               DATABASE_URL="file:/home/data/foundry.db" \
               SCM_DO_BUILD_DURING_DEPLOYMENT="false" \
               ENABLE_ORYX_BUILD="false" \
               AZURE_SPEECH_KEY="${{ secrets.AZURE_SPEECH_KEY }}" \
               AZURE_SPEECH_REGION="japaneast"
-          echo "App Service configured. SCM container will restart - build steps will give it time to settle."
+          echo "App Service configured with WEBSITE_RUN_FROM_PACKAGE=1 (fast startup mode)."
 
       - name: Install dependencies
         run: |
@@ -186,15 +185,15 @@ jobs:
       - name: Wait for site to be ready
         run: |
           echo "Waiting for site to start..."
-          sleep 90
-          for i in {1..20}; do
+          sleep 30
+          for i in {1..15}; do
             STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 60 https://molmat-foundry.azurewebsites.net/ || echo "000")
             if [ "$STATUS" = "200" ] || [ "$STATUS" = "401" ] || [ "$STATUS" = "302" ] || [ "$STATUS" = "307" ]; then
               echo "Site is up! Status: $STATUS"
               exit 0
             fi
-            echo "Attempt $i: Status $STATUS, retrying in 30s..."
-            sleep 30
+            echo "Attempt $i: Status $STATUS, retrying in 20s..."
+            sleep 20
           done
           echo "Site did not become healthy in time"
           exit 1
