@@ -86,22 +86,33 @@ export async function POST(request: NextRequest) {
 
         if (fs.existsSync(seedFilePath)) {
           if (force && existingRagCount > 0) {
-            await prisma.rAGDocument.deleteMany();
+            // webスコープ（クローラー生成）は保持し、それ以外を削除
+            await prisma.rAGDocument.deleteMany({ where: { scope: { not: "web" } } });
           }
 
           const seedData = JSON.parse(fs.readFileSync(seedFilePath, "utf-8"));
           const documents: SeedDocument[] = seedData.documents || [];
 
           for (const doc of documents) {
-            await prisma.rAGDocument.create({
-              data: {
-                id: crypto.randomUUID(),
-                filename: doc.filename,
-                fileType: doc.fileType,
-                content: doc.content,
-                metadata: typeof doc.metadata === 'object' && doc.metadata !== null ? JSON.stringify(doc.metadata) : doc.metadata,
-              },
-            });
+            // 同名ファイルが既存なら更新、なければ作成（重複防止）
+            const existing = await prisma.rAGDocument.findFirst({ where: { filename: doc.filename } });
+            const metadataStr = typeof doc.metadata === 'object' && doc.metadata !== null ? JSON.stringify(doc.metadata) : doc.metadata;
+            if (existing) {
+              await prisma.rAGDocument.update({
+                where: { id: existing.id },
+                data: { content: doc.content, fileType: doc.fileType, metadata: metadataStr },
+              });
+            } else {
+              await prisma.rAGDocument.create({
+                data: {
+                  id: crypto.randomUUID(),
+                  filename: doc.filename,
+                  fileType: doc.fileType,
+                  content: doc.content,
+                  metadata: metadataStr,
+                },
+              });
+            }
           }
           results.rag = { seeded: documents.length };
         } else {
