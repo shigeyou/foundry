@@ -4,31 +4,15 @@ set -e
 echo "=== Foundry startup ==="
 echo "PWD: $(pwd)"
 
-# With WEBSITE_RUN_FROM_PACKAGE=1, wwwroot is mounted read-only from ZIP.
-# Oryx cannot interfere because it cannot modify the filesystem.
-# NODE_PATH may still be set by the container, so clear it.
+# Clear NODE_PATH to prevent Oryx/system paths from interfering
 export NODE_PATH=""
 
-# ===== Wait for node_modules (Oryx tar.gz extraction can be slow) =====
+# ===== Verify node_modules =====
 echo "=== node_modules check ==="
-MAX_WAIT=120
-WAITED=0
-while [ ! -f node_modules/next/package.json ] && [ "$WAITED" -lt "$MAX_WAIT" ]; do
-    echo "Waiting for node_modules to be ready... (${WAITED}s / ${MAX_WAIT}s)"
-    # If node_modules.tar.gz exists and node_modules is empty/missing, extract manually
-    if [ -f node_modules.tar.gz ] && [ ! -f node_modules/next/package.json ]; then
-        echo "Extracting node_modules.tar.gz manually..."
-        mkdir -p node_modules
-        tar -xzf node_modules.tar.gz -C node_modules 2>/dev/null && echo "Extraction complete" && break
-    fi
-    sleep 5
-    WAITED=$((WAITED + 5))
-done
-
 if [ -f node_modules/next/package.json ]; then
     echo "next: OK ($(node -e "console.log(require('./node_modules/next/package.json').version)"))"
 else
-    echo "ERROR: node_modules/next not found after ${MAX_WAIT}s!"
+    echo "ERROR: node_modules/next not found!"
     echo "Contents of node_modules/:"
     ls node_modules/ 2>/dev/null | head -20 || echo "node_modules is missing entirely"
     echo "Files in wwwroot:"

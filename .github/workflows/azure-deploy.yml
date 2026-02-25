@@ -115,15 +115,9 @@ jobs:
           chmod +x .next/standalone/startup.sh
           # Create package.json for Azure App Service
           echo '{"name":"foundry","version":"1.0.0","scripts":{"start":"node server.js"}}' > .next/standalone/package.json
-          # Create oryx-manifest.toml to prevent Oryx from restructuring node_modules at startup
-          {
-            echo 'OperationId = "00000000-0000-0000-0000-000000000000"'
-            echo 'SourceDirectoryCommitId = ""'
-            echo 'PlatformName = "nodejs"'
-            echo 'PlatformVersion = "20.20.0"'
-            echo 'BuildCommandsFileName = ""'
-            echo 'CompressedVirtualFileSystems = ""'
-          } > .next/standalone/oryx-manifest.toml
+          # NOTE: Do NOT create oryx-manifest.toml - it can trigger Oryx startup
+          # processing (node_modules.tar.gz extraction). Without it, Oryx skips to
+          # our custom startup.sh directly, which is faster and more reliable.
 
       - name: Prepare node_modules for deployment
         run: |
@@ -160,13 +154,11 @@ jobs:
             -type d -exec rm -rf {} + 2>/dev/null || true
           echo "node_modules size after cleanup: $(du -sh .next/standalone/node_modules/ | cut -f1)"
 
-          # Create node_modules.tar.gz from the real-file node_modules.
-          # Oryx startup script extracts this to /node_modules and symlinks ./node_modules -> /node_modules.
-          # Having BOTH node_modules/ directory AND node_modules.tar.gz triggers Oryx to generate
-          # the tar.gz extraction startup script (required for correct dep resolution at runtime).
-          echo "=== Creating node_modules.tar.gz ==="
-          tar -czf .next/standalone/node_modules.tar.gz -C .next/standalone/node_modules .
-          echo "node_modules.tar.gz: $(du -sh .next/standalone/node_modules.tar.gz | cut -f1)"
+          # DO NOT create node_modules.tar.gz - it triggers Oryx's slow extraction process
+          # which causes multi-minute startup delays and 503 errors on new instances.
+          # node_modules/ directory is included directly in the ZIP and used as-is.
+          echo "=== Skipping node_modules.tar.gz (direct node_modules in ZIP) ==="
+          echo "node_modules size: $(du -sh .next/standalone/node_modules/ | cut -f1)"
 
       - name: Create deployment ZIP
         run: |
