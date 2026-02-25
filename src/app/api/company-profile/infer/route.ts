@@ -2,6 +2,57 @@ import { NextRequest, NextResponse } from "next/server";
 import * as cheerio from "cheerio";
 import { generateWithClaude } from "@/lib/claude";
 
+const TAVILY_API_KEY = process.env.TAVILY_API_KEY;
+
+// 会社名からTavilyで公式サイトURLを検索
+async function findOfficialWebsite(companyName: string): Promise<string> {
+  if (!TAVILY_API_KEY || TAVILY_API_KEY.startsWith("your_")) {
+    throw new Error("Tavily APIキーが設定されていません");
+  }
+
+  const query = `${companyName} 公式サイト`;
+  const response = await fetch("https://api.tavily.com/search", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      api_key: TAVILY_API_KEY,
+      query,
+      search_depth: "basic",
+      max_results: 5,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Tavily検索エラー: ${response.status}`);
+  }
+
+  const data = await response.json();
+  const results: Array<{ url: string; score: number }> = data.results || [];
+
+  if (results.length === 0) {
+    throw new Error(`「${companyName}」の公式サイトが見つかりませんでした`);
+  }
+
+  // スコア順上位のURLをそのまま使う（公式サイトが最上位に来ることが多い）
+  // wikipediaやニュースサイトは除外
+  const skipDomains = ["wikipedia.org", "linkedin.com", "facebook.com", "twitter.com", "x.com", "youtube.com"];
+  const official = results.find(
+    (r) => !skipDomains.some((d) => r.url.includes(d))
+  );
+
+  if (!official) {
+    throw new Error(`「${companyName}」の公式サイトを特定できませんでした`);
+  }
+
+  // トップページのURLに変換
+  try {
+    const parsed = new URL(official.url);
+    return `${parsed.protocol}//${parsed.hostname}/`;
+  } catch {
+    return official.url;
+  }
+}
+
 // Webページからコンテンツを取得
 interface WebContent {
   title: string;
@@ -196,32 +247,38 @@ JSONのみを出力してください。説明文は不要です。`;
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { url } = body;
+    const { url, companyName } = body;
 
-    if (!url || typeof url !== "string") {
-      return NextResponse.json(
-        { error: "URLを入力してください" },
-        { status: 400 }
-      );
-    }
-
-    // URLの簡易バリデーション
-    let parsedUrl: URL;
-    try {
-      parsedUrl = new URL(url);
-      if (!["http:", "https:"].includes(parsedUrl.protocol)) {
-        throw new Error("Invalid protocol");
+    // 会社名からURLを自動検索、またはURLを直接使用
+    let targetUrl: string;
+    if (companyName && typeof companyName === "string" && companyName.trim()) {
+      console.log(`[Infer] Searching official website for: ${companyName}`);
+      targetUrl = await findOfficialWebsite(companyName.trim());
+      console.log(`[Infer] Found official website: ${targetUrl}`);
+    } else if (url && typeof url === "string") {
+      try {
+        const parsedUrl = new URL(url);
+        if (!["http:", "https:"].includes(parsedUrl.protocol)) {
+          throw new Error("Invalid protocol");
+        }
+        targetUrl = url;
+      } catch {
+        return NextResponse.json(
+          { error: "有効なURLを入力してください" },
+          { status: 400 }
+        );
       }
-    } catch {
+    } else {
       return NextResponse.json(
-        { error: "有効なURLを入力してください" },
+        { error: "会社名またはURLを入力してください" },
         { status: 400 }
       );
     }
 
     // Webコンテンツを取得
-    console.log(`Fetching content from: ${url}`);
-    const webContent = await fetchWebContent(url);
+    console.log(`Fetching content from: ${targetUrl}`);
+    const url_used = targetUrl;
+    const webContent = await fetchWebContent(url_used);
 
     console.log("=== Extracted Web Content ===");
     console.log(`Title: "${webContent.title}"`);

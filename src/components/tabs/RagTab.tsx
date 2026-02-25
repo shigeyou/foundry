@@ -22,6 +22,16 @@ export function RagTab() {
   const [newWebSourceUrl, setNewWebSourceUrl] = useState("");
   const [webSourceMessage, setWebSourceMessage] = useState("");
 
+  // Webクローラー
+  const [crawlLoading, setCrawlLoading] = useState(false);
+  const [crawlStatus, setCrawlStatus] = useState<{
+    status: string;
+    pagesVisited: number;
+    docsUpdated: number;
+    startedAt: string;
+    completedAt?: string;
+  } | null>(null);
+
   // RAG
   const [ragMessage, setRagMessage] = useState("");
   const [ragUploading, setRagUploading] = useState(false);
