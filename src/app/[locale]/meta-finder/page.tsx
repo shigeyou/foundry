@@ -557,7 +557,7 @@ export default function MetaFinderPage() {
       const data = await res.json();
 
       if (res.ok) {
-        alert(t("batch.started", { batchId: data.batchId, estimatedTime: data.estimatedTime }));
+        // alertはブラウザをブロックしてポーリングを止めるので使わない
         fetchBatchStatus();
       } else {
         alert(data.error || t("batch.startFailed"));
@@ -672,15 +672,13 @@ export default function MetaFinderPage() {
     // 初回読み込み
     fetchBatchStatus();
 
-    // 実行中の場合は定期的に更新
-    const interval = setInterval(() => {
-      if (latestBatch?.status === "running") {
-        fetchBatchStatus();
-      }
-    }, 5000);
+    // 実行中 or 開始中は3秒ポーリング、それ以外は停止
+    const shouldPoll = latestBatch?.status === "running" || batchStarting;
+    if (!shouldPoll) return;
 
+    const interval = setInterval(fetchBatchStatus, 3000);
     return () => clearInterval(interval);
-  }, [fetchBatchStatus, latestBatch?.status]);
+  }, [fetchBatchStatus, latestBatch?.status, batchStarting]);
 
   // スコアに応じた色
   const getScoreColor = (score: number) => {
