@@ -169,9 +169,9 @@ ${swot.summary ? `\n### SWOT総括\n${swot.summary}` : ""}
 
     // 並列数: BATCH_CONCURRENCY環境変数で調整可能（デフォルト40）
     // スライディングウィンドウ方式: N件を常に並列稼働し、完了次第次の呼び出しを開始
-    // RAGコンテキスト20,000文字 x 40 = 推定TPM余裕あり
+    // CDIOメモ等の優先ドキュメント追加でトークン増のため40に調整
     // レート制限エラーが出る場合: env BATCH_CONCURRENCY=20 などで下げること
-    const CONCURRENCY = parseInt(process.env.BATCH_CONCURRENCY || "60");
+    const CONCURRENCY = parseInt(process.env.BATCH_CONCURRENCY || "40");
 
     // DB保存用バッファ（スライディングウィンドウ内の完了済み結果を随時保存）
     const ideasBuffer: {
