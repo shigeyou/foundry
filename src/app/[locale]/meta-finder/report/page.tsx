@@ -756,12 +756,12 @@ export default function ReportPage() {
       </div>
 
       {/* 音声コントロールバー */}
-      {(audio.isPlaying || audio.audioError) && (
+      {(audio.isPlaying || audio.isPaused || audio.audioError) && (
         <div className="bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800 sticky top-[102px] z-10">
           <div className="max-w-5xl mx-auto px-4 py-2">
             <div className="flex items-center gap-4 flex-wrap">
               {/* 一時停止/再開 + 停止 */}
-              {audio.isPlaying && (
+              {(audio.isPlaying || audio.isPaused) && (
                 <div className="flex items-center gap-2">
                   {/* 再生ボタン */}
                   <button
