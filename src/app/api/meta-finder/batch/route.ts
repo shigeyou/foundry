@@ -42,8 +42,9 @@ ${deptCtx}
     `${BATCH_PROMPT}\n\n${userPrompt}`,
     {
       temperature: 0.8,
-      maxTokens: 6000,
+      maxTokens: 8000,
       jsonMode: true,
+      usePoolDeployment: true,
     }
   );
 
@@ -170,7 +171,7 @@ ${swot.summary ? `\n### SWOT総括\n${swot.summary}` : ""}
     // スライディングウィンドウ方式: N件を常に並列稼働し、完了次第次の呼び出しを開始
     // RAGコンテキスト20,000文字 x 40 = 推定TPM余裕あり
     // レート制限エラーが出る場合: env BATCH_CONCURRENCY=20 などで下げること
-    const CONCURRENCY = parseInt(process.env.BATCH_CONCURRENCY || "40");
+    const CONCURRENCY = parseInt(process.env.BATCH_CONCURRENCY || "60");
 
     // DB保存用バッファ（スライディングウィンドウ内の完了済み結果を随時保存）
     const ideasBuffer: {

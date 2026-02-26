@@ -4,6 +4,31 @@ import { getFinderSettings } from "@/config/finder-config";
 
 let client: AzureOpenAI | null = null;
 
+// バッチ処理用: 複数デプロイメントのラウンドロビンプール
+let deploymentPool: string[] = [];
+let deploymentIndex = 0;
+
+function getDeploymentPool(): string[] {
+  if (deploymentPool.length === 0) {
+    const extra = process.env.AZURE_OPENAI_EXTRA_DEPLOYMENTS;
+    const primary = process.env.AZURE_OPENAI_DEPLOYMENT || "gpt-4";
+    if (extra) {
+      deploymentPool = [primary, ...extra.split(",").map(s => s.trim()).filter(Boolean)];
+    } else {
+      deploymentPool = [primary];
+    }
+    console.log(`[DeploymentPool] ${deploymentPool.length} deployments: ${deploymentPool.join(", ")}`);
+  }
+  return deploymentPool;
+}
+
+function getNextDeployment(): string {
+  const pool = getDeploymentPool();
+  const deployment = pool[deploymentIndex % pool.length];
+  deploymentIndex++;
+  return deployment;
+}
+
 // 対象企業プロファイルの型
 interface CompanyProfile {
   name: string;
@@ -359,12 +384,14 @@ function estimatePromptTokens(prompt: string): number {
 const MODEL_MAX_TOKENS = parseInt(process.env.MODEL_MAX_TOKENS || "128000");
 
 // Generic Claude/OpenAI generation function
+// usePoolDeployment: true でバッチ用デプロイメントプールからラウンドロビンで選択
 export async function generateWithClaude(
   prompt: string,
   options?: {
     temperature?: number;
     maxTokens?: number;
     jsonMode?: boolean;
+    usePoolDeployment?: boolean;
   }
 ): Promise<string> {
   // maxTokens が明示指定されていない場合、プロンプト長から動的に決定
@@ -374,8 +401,12 @@ export async function generateWithClaude(
   const requestedMax = options?.maxTokens ?? 4000;
   const effectiveMaxTokens = Math.min(requestedMax, Math.max(2000, availableForOutput));
 
+  const deployment = options?.usePoolDeployment
+    ? getNextDeployment()
+    : (process.env.AZURE_OPENAI_DEPLOYMENT || "gpt-4");
+
   const response = await getClient().chat.completions.create({
-    model: process.env.AZURE_OPENAI_DEPLOYMENT || "gpt-4",
+    model: deployment,
     messages: [
       { role: "user", content: prompt },
     ],
