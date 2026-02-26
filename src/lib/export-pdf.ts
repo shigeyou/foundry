@@ -830,19 +830,6 @@ export async function exportFullReportPdfFromData(
   records: FullReportRecord[],
   batchInfo?: { totalIdeas: number; startedAt: string }
 ): Promise<void> {
-  const container = document.createElement("div");
-  container.style.cssText = `
-    position: absolute;
-    left: -9999px;
-    top: 0;
-    width: 794px;
-    padding: 40px;
-    background: white;
-    font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
-    color: #1a1a1a;
-    line-height: 1.6;
-  `;
-
   const generatedAt = new Date().toLocaleString("ja-JP");
   const completedRecords = records.filter(r => r.status === "completed");
 
@@ -854,7 +841,68 @@ export async function exportFullReportPdfFromData(
   const priLabel = (p: string) => p === "immediate" ? "即時対応" : p === "short-term" ? "短期" : "中期";
   const priColor = (p: string) => p === "immediate" ? "#dc2626" : p === "short-term" ? "#2563eb" : "#7c3aed";
 
-  const deptHtmlParts = completedRecords.map((record, idx) => {
+  const containerBase = `
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    width: 794px;
+    padding: 40px;
+    background: white;
+    font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
+    color: #1a1a1a;
+    line-height: 1.6;
+  `;
+
+  // Helper: render a single HTML section to canvas, add pages to pdf, then clean up
+  // Uses JPEG to keep PDF size within JS string length limits
+  async function renderSectionToPdf(
+    pdf: jsPDF,
+    html: string,
+    isFirstSection: boolean,
+    margin: number,
+    contentWidth: number,
+    pageHeight: number
+  ) {
+    const container = document.createElement("div");
+    container.style.cssText = containerBase;
+    container.innerHTML = html;
+    document.body.appendChild(container);
+
+    try {
+      const canvas = await html2canvas(container, {
+        scale: 1.5,
+        useCORS: true,
+        logging: false,
+        backgroundColor: "#ffffff",
+        width: 794,
+        windowWidth: 794,
+      });
+
+      const pxPerMm = canvas.width / contentWidth;
+      const usableHeight = pageHeight - margin * 2;
+      const pageHeightPx = Math.floor(usableHeight * pxPerMm);
+
+      let srcY = 0;
+      let firstSlice = true;
+      while (srcY < canvas.height) {
+        if (!firstSlice || !isFirstSection) pdf.addPage();
+        firstSlice = false;
+
+        const sliceHeight = Math.min(pageHeightPx, canvas.height - srcY);
+        const pageCanvas = document.createElement("canvas");
+        pageCanvas.width = canvas.width;
+        pageCanvas.height = sliceHeight;
+        pageCanvas.getContext("2d")!.drawImage(canvas, 0, srcY, canvas.width, sliceHeight, 0, 0, canvas.width, sliceHeight);
+        pdf.addImage(pageCanvas.toDataURL("image/jpeg", 0.75), "JPEG", margin, margin, contentWidth, sliceHeight / pxPerMm);
+        srcY += pageHeightPx;
+      }
+    } finally {
+      document.body.removeChild(container);
+    }
+  }
+
+  // Build per-department HTML chunks
+  const deptHtmlChunks = completedRecords.map((record) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let sections: any;
     try { sections = JSON.parse(record.sections); } catch { return ""; }
@@ -918,7 +966,6 @@ export async function exportFullReportPdfFromData(
     }).join("");
 
     return `
-      ${idx > 0 ? `<div style="margin-top:40px;border-top:3px solid #e2e8f0;padding-top:24px;"></div>` : ""}
       <div style="border-bottom:2px solid #4f46e5;padding-bottom:10px;margin-bottom:14px;">
         <h2 style="font-size:20px;font-weight:bold;margin:0;color:#1e293b;">${escapeHtml(record.scopeName)}</h2>
       </div>
@@ -942,61 +989,56 @@ export async function exportFullReportPdfFromData(
         ${strategiesHtml}
       </div>
     `;
-  }).join("");
+  });
 
-  container.innerHTML = `
+  // Create PDF, render cover page first, then each department separately
+  const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
+  const margin = 15;
+  const contentWidth = pageWidth - margin * 2;
+
+  // Operating Profit chart page (inserted after cover, before departments)
+  const renderProfitChart = async () => {
+    try {
+      const { getOperatingProfitChartHtml } = await import("@/components/charts/OperatingProfitChart");
+      const chartHtml = getOperatingProfitChartHtml();
+      await renderSectionToPdf(pdf, chartHtml, false, margin, contentWidth, pageHeight);
+    } catch (e) {
+      console.warn("[PDF] Operating profit chart skipped:", e);
+    }
+  };
+
+  // Cover page
+  const coverHtml = `
     <div style="text-align:center;padding:60px 0 40px;border-bottom:3px solid #4f46e5;margin-bottom:32px;">
       <h1 style="font-size:26px;font-weight:bold;color:#1e293b;margin:0 0 10px;">勝ち筋ファインダー レポート</h1>
       <p style="font-size:14px;color:#4f46e5;margin:0 0 6px;">部門別 課題・解決策・勝ち筋</p>
       ${batchInfo ? `<p style="font-size:12px;color:#64748b;margin:0 0 4px;">探索日: ${new Date(batchInfo.startedAt).toLocaleDateString("ja-JP")} | ${batchInfo.totalIdeas}件のアイデア</p>` : ""}
       <p style="font-size:11px;color:#94a3b8;margin:0;">生成: ${generatedAt} | ${completedRecords.length}部門</p>
     </div>
-    ${deptHtmlParts}
-    <div style="margin-top:32px;padding-top:12px;border-top:1px solid #e2e8f0;text-align:center;">
-      <p style="font-size:9px;color:#94a3b8;margin:0;">勝ち筋ファインダー | AI分析 | ${escapeHtml(generatedAt)}</p>
-    </div>
   `;
+  await renderSectionToPdf(pdf, coverHtml, true, margin, contentWidth, pageHeight);
 
-  document.body.appendChild(container);
+  // Operating profit chart right after cover page
+  await renderProfitChart();
 
-  try {
-    const canvas = await html2canvas(container, {
-      scale: 2,
-      useCORS: true,
-      logging: false,
-      backgroundColor: "#ffffff",
-      width: 794,
-      windowWidth: 794,
-    });
-
-    const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
-    const margin = 15;
-    const contentWidth = pageWidth - margin * 2;
-    const pxPerMm = canvas.width / contentWidth;
-    const pageHeightPx = Math.floor((pageHeight - margin * 2) * pxPerMm);
-
-    let srcY = 0;
-    let pageIndex = 0;
-    while (srcY < canvas.height) {
-      if (pageIndex > 0) pdf.addPage();
-      const sliceHeight = Math.min(pageHeightPx, canvas.height - srcY);
-      const pageCanvas = document.createElement("canvas");
-      pageCanvas.width = canvas.width;
-      pageCanvas.height = sliceHeight;
-      pageCanvas.getContext("2d")!.drawImage(canvas, 0, srcY, canvas.width, sliceHeight, 0, 0, canvas.width, sliceHeight);
-      pdf.addImage(pageCanvas.toDataURL("image/png"), "PNG", margin, margin, contentWidth, sliceHeight / pxPerMm);
-      srcY += pageHeightPx;
-      pageIndex++;
-    }
-
-    const now = new Date();
-    const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
-    pdf.save(`${dateStr}_勝ち筋ファインダー報告書_全部門.pdf`);
-  } finally {
-    document.body.removeChild(container);
+  // Each department as a separate canvas (avoids browser canvas height limit)
+  for (let i = 0; i < deptHtmlChunks.length; i++) {
+    if (!deptHtmlChunks[i]) continue;
+    await renderSectionToPdf(pdf, deptHtmlChunks[i], false, margin, contentWidth, pageHeight);
   }
+
+  // Footer on last page
+  const lastPageCount = pdf.getNumberOfPages();
+  pdf.setPage(lastPageCount);
+  pdf.setFontSize(7);
+  pdf.setTextColor(148, 163, 184);
+  pdf.text(`勝ち筋ファインダー | AI分析 | ${generatedAt}`, pageWidth / 2, pageHeight - 5, { align: "center" });
+
+  const now = new Date();
+  const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
+  pdf.save(`${dateStr}_勝ち筋ファインダー報告書_全部門.pdf`);
 }
 
 // HTMLエスケープ用ヘルパー

@@ -36,7 +36,7 @@ export async function triggerReportGeneration(batchId: string): Promise<void> {
   }
 }
 
-// GET: レポート取得
+// GET: レポート取得（欠けたスコープがあれば自動補完生成）
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "batchIdが必要です" }, { status: 400 });
     }
 
-    const reports = await prisma.metaFinderReport.findMany({
+    let reports = await prisma.metaFinderReport.findMany({
       where: { batchId },
       orderBy: { createdAt: "asc" },
     });
@@ -55,6 +55,44 @@ export async function GET(req: NextRequest) {
     const batch = await prisma.metaFinderBatch.findUnique({
       where: { id: batchId },
     });
+
+    // departments配列に存在するがレポートが未生成のスコープを検出・自動生成
+    if (reports.length > 0) {
+      const existingScopes = new Set(reports.map(r => r.scope));
+      const allScopes = departments.map(d => ({ id: d.id, name: d.label, desc: d.description }));
+      const missingScopes = allScopes.filter(s => !existingScopes.has(s.id));
+
+      if (missingScopes.length > 0) {
+        console.log(`[Report] Auto-filling ${missingScopes.length} missing scopes for batch ${batchId}: ${missingScopes.map(s => s.id).join(", ")}`);
+
+        // 欠けたスコープのレコードをpending状態で作成
+        for (const s of missingScopes) {
+          await prisma.metaFinderReport.upsert({
+            where: { id: `report-${batchId}-${s.id}` },
+            create: {
+              id: `report-${batchId}-${s.id}`,
+              batchId,
+              scope: s.id,
+              scopeName: s.name,
+              sections: "{}",
+              status: "pending",
+            },
+            update: {},
+          });
+        }
+
+        // バックグラウンドで欠けたスコープのみ生成
+        generateAllReports(batchId, missingScopes).catch(err => {
+          console.error("[Report] Auto-fill generation failed:", err);
+        });
+
+        // 更新後のレポート一覧を再取得して返す
+        reports = await prisma.metaFinderReport.findMany({
+          where: { batchId },
+          orderBy: { createdAt: "asc" },
+        });
+      }
+    }
 
     return NextResponse.json({ batch, reports });
   } catch (error) {
@@ -82,7 +120,7 @@ export async function POST(req: NextRequest) {
     // 既存レポートを削除（再生成）
     await prisma.metaFinderReport.deleteMany({ where: { batchId } });
 
-    // 全社 + 各部門 = 14スコープ
+    // 全社 + 横断テーマ + 各部門 = 18スコープ
     const scopes = departments.map(d => ({ id: d.id, name: d.label, desc: d.description }));
 
     // レポートレコードを一括作成

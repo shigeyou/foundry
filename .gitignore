@@ -75,7 +75,13 @@ azure-foundry-logs*/
 # test screenshots & audio
 test-*.png
 test-*.mp3
+test-*.js
+test-*.mjs
 Devfoundrytest-*.png
+meta-finder-*.png
+
+# Windows null device artifact
+nul
 
 # temporary data files
 tmp-*.json

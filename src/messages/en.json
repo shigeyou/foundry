@@ -266,12 +266,12 @@
       "desc": "Click cells to select (multiple selection available)",
       "majorCategory": "Major Category",
       "subCategory": "Sub Category",
-      "fullExplore": "Full Exploration (252 combinations, ~6 hours)",
+      "fullExplore": "Full Exploration (324 combinations, ~20 min)",
       "running": "Running",
       "starting": "Starting..."
     },
     "batch": {
-      "confirmStart": "Start full matrix exploration?\n\n- 18 themes x 14 departments = 252 patterns\n- Estimated time: ~6 hours\n- Recommended to run before bedtime",
+      "confirmStart": "Start full matrix exploration?\n\n- 18 themes x 18 departments = 324 patterns\n- Estimated time: ~20 min",
       "started": "Batch processing started\n\nBatch ID: {batchId}\nEstimated time: {estimatedTime}",
       "startFailed": "Failed to start",
       "startError": "Failed to start batch processing",
@@ -415,7 +415,10 @@
     "bscProcess": "Process",
     "bscGrowth": "Growth",
     "fetchFailed": "Failed to fetch batch list",
-    "reportFetchFailed": "Failed to fetch report"
+    "reportFetchFailed": "Failed to fetch report",
+    "operatingProfitTab": "📊 Operating P/L",
+    "operatingProfitTitle": "Operating Profit by Department (FY25/FY26)",
+    "operatingProfitNote": "FY25: forecast (unconfirmed), FY26: initial budget (projected)"
   },
   "me": {
     "title": "My Navigator",

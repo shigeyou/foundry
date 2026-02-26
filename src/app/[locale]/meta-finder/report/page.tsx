@@ -10,6 +10,12 @@ import { departments } from "@/lib/meta-finder-prompt";
 import type { ReportSections, ReportIssueItem, ReportSolutionItem, ReportStrategyItem, FinancialAssessment } from "@/lib/meta-finder-report-types";
 import { useReportAudio } from "@/hooks/useReportAudio";
 import { formatProfitLoss } from "@/config/department-financials";
+import dynamic from "next/dynamic";
+
+const OperatingProfitChart = dynamic(
+  () => import("@/components/charts/OperatingProfitChart"),
+  { ssr: false }
+);
 
 interface ReportRecord {
   id: string;
@@ -731,6 +737,17 @@ export default function ReportPage() {
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-[57px] z-20">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex overflow-x-auto gap-1 py-2 scrollbar-thin">
+            {/* 営業損益タブ */}
+            <button
+              onClick={() => { userManualTabSwitch.current = true; setActiveScope("__profit_chart__"); }}
+              className={`whitespace-nowrap px-3 py-1.5 text-xs rounded-lg transition-colors flex items-center gap-1 ${
+                activeScope === "__profit_chart__"
+                  ? "bg-indigo-600 text-white"
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+              }`}
+            >
+              {t("operatingProfitTab")}
+            </button>
             {departments.map(dept => {
               const report = reports.find(r => r.scope === dept.id);
               const isActive = activeScope === dept.id;
@@ -867,7 +884,12 @@ export default function ReportPage() {
 
       {/* メインコンテンツ */}
       <main className="max-w-5xl mx-auto px-4 py-6" style={{ fontSize: "120%" }}>
-        {loading ? (
+        {activeScope === "__profit_chart__" ? (
+          /* 営業損益グラフ */
+          <div className="py-2">
+            <OperatingProfitChart locale={searchParams.get("locale") || "ja"} />
+          </div>
+        ) : loading ? (
           <div className="text-center py-20">
             <div className="animate-spin h-8 w-8 border-2 border-indigo-600 border-t-transparent rounded-full mx-auto mb-4" />
             <p className="text-gray-500">{tc("loading")}</p>

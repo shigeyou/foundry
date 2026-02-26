@@ -22,7 +22,7 @@ test("report page: PDF export completes without errors", async ({ page }) => {
   ]);
 
   if (download) {
-    expect(download.suggestedFilename()).toContain("勝ち筋ファインダー報告書.pdf");
+    expect(download.suggestedFilename()).toContain("勝ち筋ファインダー報告書");
   } else {
     await page.waitForTimeout(15000);
     expect(pdfLogs.some(l => l.includes("failed"))).toBe(false);

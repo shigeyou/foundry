@@ -269,12 +269,12 @@
       "financialRowFy26": "FY26予算",
       "financialRowFy25": "FY25見込",
       "financialLabel": "財務指標",
-      "fullExplore": "全探索（252通り・約6時間）",
+      "fullExplore": "全探索（324通り・約20分）",
       "running": "実行中",
       "starting": "開始中..."
     },
     "batch": {
-      "confirmStart": "全マトリックス探索を開始しますか？\n\n・18テーマ × 14部門 = 252パターン\n・推定所要時間: 約6時間\n・就寝前の実行を推奨します",
+      "confirmStart": "全マトリックス探索を開始しますか？\n\n・18テーマ × 18部門 = 324パターン\n・推定所要時間: 約20分",
       "started": "バッチ処理を開始しました\n\nバッチID: {batchId}\n推定時間: {estimatedTime}",
       "startFailed": "開始に失敗しました",
       "startError": "バッチ処理の開始に失敗しました",
@@ -425,7 +425,10 @@
     "bscProcess": "業務",
     "bscGrowth": "成長",
     "fetchFailed": "バッチ一覧の取得に失敗しました",
-    "reportFetchFailed": "レポートの取得に失敗しました"
+    "reportFetchFailed": "レポートの取得に失敗しました",
+    "operatingProfitTab": "📊 営業損益",
+    "operatingProfitTitle": "部門別 営業損益（FY25/FY26）",
+    "operatingProfitNote": "※FY25は着地見込み（未確定）、FY26は期初予算（予測値）"
   },
   "me": {
     "title": "俺ナビ",

@@ -44,6 +44,7 @@
     "pdf-parse": "^1.1.1",
     "react": "19.2.3",
     "react-dom": "19.2.3",
+    "recharts": "^3.7.0",
     "styled-jsx": "^5.1.7",
     "tailwind-merge": "^2.6.0",
     "xlsx": "^0.18.5"
