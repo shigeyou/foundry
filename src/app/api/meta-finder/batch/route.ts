@@ -105,7 +105,7 @@ async function runBatchInBackground(batchId: string) {
     // 予算ドキュメントを優先配置
     const RAG_CONTEXT_BUDGET = 50000;
     const budgetDocs = ragDocuments.filter(d =>
-      d.filename.includes("予算") || d.filename.includes("取締役会議案書")
+      d.filename.includes("予算") || d.filename.includes("取締役会議案書") || d.filename.includes("CDIO")
     );
     const otherDocs = ragDocuments.filter(d => !budgetDocs.includes(d));
 

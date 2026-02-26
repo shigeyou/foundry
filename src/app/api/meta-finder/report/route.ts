@@ -241,6 +241,27 @@ ${deptFinancial.budgetDeptName}は間接部門のため個別P/Lはありませ�
       }
     }
 
+    // CDIOメモ・組織関連ドキュメントを検索（経営視点の横断的課題認識）
+    const strategicDocs = await prisma.rAGDocument.findMany({
+      where: {
+        scope: { not: "orenavi" },
+        OR: [
+          { filename: { contains: "CDIO" } },
+          { filename: { contains: "組織図" } },
+          { filename: { contains: "事業計画" } },
+        ],
+      },
+      select: { filename: true, content: true },
+    });
+
+    let strategicContext = "";
+    if (strategicDocs.length > 0) {
+      strategicContext = `\n## 経営戦略・組織関連ドキュメント\n以下はCDIOメモ・組織図・事業計画等の重要ドキュメントです。レポートの分析において、経営陣の課題認識や組織構造を踏まえた提言を行ってください。\n\n`;
+      for (const doc of strategicDocs) {
+        strategicContext += `### ${doc.filename}\n${doc.content}\n\n`;
+      }
+    }
+
     const prompt = `あなたは経営企画部の分析担当です。メタファインダーで発見されたアイデア群を分析し、${scope.name}の経営レポートを日本語で作成してください。
 
 ## 文章の方針
@@ -259,6 +280,7 @@ ${financialContext}
 ## この部門の特徴
 ${deptCharacteristics || `${scope.name}は全社横断的な視点で課題を捉える対象です。`}
 ${engagementContext}
+${strategicContext}
 
 ## 分析対象アイデア（スコア順、上位${totalCount}件）
 ${ideasText}

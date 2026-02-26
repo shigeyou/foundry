@@ -20,7 +20,7 @@ export const departmentFinancials: DeptFinancial[] = [
   { deptId: "hr", budgetDeptName: "人事総務部", fy26OperatingProfit: 0, fy25OperatingProfit: 0, fy26Revenue: 0, profitStatus: "na", trend: "na", keyNote: "間接部門（個別P/Lなし）" },
   { deptId: "finance", budgetDeptName: "経理部", fy26OperatingProfit: 0, fy25OperatingProfit: 0, fy26Revenue: 0, profitStatus: "na", trend: "na", keyNote: "間接部門（個別P/Lなし）" },
   { deptId: "maritime-tech", budgetDeptName: "海技事業部", fy26OperatingProfit: -40667, fy25OperatingProfit: 13539, fy26Revenue: 454234, profitStatus: "loss", trend: "down", keyNote: "赤字転落（大型コンサル案件不在）" },
-  { deptId: "simulator", budgetDeptName: "シミュレータ技術部", fy26OperatingProfit: -63207, fy25OperatingProfit: 2313, fy26Revenue: 29050, profitStatus: "loss", trend: "down", keyNote: "検査減少で大幅赤字化" },
+  { deptId: "simulator", budgetDeptName: "シミュレータ技術部", fy26OperatingProfit: -63207, fy25OperatingProfit: 2313, fy26Revenue: 29050, profitStatus: "loss", trend: "down", keyNote: "検査減少で大幅赤字化。ただしコンサル・訓練業務の費用が他事業部（海洋技術・海技訓練）から適切に振替されておらず、実質損益は表面値より良好な可能性あり" },
   { deptId: "training", budgetDeptName: "海技安全事業部", fy26OperatingProfit: 29827, fy25OperatingProfit: 31609, fy26Revenue: 285568, profitStatus: "profit", trend: "down", keyNote: "微減益（短期案件減少）" },
   { deptId: "cable", budgetDeptName: "ケーブル船事業部", fy26OperatingProfit: 58250, fy25OperatingProfit: 119541, fy26Revenue: 289105, profitStatus: "profit", trend: "down", keyNote: "スキーム変更で営業利益▲61M" },
   { deptId: "offshore-training", budgetDeptName: "オフショア船事業部", fy26OperatingProfit: 30327, fy25OperatingProfit: 41583, fy26Revenue: 235590, profitStatus: "profit", trend: "down", keyNote: "エネルギー補助金見込まず減益" },
