@@ -101,10 +101,10 @@ class OreNaviAudioManager {
     if (this.speechSpeed === speed) return;
     this.speechSpeed = speed;
 
-    // 再生中/一時停止中なら、未再生セクションのキャッシュをクリアして新速度で再生成
+    // 再生中/一時停止中なら、現在のセクション以降の全キャッシュをクリアして新速度で再生成
     if (this.sections.length > 0 && (this.state.isPlaying || this.state.isPaused)) {
-      const futureStart = this.currentIndex + 1;
-      for (let i = futureStart; i < this.sections.length; i++) {
+      // 現在のセクションも含めてクリア（再生中の音声は現速度のまま完了し、次から新速度）
+      for (let i = this.currentIndex; i < this.sections.length; i++) {
         const section = this.sections[i];
         const cached = this.audioCache.get(section);
         if (cached) {
@@ -114,15 +114,33 @@ class OreNaviAudioManager {
         this.sectionStatus.set(section, "pending");
       }
       this.updateQueueStatus();
-      // バックグラウンドで未再生分を新速度で再生成
-      this.regeneratePendingSections();
+
+      // 現在再生中の音声を停止し、同じセクションから新速度で再開
+      if (this.audio && !this.audio.paused) {
+        // 再生中: 現在のセクションを中断→再生成→再開
+        this.audio.pause();
+        this.audio.src = "";
+        this.speedChangeRestart();
+      } else {
+        // 一時停止中: バックグラウンドで再生成のみ（再開時に新速度音声が使われる）
+        this.regenerateFromCurrentSection();
+      }
     }
   }
 
-  // 未再生分のみ再生成（速度変更時用）
-  private async regeneratePendingSections() {
-    const futureStart = this.currentIndex + 1;
-    const pendingSections = this.sectionsData.slice(futureStart).filter(
+  // 速度変更後の再開処理
+  private async speedChangeRestart() {
+    // 現在のセクション以降を再生成
+    await this.regenerateFromCurrentSection();
+    // 再生が停止されていなければ、現在のセクションから再開
+    if (!this.stopRequested && this.sections.length > 0) {
+      await this.streamingPlayback();
+    }
+  }
+
+  // 現在のセクション以降を再生成
+  private async regenerateFromCurrentSection() {
+    const pendingSections = this.sectionsData.slice(this.currentIndex).filter(
       sd => !this.audioCache.has(sd.section)
     );
     const tasks = pendingSections.map((sectionData) => async () => {
