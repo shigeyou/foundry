@@ -606,7 +606,7 @@ export default function OreNaviPage() {
             <div
               ref={(el) => setSectionRef("summary", el)}
               onClick={() => audio.handleSectionClick("summary")}
-              className={`p-5 bg-slate-900 border border-amber-800/50 rounded-lg transition-all duration-300 ${getHighlightStyle("summary")} ${audio.isPlaying ? "cursor-pointer hover:ring-1 hover:ring-amber-500/50" : ""}`}
+              className={`p-5 bg-slate-900 border border-amber-800/50 rounded-lg transition-all duration-300 ${getHighlightStyle("summary")} ${(audio.isPlaying || audio.isPaused) ? "cursor-pointer hover:ring-1 hover:ring-amber-500/50" : ""}`}
             >
               <p className="text-amber-300 text-lg">{result.summary}</p>
             </div>
@@ -616,7 +616,7 @@ export default function OreNaviPage() {
               <div
                 ref={(el) => setSectionRef("warning", el)}
                 onClick={() => audio.handleSectionClick("warning")}
-                className={`p-4 bg-red-900/30 border border-red-800 rounded-lg transition-all duration-300 ${getHighlightStyle("warning")} ${audio.isPlaying ? "cursor-pointer hover:ring-1 hover:ring-amber-500/50" : ""}`}
+                className={`p-4 bg-red-900/30 border border-red-800 rounded-lg transition-all duration-300 ${getHighlightStyle("warning")} ${(audio.isPlaying || audio.isPaused) ? "cursor-pointer hover:ring-1 hover:ring-amber-500/50" : ""}`}
               >
                 <p className="text-red-300 text-sm flex items-center gap-2">
                   <span>⚠️</span>
@@ -635,6 +635,7 @@ export default function OreNaviPage() {
                   isExpanded={expandedInsight === insight.id}
                   onToggle={() => setExpandedInsight(expandedInsight === insight.id ? null : insight.id)}
                   isPlaying={audio.isPlaying}
+                  isPaused={audio.isPaused}
                   currentSection={audio.currentSection}
                   onSectionClick={audio.handleSectionClick}
                   setSectionRef={setSectionRef}

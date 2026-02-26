@@ -7,6 +7,7 @@ interface InsightCardProps {
   isExpanded: boolean;
   onToggle: () => void;
   isPlaying: boolean;
+  isPaused?: boolean;
   currentSection: SectionType | null;
   onSectionClick: (section: SectionType) => void;
   setSectionRef: (section: string, el: HTMLDivElement | null) => void;
@@ -37,10 +38,12 @@ export function InsightCard({
   isExpanded,
   onToggle,
   isPlaying,
+  isPaused,
   currentSection,
   onSectionClick,
   setSectionRef,
 }: InsightCardProps) {
+  const audioActive = isPlaying || isPaused;
   const titleKey = `insight-${index}-title`;
   const contentKey = `insight-${index}-content`;
   const whyNowKey = `insight-${index}-why_now`;
@@ -59,7 +62,7 @@ export function InsightCard({
       <div
         ref={(el) => setSectionRef(titleKey, el)}
         onClick={() => {
-          if (isPlaying) {
+          if (audioActive) {
             onSectionClick(titleKey);
           } else {
             onToggle();
@@ -93,8 +96,8 @@ export function InsightCard({
           {/* 内容 */}
           <div
             ref={(el) => setSectionRef(contentKey, el)}
-            onClick={() => isPlaying && onSectionClick(contentKey)}
-            className={`p-3 rounded-lg transition-all duration-300 ${highlight(contentKey)} ${isPlaying ? "cursor-pointer hover:ring-1 hover:ring-amber-500/50" : ""}`}
+            onClick={() => audioActive && onSectionClick(contentKey)}
+            className={`p-3 rounded-lg transition-all duration-300 ${highlight(contentKey)} ${audioActive ? "cursor-pointer hover:ring-1 hover:ring-amber-500/50" : ""}`}
           >
             <p className="text-slate-300">{insight.content}</p>
           </div>
@@ -103,8 +106,8 @@ export function InsightCard({
             {/* なぜ今か */}
             <div
               ref={(el) => setSectionRef(whyNowKey, el)}
-              onClick={() => isPlaying && onSectionClick(whyNowKey)}
-              className={`p-3 bg-slate-800/50 rounded-lg transition-all duration-300 ${highlight(whyNowKey)} ${isPlaying ? "cursor-pointer hover:ring-1 hover:ring-amber-500/50" : ""}`}
+              onClick={() => audioActive && onSectionClick(whyNowKey)}
+              className={`p-3 bg-slate-800/50 rounded-lg transition-all duration-300 ${highlight(whyNowKey)} ${audioActive ? "cursor-pointer hover:ring-1 hover:ring-amber-500/50" : ""}`}
             >
               <p className="text-slate-500 mb-1">なぜ今か</p>
               <p className="text-slate-300">{insight.why_now}</p>
@@ -112,8 +115,8 @@ export function InsightCard({
             {/* なぜ俺か */}
             <div
               ref={(el) => setSectionRef(whyYouKey, el)}
-              onClick={() => isPlaying && onSectionClick(whyYouKey)}
-              className={`p-3 bg-slate-800/50 rounded-lg transition-all duration-300 ${highlight(whyYouKey)} ${isPlaying ? "cursor-pointer hover:ring-1 hover:ring-amber-500/50" : ""}`}
+              onClick={() => audioActive && onSectionClick(whyYouKey)}
+              className={`p-3 bg-slate-800/50 rounded-lg transition-all duration-300 ${highlight(whyYouKey)} ${audioActive ? "cursor-pointer hover:ring-1 hover:ring-amber-500/50" : ""}`}
             >
               <p className="text-slate-500 mb-1">なぜ俺か</p>
               <p className="text-slate-300">{insight.why_you}</p>
@@ -123,8 +126,8 @@ export function InsightCard({
           {/* 次の一手 */}
           <div
             ref={(el) => setSectionRef(actionKey, el)}
-            onClick={() => isPlaying && onSectionClick(actionKey)}
-            className={`p-3 bg-amber-900/20 border border-amber-800/50 rounded-lg transition-all duration-300 ${highlight(actionKey)} ${isPlaying ? "cursor-pointer hover:ring-1 hover:ring-amber-500/50" : ""}`}
+            onClick={() => audioActive && onSectionClick(actionKey)}
+            className={`p-3 bg-amber-900/20 border border-amber-800/50 rounded-lg transition-all duration-300 ${highlight(actionKey)} ${audioActive ? "cursor-pointer hover:ring-1 hover:ring-amber-500/50" : ""}`}
           >
             <p className="text-amber-400 text-sm mb-1">次の一手</p>
             <p className="text-white">{insight.action}</p>
@@ -134,8 +137,8 @@ export function InsightCard({
           {insight.risk && (
             <div
               ref={(el) => setSectionRef(riskKey, el)}
-              onClick={() => isPlaying && onSectionClick(riskKey)}
-              className={`p-3 bg-red-900/20 border border-red-800/50 rounded-lg transition-all duration-300 ${highlight(riskKey)} ${isPlaying ? "cursor-pointer hover:ring-1 hover:ring-amber-500/50" : ""}`}
+              onClick={() => audioActive && onSectionClick(riskKey)}
+              className={`p-3 bg-red-900/20 border border-red-800/50 rounded-lg transition-all duration-300 ${highlight(riskKey)} ${audioActive ? "cursor-pointer hover:ring-1 hover:ring-amber-500/50" : ""}`}
             >
               <p className="text-red-400 text-sm mb-1">リスク・盲点</p>
               <p className="text-slate-300">{insight.risk}</p>

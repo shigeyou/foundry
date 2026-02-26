@@ -188,12 +188,12 @@ export function useOreNaviAudio(
     }
   }, [result, getSections, getSectionText]);
 
-  // セクションをクリックしてそこから読み上げ開始
+  // セクションをクリックしてそこから読み上げ開始（再生中・一時停止中に対応）
   const handleSectionClick = useCallback((section: SectionType) => {
-    if (isPlaying) {
+    if (isPlaying || isPaused) {
       playSectionsFrom(section);
     }
-  }, [isPlaying, playSectionsFrom]);
+  }, [isPlaying, isPaused, playSectionsFrom]);
 
   // 再生/一時停止
   const togglePlayPause = useCallback(() => {
