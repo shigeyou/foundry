@@ -426,12 +426,30 @@ export default function ReportPage() {
     return () => clearTimeout(timer);
   }, [audio.currentSection, activeScope]);
 
-  // カードクリックで読み上げジャンプ（再生中・一時停止中に反応）
+  // カードクリックで読み上げジャンプ（停止中ならそのセクションから全文読み上げ開始）
   const handleSectionClick = useCallback((section: string) => {
     if (audio.isPlaying || audio.isPaused) {
       audio.playFromSection(section);
+    } else {
+      // 停止中: まず全文セクションを構築して再生開始し、該当セクションへジャンプ
+      if (reports.length === 0) return;
+      const allSpeechSections: { section: string; text: string }[] = [];
+      for (const dept of departments) {
+        const report = reports.find(r => r.scope === dept.id);
+        if (report?.status !== "completed" || !report.sections) continue;
+        try {
+          const parsed: ReportSections = JSON.parse(report.sections);
+          allSpeechSections.push(...buildFullSpeechSections(parsed, report.scopeName, dept.id));
+        } catch { /* skip */ }
+      }
+      if (allSpeechSections.length > 0) {
+        audio.playSections(allSpeechSections).then(() => {
+          // 再生開始後にジャンプ
+          setTimeout(() => audio.playFromSection(section), 300);
+        });
+      }
     }
-  }, [audio]);
+  }, [audio, reports, buildFullSpeechSections]);
 
   // 生成進捗
   const completedCount = reports.filter(r => r.status === "completed").length;
@@ -907,7 +925,7 @@ export default function ReportPage() {
         ) : sections ? (
           /* レポート表示 */
           <div id="report-print-area" ref={printRef}>
-            <ReportContent sections={sections} scopeName={activeReport?.scopeName || ""} scopeId={activeScope} currentSection={audio.currentSection} setSectionRef={setSectionRef} t={t} />
+            <ReportContent sections={sections} scopeName={activeReport?.scopeName || ""} scopeId={activeScope} currentSection={audio.currentSection} setSectionRef={setSectionRef} onSectionClick={handleSectionClick} t={t} />
           </div>
         ) : (
           <div className="text-center py-20 text-gray-500">
