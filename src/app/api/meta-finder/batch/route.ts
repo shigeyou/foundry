@@ -115,7 +115,10 @@ async function runBatchInBackground(batchId: string) {
 
     // 予算ドキュメント: 全文注入（最大15,000文字）
     for (const doc of budgetDocs) {
-      documentContext += `### ${doc.filename}\n${doc.content.slice(0, 15000)}\n\n`;
+      // ファイル名を匿名化（特定個人のメモと分からないように）
+      const label = doc.filename.includes("CDIO") ? "経営課題認識メモ"
+        : doc.filename;
+      documentContext += `### ${label}\n${doc.content.slice(0, 15000)}\n\n`;
     }
 
     // 静的財務サマリーも追加

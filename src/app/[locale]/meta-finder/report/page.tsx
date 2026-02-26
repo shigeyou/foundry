@@ -110,6 +110,7 @@ export default function ReportPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const printRef = useRef<HTMLDivElement>(null);
+  const userManualTabSwitch = useRef(false); // ユーザーが手動でタブ切替したかどうか
 
   // 音声ハイライト用セクションRef
   const sectionRefs = useRef<Map<string, HTMLDivElement | null>>(new Map());
@@ -401,9 +402,11 @@ export default function ReportPage() {
   }, [reports, buildFullSpeechSections, buildSummarySpeechSections, audio]);
 
   // 再生中のセクションから部門IDを抽出してタブを自動切替
+  // ただしユーザーが手動でタブを切替えた場合は自動切替を抑制
   const currentAudioScopeRef = useRef<string | null>(null);
   useEffect(() => {
     if (!audio.currentSection) return;
+    if (userManualTabSwitch.current) return; // ユーザー手動切替中は自動切替しない
     const match = audio.currentSection.match(/^dept:([^:]+):/);
     if (match) {
       currentAudioScopeRef.current = match[1];
@@ -428,6 +431,7 @@ export default function ReportPage() {
 
   // カードクリックで読み上げジャンプ（停止中ならそのセクションから全文読み上げ開始）
   const handleSectionClick = useCallback((section: string) => {
+    userManualTabSwitch.current = false; // セクションクリックで自動タブ切替を再開
     if (audio.isPlaying || audio.isPaused) {
       audio.playFromSection(section);
     } else {
@@ -737,7 +741,7 @@ export default function ReportPage() {
               return (
                 <button
                   key={dept.id}
-                  onClick={() => setActiveScope(dept.id)}
+                  onClick={() => { userManualTabSwitch.current = true; setActiveScope(dept.id); }}
                   className={`whitespace-nowrap px-3 py-1.5 text-xs rounded-lg transition-colors flex items-center gap-1 ${
                     isActive
                       ? "bg-indigo-600 text-white"

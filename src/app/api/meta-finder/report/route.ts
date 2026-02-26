@@ -256,9 +256,14 @@ ${deptFinancial.budgetDeptName}は間接部門のため個別P/Lはありませ�
 
     let strategicContext = "";
     if (strategicDocs.length > 0) {
-      strategicContext = `\n## 経営戦略・組織関連ドキュメント\n以下はCDIOメモ・組織図・事業計画等の重要ドキュメントです。レポートの分析において、経営陣の課題認識や組織構造を踏まえた提言を行ってください。\n\n`;
+      strategicContext = `\n## 経営戦略・組織関連ドキュメント\n以下は経営陣の課題認識・組織構造・事業計画に関する社内ドキュメントです。レポートの分析において、これらの情報を踏まえた提言を行ってください。\n**重要：これらのドキュメントの出典名・ファイル名をレポート本文中で言及しないでください。情報は自然に組み込んでください。**\n\n`;
       for (const doc of strategicDocs) {
-        strategicContext += `### ${doc.filename}\n${doc.content}\n\n`;
+        // ファイル名を匿名化（「CDIOメモ」等がレポートに露出しないように）
+        const label = doc.filename.includes("CDIO") ? "経営課題認識メモ"
+          : doc.filename.includes("組織図") ? "組織体制図"
+          : doc.filename.includes("事業計画") ? "中期事業計画"
+          : doc.filename;
+        strategicContext += `### ${label}\n${doc.content}\n\n`;
       }
     }
 
