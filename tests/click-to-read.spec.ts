@@ -103,4 +103,54 @@ test.describe("メタファインダー レポート クリック読み上げ", 
     await expect(page.locator("body")).toBeVisible();
     console.log("Click-to-read: cross-tab OK");
   });
+
+  test("速度スライダーが操作可能で値が変わる", async ({ page }) => {
+    await page.goto(`${BASE}/meta-finder/report`);
+    await page.waitForLoadState("networkidle");
+
+    // バッチ選択
+    const batchSelect = page.locator("select").first();
+    if (await batchSelect.isVisible({ timeout: 3000 }).catch(() => false)) {
+      const options = await batchSelect.locator("option").all();
+      if (options.length > 1) {
+        await batchSelect.selectOption({ index: 1 });
+        await page.waitForTimeout(2000);
+      }
+    }
+
+    const reportArea = page.locator("#report-print-area");
+    const hasReport = await reportArea.isVisible({ timeout: 15000 }).catch(() => false);
+    if (!hasReport) {
+      test.skip(true, "レポートデータがないためスキップ");
+      return;
+    }
+
+    // 速度スライダーを見つける
+    const speedSlider = page.locator("input[type='range']");
+    const hasSlider = await speedSlider.isVisible({ timeout: 5000 }).catch(() => false);
+    if (!hasSlider) {
+      test.skip(true, "速度スライダーが見つからないためスキップ");
+      return;
+    }
+
+    // 初期値を取得
+    const initialValue = await speedSlider.inputValue();
+    console.log(`Initial speed: ${initialValue}%`);
+
+    // スライダーの値を変更（fill で直接値をセット）
+    await speedSlider.fill("100");
+    await page.waitForTimeout(500);
+
+    const newValue = await speedSlider.inputValue();
+    console.log(`New speed: ${newValue}%`);
+
+    // 値が変わったことを確認
+    expect(newValue).toBe("100");
+
+    // 速度表示テキストが更新されていることを確認
+    const speedDisplay = page.locator("text=100%");
+    await expect(speedDisplay).toBeVisible({ timeout: 2000 });
+
+    console.log("Speed slider: OK");
+  });
 });

@@ -98,7 +98,51 @@ class OreNaviAudioManager {
   }
 
   setSpeechSpeed(speed: number) {
+    if (this.speechSpeed === speed) return;
     this.speechSpeed = speed;
+
+    // 再生中/一時停止中なら、未再生セクションのキャッシュをクリアして新速度で再生成
+    if (this.sections.length > 0 && (this.state.isPlaying || this.state.isPaused)) {
+      const futureStart = this.currentIndex + 1;
+      for (let i = futureStart; i < this.sections.length; i++) {
+        const section = this.sections[i];
+        const cached = this.audioCache.get(section);
+        if (cached) {
+          URL.revokeObjectURL(cached);
+          this.audioCache.delete(section);
+        }
+        this.sectionStatus.set(section, "pending");
+      }
+      this.updateQueueStatus();
+      // バックグラウンドで未再生分を新速度で再生成
+      this.regeneratePendingSections();
+    }
+  }
+
+  // 未再生分のみ再生成（速度変更時用）
+  private async regeneratePendingSections() {
+    const futureStart = this.currentIndex + 1;
+    const pendingSections = this.sectionsData.slice(futureStart).filter(
+      sd => !this.audioCache.has(sd.section)
+    );
+    const tasks = pendingSections.map((sectionData) => async () => {
+      if (this.stopRequested) return;
+      if (this.audioCache.has(sectionData.section)) return;
+
+      this.sectionStatus.set(sectionData.section, "generating");
+      this.updateQueueStatus();
+
+      const url = await this.generateAudio(sectionData.text);
+      if (url && !this.stopRequested) {
+        this.audioCache.set(sectionData.section, url);
+        this.sectionStatus.set(sectionData.section, "ready");
+      } else {
+        this.sectionStatus.set(sectionData.section, "error");
+      }
+      this.updateQueueStatus();
+    });
+
+    await this.runWithConcurrency(tasks, this.concurrencyLimit);
   }
 
   getSpeechSpeed(): number {
