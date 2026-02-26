@@ -3,12 +3,12 @@ import { test, expect } from "@playwright/test";
 const BASE = process.env.TEST_BASE_URL || "http://localhost:3006";
 
 test.describe("メタファインダー レポート クリック読み上げ", () => {
-  test("レポートセクションにonClickとcursor-pointerが設定されている", async ({ page }) => {
-    // レポートページへ遷移
+
+  test("レポートセクションにcursor-pointerが設定されクリック可能", async ({ page }) => {
     await page.goto(`${BASE}/meta-finder/report`);
     await page.waitForLoadState("networkidle");
 
-    // バッチ選択が必要な場合は最新バッチを選択
+    // バッチ選択
     const batchSelect = page.locator("select").first();
     if (await batchSelect.isVisible({ timeout: 3000 }).catch(() => false)) {
       const options = await batchSelect.locator("option").all();
@@ -18,35 +18,89 @@ test.describe("メタファインダー レポート クリック読み上げ", 
       }
     }
 
-    // レポートが表示されるまで待つ（最大15秒）
     const reportArea = page.locator("#report-print-area");
     const hasReport = await reportArea.isVisible({ timeout: 15000 }).catch(() => false);
-
     if (!hasReport) {
-      // レポートがない場合（バッチ未実行等）はスキップ
       test.skip(true, "レポートデータがないためスキップ");
       return;
     }
 
-    // ReportContent内のセクションカード（cursor-pointerクラスがあること）
-    const clickableSections = page.locator("[class*='cursor-pointer']");
+    // cursor-pointerが付いたセクションがある
+    const clickableSections = page.locator("#report-print-area [class*='cursor-pointer']");
     const count = await clickableSections.count();
-
-    console.log(`Found ${count} clickable sections`);
+    console.log(`Found ${count} clickable sections on initial tab`);
     expect(count).toBeGreaterThan(0);
 
-    // 最初のクリッカブルセクションにonClickが動作するか確認
-    const firstSection = clickableSections.first();
-    await expect(firstSection).toBeVisible();
-
-    // クリックしてもエラーにならないことを確認
-    await firstSection.click();
+    // クリックしてもエラーにならない
+    await clickableSections.first().click();
     await page.waitForTimeout(1000);
+    await expect(page.locator("body")).toBeVisible();
+    console.log("Click-to-read: initial tab OK");
+  });
 
-    // ページがクラッシュしていないことを確認
-    const body = page.locator("body");
-    await expect(body).toBeVisible();
+  test("別タブに切り替えてもcursor-pointerが維持されクリック可能", async ({ page }) => {
+    await page.goto(`${BASE}/meta-finder/report`);
+    await page.waitForLoadState("networkidle");
 
-    console.log("Click-to-read sections are properly wired up");
+    // バッチ選択
+    const batchSelect = page.locator("select").first();
+    if (await batchSelect.isVisible({ timeout: 3000 }).catch(() => false)) {
+      const options = await batchSelect.locator("option").all();
+      if (options.length > 1) {
+        await batchSelect.selectOption({ index: 1 });
+        await page.waitForTimeout(2000);
+      }
+    }
+
+    const reportArea = page.locator("#report-print-area");
+    const hasReport = await reportArea.isVisible({ timeout: 15000 }).catch(() => false);
+    if (!hasReport) {
+      test.skip(true, "レポートデータがないためスキップ");
+      return;
+    }
+
+    // 部門タブ一覧を取得（横スクロール内のボタン群）
+    const deptTabs = page.locator("button").filter({ hasText: /技術部|事業部|事業本部|企画部|総務部|経理部|全社|CEO/ });
+    const tabCount = await deptTabs.count();
+    console.log(`Found ${tabCount} department tabs`);
+
+    if (tabCount < 2) {
+      test.skip(true, "タブが2つ未満のためスキップ");
+      return;
+    }
+
+    // 初期タブのセクション数を確認
+    const initialClickable = await page.locator("#report-print-area [class*='cursor-pointer']").count();
+    console.log(`Initial tab: ${initialClickable} clickable sections`);
+    expect(initialClickable).toBeGreaterThan(0);
+
+    // 別のタブをクリック（2番目のタブ）
+    await deptTabs.nth(1).click();
+    await page.waitForTimeout(1500);
+
+    // 別タブでもcursor-pointerセクションがある
+    const secondTabClickable = page.locator("#report-print-area [class*='cursor-pointer']");
+    const secondCount = await secondTabClickable.count();
+
+    // レポートが生成されていない部門もあるのでreport-print-areaがない場合もチェック
+    const hasSecondReport = await page.locator("#report-print-area").isVisible().catch(() => false);
+    if (!hasSecondReport || secondCount === 0) {
+      console.log("Second tab has no report, trying third tab");
+      if (tabCount > 2) {
+        await deptTabs.nth(2).click();
+        await page.waitForTimeout(1500);
+      }
+    }
+
+    const finalClickable = page.locator("[class*='cursor-pointer']").filter({ hasNotText: /速度|スピード/ });
+    const finalCount = await finalClickable.count();
+    console.log(`After tab switch: ${finalCount} clickable sections`);
+    expect(finalCount).toBeGreaterThan(0);
+
+    // クリックしてもエラーにならない
+    await finalClickable.first().click();
+    await page.waitForTimeout(1000);
+    await expect(page.locator("body")).toBeVisible();
+    console.log("Click-to-read: cross-tab OK");
   });
 });

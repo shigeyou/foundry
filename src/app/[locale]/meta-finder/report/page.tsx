@@ -905,7 +905,7 @@ export default function ReportPage() {
             {/* 完了済みタブは閲覧可能 */}
             {sections && (
               <div className="mt-8 text-left">
-                <ReportContent sections={sections} scopeName={activeReport?.scopeName || ""} scopeId={activeScope} currentSection={audio.currentSection} setSectionRef={setSectionRef} onSectionClick={(audio.isPlaying || audio.isPaused) ? handleSectionClick : undefined} t={t} />
+                <ReportContent sections={sections} scopeName={activeReport?.scopeName || ""} scopeId={activeScope} currentSection={audio.currentSection} setSectionRef={setSectionRef} onSectionClick={handleSectionClick} t={t} />
               </div>
             )}
           </div>
