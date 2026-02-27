@@ -34,10 +34,24 @@ fi
 
 export DATABASE_URL="file:/home/data/foundry.db"
 
-# Sync database schema (non-fatal on failure)
+# Clear stale SQLite locks from previous crash
+if [ -f /home/data/foundry.db-journal ]; then
+    echo "Removing stale journal file..."
+    rm -f /home/data/foundry.db-journal
+fi
+if [ -f /home/data/foundry.db-wal ]; then
+    echo "Removing stale WAL file..."
+    rm -f /home/data/foundry.db-wal
+fi
+if [ -f /home/data/foundry.db-shm ]; then
+    echo "Removing stale SHM file..."
+    rm -f /home/data/foundry.db-shm
+fi
+
+# Sync database schema (non-fatal on failure, 30s timeout)
 if [ -f node_modules/prisma/build/index.js ]; then
     echo "Syncing database schema..."
-    node node_modules/prisma/build/index.js db push --schema=prisma/schema.prisma --skip-generate --accept-data-loss 2>&1 || echo "Schema sync failed (non-fatal)"
+    timeout 30 node node_modules/prisma/build/index.js db push --schema=prisma/schema.prisma --skip-generate --accept-data-loss 2>&1 || echo "Schema sync failed (non-fatal)"
 else
     echo "Prisma CLI not found, schema sync skipped"
 fi
