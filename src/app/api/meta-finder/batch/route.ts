@@ -105,7 +105,7 @@ async function runBatchInBackground(batchId: string) {
     // 予算ドキュメントを優先配置
     const RAG_CONTEXT_BUDGET = 50000;
     const budgetDocs = ragDocuments.filter(d =>
-      d.filename.includes("予算") || d.filename.includes("取締役会議案書") || d.filename.includes("CDIO")
+      d.filename.includes("予算") || d.filename.includes("取締役会議案書") || d.filename.includes("RAG補足情報")
     );
     const otherDocs = ragDocuments.filter(d => !budgetDocs.includes(d));
 
@@ -115,8 +115,8 @@ async function runBatchInBackground(batchId: string) {
 
     // 予算ドキュメント: 全文注入（最大15,000文字）
     for (const doc of budgetDocs) {
-      // ファイル名を匿名化（特定個人のメモと分からないように）
-      const label = doc.filename.includes("CDIO") ? "経営課題認識メモ"
+      // ファイル名を匿名化
+      const label = doc.filename.includes("RAG補足情報") ? "経営課題補足情報"
         : doc.filename;
       documentContext += `### ${label}\n${doc.content.slice(0, 15000)}\n\n`;
     }
