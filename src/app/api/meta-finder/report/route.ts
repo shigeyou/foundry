@@ -188,7 +188,7 @@ async function generateScopeReport(
     const ideas = await prisma.metaFinderIdea.findMany({
       where: whereClause,
       orderBy: { score: "desc" },
-      take: scope.id === "all" ? 80 : 25,
+      take: scope.id === "all" ? 40 : 25,
     });
 
     if (ideas.length === 0) {
@@ -215,8 +215,11 @@ async function generateScopeReport(
     const avgProcess = (ideas.reduce((s, i) => s + i.process, 0) / totalCount).toFixed(1);
     const avgGrowth = (ideas.reduce((s, i) => s + i.growth, 0) / totalCount).toFixed(1);
 
-    // アイデアをフォーマット
+    // アイデアをフォーマット（全社向けは簡潔版でプロンプトサイズを抑制）
     const ideasText = ideas.map((idea, idx) => {
+      if (isCompanyWide) {
+        return `【${idx + 1}】${idea.name}（${idea.score.toFixed(1)}）${idea.themeName}／${idea.deptName}: ${idea.description.slice(0, 120)}`;
+      }
       const actions = idea.actions ? JSON.parse(idea.actions) : [];
       return `【${idx + 1}】${idea.name}（スコア: ${idea.score.toFixed(1)}）
 テーマ: ${idea.themeName} ／ 部門: ${idea.deptName}
@@ -273,9 +276,14 @@ ${deptFinancial.budgetDeptName}は間接部門のため個別P/Lはありませ�
 
     let engagementContext = "";
     if (engagementDocs.length > 0) {
+      const maxEngagementChars = isCompanyWide ? 8000 : 15000;
       engagementContext = `\n## エンゲージメントサーベイ・従業員調査データ\n以下はRAGに格納されたエンゲージメント関連ドキュメントです。レポートの課題分析において、該当部門に関連するサーベイ結果を引用・参照してください。\n\n`;
+      let totalChars = 0;
       for (const doc of engagementDocs) {
-        engagementContext += `### ${doc.filename}\n${doc.content}\n\n`;
+        const text = doc.content.slice(0, maxEngagementChars - totalChars);
+        engagementContext += `### ${doc.filename}\n${text}\n\n`;
+        totalChars += text.length;
+        if (totalChars >= maxEngagementChars) break;
       }
     }
 
@@ -294,14 +302,18 @@ ${deptFinancial.budgetDeptName}は間接部門のため個別P/Lはありませ�
 
     let strategicContext = "";
     if (strategicDocs.length > 0) {
+      const maxStrategicChars = isCompanyWide ? 8000 : 15000;
       strategicContext = `\n## 経営戦略・組織関連ドキュメント\n以下は経営陣の課題認識・組織構造・事業計画に関する社内ドキュメントです。レポートの分析において、これらの情報を踏まえた提言を行ってください。\n**重要：これらのドキュメントの出典名・ファイル名をレポート本文中で言及しないでください。情報は自然に組み込んでください。**\n\n`;
+      let totalChars = 0;
       for (const doc of strategicDocs) {
-        // ファイル名を匿名化（「CDIOメモ」等がレポートに露出しないように）
         const label = doc.filename.includes("CDIO") ? "経営課題認識メモ"
           : doc.filename.includes("組織図") ? "組織体制図"
           : doc.filename.includes("事業計画") ? "中期事業計画"
           : doc.filename;
-        strategicContext += `### ${label}\n${doc.content}\n\n`;
+        const text = doc.content.slice(0, maxStrategicChars - totalChars);
+        strategicContext += `### ${label}\n${text}\n\n`;
+        totalChars += text.length;
+        if (totalChars >= maxStrategicChars) break;
       }
     }
 
