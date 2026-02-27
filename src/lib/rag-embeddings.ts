@@ -8,12 +8,16 @@
  * - フォールバック: 埋め込みモデル未設定時はキーワードマッチング
  */
 
-import { AzureOpenAI } from "openai";
-
 const EMBEDDING_DIMENSIONS = 1536;
 const BATCH_SIZE = 16;
 
-let embeddingClient: AzureOpenAI | null = null;
+// openaiは動的importで遅延ロード（バンドル問題を回避）
+let embeddingClient: InstanceType<Awaited<ReturnType<typeof getAzureOpenAI>>> | null = null;
+
+async function getAzureOpenAI() {
+  const { AzureOpenAI } = await import("openai");
+  return AzureOpenAI;
+}
 
 function getEmbeddingDeployment(): string | null {
   return process.env.AZURE_OPENAI_EMBEDDING_DEPLOYMENT || null;
@@ -27,15 +31,16 @@ export function isEmbeddingAvailable(): boolean {
   );
 }
 
-function getEmbeddingClient(): AzureOpenAI {
+async function getEmbeddingClient() {
   if (!embeddingClient) {
+    const AzureOpenAI = await getAzureOpenAI();
     embeddingClient = new AzureOpenAI({
       apiKey: process.env.AZURE_OPENAI_API_KEY,
       endpoint: process.env.AZURE_OPENAI_ENDPOINT,
       apiVersion: "2024-08-01-preview",
     });
   }
-  return embeddingClient;
+  return embeddingClient!;
 }
 
 // ─── Float32 ↔ Base64 変換 ───
@@ -71,7 +76,7 @@ export async function generateEmbeddings(
     return texts.map(() => null);
   }
 
-  const client = getEmbeddingClient();
+  const client = await getEmbeddingClient();
   const deployment = getEmbeddingDeployment()!;
   const results: (number[] | null)[] = new Array(texts.length).fill(null);
 

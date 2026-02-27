@@ -17,6 +17,7 @@ const nextConfig: NextConfig = {
     "@libsql/client",
     "@libsql/core",
     "@prisma/adapter-libsql",
+    "openai",
   ],
 
   async redirects() {

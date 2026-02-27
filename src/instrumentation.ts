@@ -345,14 +345,18 @@ export async function register() {
         startIngestWatcher();
 
         // チャンクがなければ全ドキュメントを一括チャンク処理
-        const { prisma: db } = await import("@/lib/db");
-        const chunkCount = await db.rAGChunk.count();
-        if (chunkCount === 0) {
-          console.log("[Auto-Seed] RAGチャンクが0件です。全ドキュメントをチャンク処理します...");
-          const { processAllDocuments } = await import("@/lib/rag-ingest-pipeline");
-          processAllDocuments().catch((err) => console.error("[Auto-Seed] チャンク一括処理エラー:", err));
-        } else {
-          console.log(`[Auto-Seed] RAGチャンクが${chunkCount}件存在します。チャンク処理をスキップします`);
+        try {
+          const { prisma: db } = await import("@/lib/db");
+          const chunkCount = await db.rAGChunk.count();
+          if (chunkCount === 0) {
+            console.log("[Auto-Seed] RAGチャンクが0件です。全ドキュメントをチャンク処理します...");
+            const { processAllDocuments } = await import("@/lib/rag-ingest-pipeline");
+            processAllDocuments().catch((err) => console.error("[Auto-Seed] チャンク一括処理エラー:", err));
+          } else {
+            console.log(`[Auto-Seed] RAGチャンクが${chunkCount}件存在します。チャンク処理をスキップします`);
+          }
+        } catch (chunkErr) {
+          console.error("[Auto-Seed] チャンク処理の初期化エラー（スキップ）:", chunkErr);
         }
       });
 

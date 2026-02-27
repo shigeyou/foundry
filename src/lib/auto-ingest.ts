@@ -14,7 +14,12 @@ import mammoth from "mammoth";
 import JSZip from "jszip";
 import { parse as csvParse } from "csv-parse/sync";
 import { prisma } from "./db";
-import { processDocument } from "./rag-ingest-pipeline";
+
+// processDocument は動的importで遅延ロード（openaiパッケージの起動時ロードを回避）
+async function lazyProcessDocument(documentId: string): Promise<void> {
+  const { processDocument } = await import("./rag-ingest-pipeline");
+  await processDocument(documentId);
+}
 
 // 設定
 const SUPPORTED_TYPES = ["pdf", "txt", "md", "json", "doc", "docx", "csv", "pptx", "msg", "eml", "urls"];
@@ -149,7 +154,7 @@ export async function syncWithManifest(): Promise<SyncResult> {
           console.log(`[Auto-Ingest] 更新: ${filename}`);
           result.updated.push(filename);
           // チャンク再処理（バックグラウンド）
-          processDocument(existing.id).catch(err =>
+          lazyProcessDocument(existing.id).catch(err =>
             console.error(`[Auto-Ingest] チャンク処理エラー: ${filename}`, err)
           );
         } else {
@@ -161,7 +166,7 @@ export async function syncWithManifest(): Promise<SyncResult> {
           console.log(`[Auto-Ingest] 新規: ${filename}`);
           result.created.push(filename);
           // チャンク処理（バックグラウンド）
-          processDocument(docId).catch(err =>
+          lazyProcessDocument(docId).catch(err =>
             console.error(`[Auto-Ingest] チャンク処理エラー: ${filename}`, err)
           );
         }
