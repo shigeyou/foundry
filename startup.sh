@@ -3,19 +3,18 @@ set -e
 
 echo "=== Foundry startup ==="
 echo "PWD: $(pwd)"
+echo "Date: $(date)"
 
 # Clear NODE_PATH to prevent Oryx/system paths from interfering
 export NODE_PATH=""
 
-# ===== Verify node_modules =====
+# ===== Verify node_modules (no node -e, just file check) =====
 echo "=== node_modules check ==="
 if [ -f node_modules/next/package.json ]; then
-    echo "next: OK ($(node -e "console.log(require('./node_modules/next/package.json').version)"))"
+    echo "next: OK"
 else
     echo "ERROR: node_modules/next not found!"
-    echo "Contents of node_modules/:"
     ls node_modules/ 2>/dev/null | head -20 || echo "node_modules is missing entirely"
-    echo "Files in wwwroot:"
     ls -la 2>/dev/null | head -20
     exit 1
 fi
@@ -35,18 +34,8 @@ fi
 export DATABASE_URL="file:/home/data/foundry.db"
 
 # Clear stale SQLite locks from previous crash
-if [ -f /home/data/foundry.db-journal ]; then
-    echo "Removing stale journal file..."
-    rm -f /home/data/foundry.db-journal
-fi
-if [ -f /home/data/foundry.db-wal ]; then
-    echo "Removing stale WAL file..."
-    rm -f /home/data/foundry.db-wal
-fi
-if [ -f /home/data/foundry.db-shm ]; then
-    echo "Removing stale SHM file..."
-    rm -f /home/data/foundry.db-shm
-fi
+rm -f /home/data/foundry.db-journal /home/data/foundry.db-wal /home/data/foundry.db-shm 2>/dev/null
+echo "SQLite locks cleared"
 
 # Sync database schema (non-fatal on failure, 30s timeout)
 if [ -f node_modules/prisma/build/index.js ]; then
