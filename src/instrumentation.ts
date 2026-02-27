@@ -339,10 +339,21 @@ export async function register() {
     } finally {
       // ingestディレクトリからの自動インジェスト
       // シードの成否に関わらず必ず起動する
-      void import("@/lib/auto-ingest").then(({ syncWithManifest, startIngestWatcher, ingestOreNaviDocuments }) => {
-        syncWithManifest().catch((err) => console.error("[Auto-Ingest] 初回同期エラー:", err));
-        ingestOreNaviDocuments().catch((err) => console.error("[OreNavi-Ingest] 初回インジェストエラー:", err));
+      void import("@/lib/auto-ingest").then(async ({ syncWithManifest, startIngestWatcher, ingestOreNaviDocuments }) => {
+        await syncWithManifest().catch((err) => console.error("[Auto-Ingest] 初回同期エラー:", err));
+        await ingestOreNaviDocuments().catch((err) => console.error("[OreNavi-Ingest] 初回インジェストエラー:", err));
         startIngestWatcher();
+
+        // チャンクがなければ全ドキュメントを一括チャンク処理
+        const { prisma: db } = await import("@/lib/db");
+        const chunkCount = await db.rAGChunk.count();
+        if (chunkCount === 0) {
+          console.log("[Auto-Seed] RAGチャンクが0件です。全ドキュメントをチャンク処理します...");
+          const { processAllDocuments } = await import("@/lib/rag-ingest-pipeline");
+          processAllDocuments().catch((err) => console.error("[Auto-Seed] チャンク一括処理エラー:", err));
+        } else {
+          console.log(`[Auto-Seed] RAGチャンクが${chunkCount}件存在します。チャンク処理をスキップします`);
+        }
       });
 
       // 中断されたメタファインダーバッチを再開

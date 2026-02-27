@@ -164,6 +164,27 @@ model RAGDocument {
   updatedAt DateTime @updatedAt
 }
 
+model RAGChunk {
+  id            String   @id
+  documentId    String
+  chunkIndex    Int
+  content       String
+  embedding     String?
+  charCount     Int
+  tokenEstimate Int
+  filename      String
+  scope         String   @default("shared")
+  tags          String?
+  deptIds       String?
+  docType       String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([documentId])
+  @@index([scope])
+  @@index([docType])
+}
+
 model ScoreBaseline {
   id              String   @id
   date            DateTime @default(now())

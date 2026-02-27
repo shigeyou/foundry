@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { generateWithClaude } from "@/lib/claude";
 import { SINGLE_PROMPT, normalizeScore, type DiscoveredNeed } from "@/lib/meta-finder-prompt";
+import { retrieveRelevantChunks, formatChunksForPrompt } from "@/lib/rag-retrieval";
 
 interface SingleDiscoveredNeed extends DiscoveredNeed {
   sourceDocuments: string[];
@@ -38,27 +39,30 @@ export async function POST(req: NextRequest) {
     const deptId = body.deptId || "all";
     const deptName = body.deptName || "全社";
 
-    // docs/summaries/ からドキュメントを取得（俺ナビ専用を除外）
-    const ragDocuments = await prisma.rAGDocument.findMany({
-      where: { scope: { not: "orenavi" } },
-      select: {
-        filename: true,
-        content: true,
-      },
+    // RAG意味検索: テーマ×部門に関連するチャンクを取得
+    const ragQuery = `${themeName} ${deptName} ${additionalContext || "課題と打ち手の発見"}`;
+    const ragChunks = await retrieveRelevantChunks({
+      query: ragQuery,
+      scope: ["shared"],
+      deptIds: deptId !== "all" ? [deptId, "all"] : undefined,
+      topK: 30,
+      maxChars: 30000,
     });
 
-    if (ragDocuments.length === 0) {
-      return NextResponse.json(
-        { error: "分析対象のドキュメントがありません。docs/summaries/ にドキュメントを追加してください。" },
-        { status: 400 }
-      );
+    if (ragChunks.length === 0) {
+      // チャンクもドキュメントもない場合
+      const docCount = await prisma.rAGDocument.count({
+        where: { scope: { not: "orenavi" } },
+      });
+      if (docCount === 0) {
+        return NextResponse.json(
+          { error: "分析対象のドキュメントがありません。RAGドキュメントを追加してください。" },
+          { status: 400 }
+        );
+      }
     }
 
-    // ドキュメントをプロンプト用にフォーマット
-    let documentContext = "## 分析対象ドキュメント\n\n";
-    for (const doc of ragDocuments) {
-      documentContext += `### ${doc.filename}\n${doc.content}\n\n`;
-    }
+    const documentContext = formatChunksForPrompt(ragChunks, "分析対象ドキュメント（関連箇所）");
 
     // SWOT分析結果を取得・注入
     const swot = await prisma.defaultSwot.findFirst();
@@ -158,7 +162,7 @@ ${additionalContext ? `## 追加の指示\n${additionalContext}` : "## 指示\n�
     await prisma.metaAnalysisRun.create({
       data: {
         id: `meta-${Date.now()}`,
-        totalExplorations: ragDocuments.length,
+        totalExplorations: ragChunks.length,
         totalStrategies: result.needs.length,
         topStrategies: JSON.stringify(result.needs.slice(0, 5)),
         frequentTags: JSON.stringify({}),

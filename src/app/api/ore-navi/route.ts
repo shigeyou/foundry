@@ -4,6 +4,7 @@ import { generateWithClaude } from "@/lib/claude";
 import { PERSONALITY_OS, SYSTEM_PROMPT_ORE_NAVI, ORE_NAVI_MODE_MODIFIERS } from "@/lib/personality-os";
 import { loadPersonalData, buildPersonalityPrompt } from "@/lib/personal-data-loader";
 import { checkAndIngestNewFiles } from "@/lib/auto-ingest";
+import { retrieveRelevantChunks, formatChunksForPrompt } from "@/lib/rag-retrieval";
 
 // GET: 履歴を取得
 export async function GET(req: NextRequest) {
@@ -112,34 +113,28 @@ export async function POST(req: NextRequest) {
       console.log(`[OreNavi] Using default PERSONALITY_OS`);
     }
 
-    // RAGドキュメントを取得（共通 + 俺ナビ専用）
-    const ragDocuments = await prisma.rAGDocument.findMany({
-      where: { scope: { in: ["shared", "orenavi"] } },
-      select: {
-        filename: true,
-        content: true,
-        scope: true,
-      },
+    // RAG意味検索: 質問に関連するチャンクを取得（shared + orenavi）
+    const sharedChunks = await retrieveRelevantChunks({
+      query: question,
+      scope: ["shared"],
+      topK: 20,
+      maxChars: 15000,
+    });
+    const oreNaviChunks = await retrieveRelevantChunks({
+      query: question,
+      scope: ["orenavi"],
+      topK: 10,
+      maxChars: 8000,
     });
 
-    // ドキュメントをプロンプト用にフォーマット
-    const sharedDocs = ragDocuments.filter(d => d.scope === "shared");
-    const oreNaviDocs = ragDocuments.filter(d => d.scope === "orenavi");
-
     let companyContext = "";
-    if (sharedDocs.length > 0) {
-      companyContext += "## 会社の文脈（RAGドキュメントより）\n\n";
-      for (const doc of sharedDocs) {
-        companyContext += `### ${doc.filename}\n${doc.content}\n\n`;
-      }
+    if (sharedChunks.length > 0) {
+      companyContext += formatChunksForPrompt(sharedChunks, "会社の文脈（RAGドキュメントより）");
     }
-    if (oreNaviDocs.length > 0) {
-      companyContext += "## 俺ナビ専用ドキュメント\n\n";
-      for (const doc of oreNaviDocs) {
-        companyContext += `### ${doc.filename}\n${doc.content}\n\n`;
-      }
+    if (oreNaviChunks.length > 0) {
+      companyContext += formatChunksForPrompt(oreNaviChunks, "俺ナビ専用ドキュメント");
     }
-    if (ragDocuments.length === 0) {
+    if (sharedChunks.length === 0 && oreNaviChunks.length === 0) {
       companyContext = "## 会社の文脈（RAGドキュメントより）\n\n（RAGドキュメントは未登録）\n\n";
     }
 

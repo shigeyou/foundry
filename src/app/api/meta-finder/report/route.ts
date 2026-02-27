@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { generateWithClaude } from "@/lib/claude";
 import { departments, deptContext } from "@/lib/meta-finder-prompt";
 import { getDeptFinancial, formatProfitLoss } from "@/config/department-financials";
+import { retrieveRelevantChunks, formatChunksForPrompt } from "@/lib/rag-retrieval";
 
 // 自動レポート生成のトリガー（バッチ完了時に呼び出す）
 export async function triggerReportGeneration(batchId: string): Promise<void> {
@@ -215,6 +216,9 @@ async function generateScopeReport(
     const avgProcess = (ideas.reduce((s, i) => s + i.process, 0) / totalCount).toFixed(1);
     const avgGrowth = (ideas.reduce((s, i) => s + i.growth, 0) / totalCount).toFixed(1);
 
+    // 全社スコープ専用の分析方針
+    const isCompanyWide = scope.id === "all";
+
     // アイデアをフォーマット（全社向けは簡潔版でプロンプトサイズを抑制）
     const ideasText = ideas.map((idea, idx) => {
       if (isCompanyWide) {
@@ -257,68 +261,45 @@ ${actions.length > 0 ? `アクション: ${actions.join(" / ")}` : ""}`;
 ${deptFinancial.budgetDeptName}は間接部門のため個別P/Lはありません。\n`;
     }
 
-    // RAGからエンゲージメントサーベイ関連ドキュメントを検索
-    const engagementDocs = await prisma.rAGDocument.findMany({
-      where: {
-        scope: { not: "orenavi" },
-        OR: [
-          { filename: { contains: "エンゲージメント" } },
-          { filename: { contains: "サーベイ" } },
-          { filename: { contains: "従業員満足" } },
-          { filename: { contains: "engagement" } },
-          { filename: { contains: "ES調査" } },
-          { filename: { contains: "組織診断" } },
-          { filename: { contains: "職場環境" } },
-        ],
-      },
-      select: { filename: true, content: true },
+    // RAG意味検索: エンゲージメント関連チャンクを取得
+    const engagementChunks = await retrieveRelevantChunks({
+      query: `${scope.name} エンゲージメント サーベイ 従業員満足度 組織診断 職場環境`,
+      scope: ["shared"],
+      deptIds: scope.id !== "all" ? [scope.id, "all"] : undefined,
+      docTypes: ["survey"],
+      topK: 15,
+      maxChars: isCompanyWide ? 8000 : 15000,
     });
+    const engagementContext = formatChunksForPrompt(
+      engagementChunks,
+      "エンゲージメントサーベイ・従業員調査データ",
+    );
 
-    let engagementContext = "";
-    if (engagementDocs.length > 0) {
-      const maxEngagementChars = isCompanyWide ? 8000 : 15000;
-      engagementContext = `\n## エンゲージメントサーベイ・従業員調査データ\n以下はRAGに格納されたエンゲージメント関連ドキュメントです。レポートの課題分析において、該当部門に関連するサーベイ結果を引用・参照してください。\n\n`;
-      let totalChars = 0;
-      for (const doc of engagementDocs) {
-        const text = doc.content.slice(0, maxEngagementChars - totalChars);
-        engagementContext += `### ${doc.filename}\n${text}\n\n`;
-        totalChars += text.length;
-        if (totalChars >= maxEngagementChars) break;
-      }
-    }
-
-    // CDIOメモ・組織関連ドキュメントを検索（経営視点の横断的課題認識）
-    const strategicDocs = await prisma.rAGDocument.findMany({
-      where: {
-        scope: { not: "orenavi" },
-        OR: [
-          { filename: { contains: "CDIO" } },
-          { filename: { contains: "組織図" } },
-          { filename: { contains: "事業計画" } },
-        ],
-      },
-      select: { filename: true, content: true },
+    // RAG意味検索: 経営戦略・組織関連チャンクを取得
+    const strategicChunks = await retrieveRelevantChunks({
+      query: `${scope.name} 経営戦略 組織体制 事業計画 経営課題`,
+      scope: ["shared"],
+      deptIds: scope.id !== "all" ? [scope.id, "all"] : undefined,
+      docTypes: ["strategy", "org"],
+      topK: 15,
+      maxChars: isCompanyWide ? 8000 : 15000,
     });
-
     let strategicContext = "";
-    if (strategicDocs.length > 0) {
-      const maxStrategicChars = isCompanyWide ? 8000 : 15000;
-      strategicContext = `\n## 経営戦略・組織関連ドキュメント\n以下は経営陣の課題認識・組織構造・事業計画に関する社内ドキュメントです。レポートの分析において、これらの情報を踏まえた提言を行ってください。\n**重要：これらのドキュメントの出典名・ファイル名をレポート本文中で言及しないでください。情報は自然に組み込んでください。**\n\n`;
-      let totalChars = 0;
-      for (const doc of strategicDocs) {
-        const label = doc.filename.includes("CDIO") ? "経営課題認識メモ"
-          : doc.filename.includes("組織図") ? "組織体制図"
-          : doc.filename.includes("事業計画") ? "中期事業計画"
-          : doc.filename;
-        const text = doc.content.slice(0, maxStrategicChars - totalChars);
-        strategicContext += `### ${label}\n${text}\n\n`;
-        totalChars += text.length;
-        if (totalChars >= maxStrategicChars) break;
-      }
+    if (strategicChunks.length > 0) {
+      strategicContext = "\n**重要：これらのドキュメントの出典名・ファイル名をレポート本文中で言及しないでください。情報は自然に組み込んでください。**\n\n";
+      strategicContext += formatChunksForPrompt(strategicChunks, "経営戦略・組織関連ドキュメント");
     }
 
-    // 全社スコープ専用の分析方針
-    const isCompanyWide = scope.id === "all";
+    // RAG意味検索: 予算・財務関連チャンクを取得
+    const budgetChunks = await retrieveRelevantChunks({
+      query: `${scope.name} 予算 営業利益 売上 FY26 損益 財務`,
+      scope: ["shared"],
+      deptIds: scope.id !== "all" ? [scope.id, "all"] : undefined,
+      docTypes: ["budget"],
+      topK: 15,
+      maxChars: isCompanyWide ? 8000 : 12000,
+    });
+    const budgetContext = formatChunksForPrompt(budgetChunks, "予算・財務関連データ");
 
     const prompt = `あなたは${isCompanyWide ? "CDIO直轄の経営戦略アドバイザー" : "経営企画部の分析担当"}です。メタファインダーで発見されたアイデア群を分析し、${scope.name}の経営レポートを日本語で作成してください。
 
@@ -349,6 +330,7 @@ ${financialContext}
 
 ## この部門の特徴
 ${deptCharacteristics || `${scope.name}は全社横断的な視点で課題を捉える対象です。`}
+${budgetContext}
 ${engagementContext}
 ${strategicContext}
 

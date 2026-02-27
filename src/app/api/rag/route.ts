@@ -5,6 +5,7 @@ import pdfParse from "pdf-parse";
 import mammoth from "mammoth";
 import JSZip from "jszip";
 import { parse as csvParse } from "csv-parse/sync";
+import { processDocument } from "@/lib/rag-ingest-pipeline";
 
 // PPTXからテキストを抽出
 async function extractTextFromPptx(buffer: Buffer): Promise<string> {
@@ -75,6 +76,10 @@ export async function POST(request: NextRequest) {
             data: { content: doc.content, fileType: doc.fileType, metadata: doc.metadata },
           });
           results.push({ id: existing.id, filename: doc.filename, action: "updated" });
+          // チャンク再処理（バックグラウンド）
+          processDocument(existing.id).catch(err =>
+            console.error(`[RAG API] チャンク処理エラー: ${doc.filename}`, err)
+          );
         } else {
           const created = await prisma.rAGDocument.create({
             data: {
@@ -86,6 +91,10 @@ export async function POST(request: NextRequest) {
             },
           });
           results.push({ id: created.id, filename: created.filename, action: "created" });
+          // チャンク処理（バックグラウンド）
+          processDocument(created.id).catch(err =>
+            console.error(`[RAG API] チャンク処理エラー: ${created.filename}`, err)
+          );
         }
       }
 
@@ -185,6 +194,11 @@ export async function POST(request: NextRequest) {
         metadata: Object.keys(metadata).length > 0 ? JSON.stringify(metadata) : null,
       },
     });
+
+    // チャンク処理（バックグラウンド）
+    processDocument(doc.id).catch(err =>
+      console.error(`[RAG API] チャンク処理エラー: ${filename}`, err)
+    );
 
     return NextResponse.json({
       success: true,
@@ -290,6 +304,8 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
+    // 関連チャンクも削除
+    await prisma.rAGChunk.deleteMany({ where: { documentId: id } });
     await prisma.rAGDocument.delete({
       where: { id },
     });

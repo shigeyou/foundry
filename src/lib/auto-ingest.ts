@@ -14,6 +14,7 @@ import mammoth from "mammoth";
 import JSZip from "jszip";
 import { parse as csvParse } from "csv-parse/sync";
 import { prisma } from "./db";
+import { processDocument } from "./rag-ingest-pipeline";
 
 // 設定
 const SUPPORTED_TYPES = ["pdf", "txt", "md", "json", "doc", "docx", "csv", "pptx", "msg", "eml", "urls"];
@@ -147,6 +148,10 @@ export async function syncWithManifest(): Promise<SyncResult> {
           });
           console.log(`[Auto-Ingest] 更新: ${filename}`);
           result.updated.push(filename);
+          // チャンク再処理（バックグラウンド）
+          processDocument(existing.id).catch(err =>
+            console.error(`[Auto-Ingest] チャンク処理エラー: ${filename}`, err)
+          );
         } else {
           // 新規 → create
           const docId = `rag-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -155,6 +160,10 @@ export async function syncWithManifest(): Promise<SyncResult> {
           });
           console.log(`[Auto-Ingest] 新規: ${filename}`);
           result.created.push(filename);
+          // チャンク処理（バックグラウンド）
+          processDocument(docId).catch(err =>
+            console.error(`[Auto-Ingest] チャンク処理エラー: ${filename}`, err)
+          );
         }
       } catch (error) {
         const msg = error instanceof Error ? error.message : String(error);
@@ -176,6 +185,8 @@ export async function syncWithManifest(): Promise<SyncResult> {
       if (currentFiles.has(doc.filename)) continue; // ディレクトリに存在する
 
       try {
+        // 関連チャンクも削除
+        await prisma.rAGChunk.deleteMany({ where: { documentId: doc.id } });
         await prisma.rAGDocument.delete({ where: { id: doc.id } });
         console.log(`[Auto-Ingest] 削除: ${doc.filename}`);
         result.deleted.push(doc.filename);

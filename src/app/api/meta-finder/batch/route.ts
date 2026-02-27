@@ -12,6 +12,7 @@ import {
 } from "@/lib/meta-finder-prompt";
 import { triggerReportGeneration } from "@/app/api/meta-finder/report/route";
 import { getFinancialSummaryForPrompt } from "@/config/department-financials";
+import { retrieveRelevantChunks, formatChunksForPrompt } from "@/lib/rag-retrieval";
 
 // 単一パターンの探索を実行（テーマ別視点・部門別文脈を注入）
 async function explorePattern(
@@ -19,12 +20,25 @@ async function explorePattern(
   themeName: string,
   deptId: string,
   deptName: string,
-  documentContext: string
+  baseContextStr: string
 ): Promise<DiscoveredNeed[]> {
   const themeAngle = themeAngles[themeId] || "";
   const deptCtx = deptContext[deptId] || "";
 
-  const userPrompt = `${documentContext}
+  // RAG意味検索: テーマ×部門に関連するチャンクを取得
+  const ragQuery = `${themeName} ${deptName} ${themeAngle.slice(0, 100)}`;
+  const ragChunks = await retrieveRelevantChunks({
+    query: ragQuery,
+    scope: ["shared"],
+    deptIds: deptId !== "all" ? [deptId, "all"] : undefined,
+    topK: 30,
+    maxChars: 20000,
+  });
+  const ragContext = formatChunksForPrompt(ragChunks, "RAGドキュメント（関連箇所）");
+
+  const userPrompt = `${baseContextStr}
+
+${ragContext}
 
 ## 追加の指示
 
@@ -88,56 +102,35 @@ async function runBatchInBackground(batchId: string) {
 
     console.log(`[MetaFinder Batch] Starting/Resuming: ${completedPatterns}/${batch.totalPatterns} done, ${completedSet.size} patterns in DB`);
 
-    // RAGドキュメントを取得（俺ナビ専用を除外）
-    const ragDocuments = await prisma.rAGDocument.findMany({
+    // RAGチャンクの有無を確認
+    const chunkCount = await prisma.rAGChunk.count({
       where: { scope: { not: "orenavi" } },
-      select: { filename: true, content: true },
     });
 
-    if (ragDocuments.length === 0) {
-      await prisma.metaFinderBatch.update({
-        where: { id: batchId },
-        data: { status: "failed", errors: JSON.stringify(["RAGドキュメントがありません"]) },
+    if (chunkCount === 0) {
+      // チャンクがなければ旧ドキュメントも確認
+      const docCount = await prisma.rAGDocument.count({
+        where: { scope: { not: "orenavi" } },
       });
-      return;
+      if (docCount === 0) {
+        await prisma.metaFinderBatch.update({
+          where: { id: batchId },
+          data: { status: "failed", errors: JSON.stringify(["RAGドキュメントがありません"]) },
+        });
+        return;
+      }
     }
 
-    // 予算ドキュメントを優先配置
-    const RAG_CONTEXT_BUDGET = 50000;
-    const budgetDocs = ragDocuments.filter(d =>
-      d.filename.includes("予算") || d.filename.includes("取締役会議案書") || d.filename.includes("RAG補足情報")
-    );
-    const otherDocs = ragDocuments.filter(d => !budgetDocs.includes(d));
-
-    let documentContext = "## 【最重要】FY26期初予算・財務データ\n\n";
-    documentContext += "以下の予算データは最も重要な参照資料です。探索においては各部門の財務状況を最優先で考慮してください。\n";
-    documentContext += "※FY25は着地見込み（未確定）、FY26は期初予算（予測値）であり、いずれも実績確定値ではありません。\n\n";
-
-    // 予算ドキュメント: 全文注入（最大15,000文字）
-    for (const doc of budgetDocs) {
-      // ファイル名を匿名化
-      const label = doc.filename.includes("RAG補足情報") ? "経営課題補足情報"
-        : doc.filename;
-      documentContext += `### ${label}\n${doc.content.slice(0, 15000)}\n\n`;
-    }
-
-    // 静的財務サマリーも追加
-    documentContext += getFinancialSummaryForPrompt();
-
-    // その他ドキュメント: 残り予算で均等配分
-    documentContext += "\n\n## その他の分析対象ドキュメント\n\n";
-    const remainingBudget = RAG_CONTEXT_BUDGET - documentContext.length;
-    const charsPerOtherDoc = otherDocs.length > 0
-      ? Math.max(500, Math.min(2000, Math.floor(remainingBudget / otherDocs.length)))
-      : 0;
-    for (const doc of otherDocs) {
-      documentContext += `### ${doc.filename}\n${doc.content.slice(0, charsPerOtherDoc)}\n\n`;
-    }
+    // 静的財務サマリー（常に注入）
+    let baseContext = "## 【最重要】FY26期初予算・財務データ\n\n";
+    baseContext += "以下の予算データは最も重要な参照資料です。探索においては各部門の財務状況を最優先で考慮してください。\n";
+    baseContext += "※FY25は着地見込み（未確定）、FY26は期初予算（予測値）であり、いずれも実績確定値ではありません。\n\n";
+    baseContext += getFinancialSummaryForPrompt();
 
     // SWOT分析結果を取得・注入
     const swot = await prisma.defaultSwot.findFirst();
     if (swot) {
-      documentContext += `## SWOT分析（自社の戦略的位置づけ）
+      baseContext += `\n\n## SWOT分析（自社の戦略的位置づけ）
 
 ### 強み（Strengths）
 ${swot.strengths}
@@ -213,7 +206,7 @@ ${swot.summary ? `\n### SWOT総括\n${swot.summary}` : ""}
 
         try {
           const needs = await explorePattern(
-            theme.id, theme.label, dept.id, dept.label, documentContext
+            theme.id, theme.label, dept.id, dept.label, baseContext
           );
 
           for (const need of needs) {
