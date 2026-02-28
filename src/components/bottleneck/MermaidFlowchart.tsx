@@ -6,21 +6,35 @@ interface MermaidFlowchartProps {
   code: string;
   onNodeClick?: (nodeId: string) => void;
   className?: string;
+  /** Height in px. Default 500 */
+  height?: number;
+  /** Hide zoom controls for compact display */
+  compact?: boolean;
+  /** Label shown above the chart */
+  label?: string;
+  /** Label color class */
+  labelColor?: string;
 }
 
-export function MermaidFlowchart({ code, onNodeClick, className }: MermaidFlowchartProps) {
+export function MermaidFlowchart({
+  code,
+  onNodeClick,
+  className,
+  height = 500,
+  compact = false,
+  label,
+  labelColor,
+}: MermaidFlowchartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
   const [svg, setSvg] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [scale, setScale] = useState(1);
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const [scrollStart, setScrollStart] = useState({ x: 0, y: 0 });
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const dragRef = useRef<{ startX: number; startY: number; panX: number; panY: number } | null>(null);
 
   useEffect(() => {
     if (!code) return;
-
     let cancelled = false;
 
     async function renderMermaid() {
@@ -44,7 +58,7 @@ export function MermaidFlowchart({ code, onNodeClick, className }: MermaidFlowch
           securityLevel: "loose",
         });
 
-        const id = `mermaid-${Date.now()}`;
+        const id = `mermaid-${Date.now()}-${Math.random().toString(36).slice(2)}`;
         const { svg: renderedSvg } = await mermaid.render(id, code);
         if (!cancelled) {
           setSvg(renderedSvg);
@@ -62,77 +76,96 @@ export function MermaidFlowchart({ code, onNodeClick, className }: MermaidFlowch
     return () => { cancelled = true; };
   }, [code]);
 
-  // Auto-fit on first render
-  useEffect(() => {
-    if (!svg || !viewportRef.current) return;
-    const svgEl = viewportRef.current.querySelector("svg");
-    if (!svgEl) return;
-
-    const svgW = svgEl.getBoundingClientRect().width;
-    const containerW = viewportRef.current.clientWidth;
-    if (svgW > 0 && containerW > 0) {
-      const fitScale = Math.min(containerW / svgW, 1);
-      setScale(Math.max(fitScale, 0.3));
-    }
-  }, [svg]);
-
-  const zoom = useCallback((delta: number) => {
-    setScale((s) => Math.min(Math.max(s + delta, 0.2), 2));
-  }, []);
-
+  // Auto-fit on render
   const fitToView = useCallback(() => {
     if (!viewportRef.current) return;
     const svgEl = viewportRef.current.querySelector("svg");
     if (!svgEl) return;
-    // Reset scale to 1 temporarily to get natural size
-    setScale(1);
+
+    const svgRect = svgEl.getBoundingClientRect();
+    const vpW = viewportRef.current.clientWidth;
+    const vpH = viewportRef.current.clientHeight;
+    // Get natural SVG size (at current scale)
+    const naturalW = svgRect.width / scale;
+    const naturalH = svgRect.height / scale;
+    if (naturalW > 0 && vpW > 0) {
+      const fitScale = Math.min(vpW / naturalW, vpH / naturalH, 1) * 0.95;
+      const newScale = Math.max(fitScale, 0.15);
+      // Center the content
+      const scaledW = naturalW * newScale;
+      const scaledH = naturalH * newScale;
+      setPan({
+        x: Math.max(0, (vpW - scaledW) / 2),
+        y: Math.max(0, (vpH - scaledH) / 2),
+      });
+      setScale(newScale);
+    }
+  }, [scale]);
+
+  // Auto-fit on first SVG render
+  useEffect(() => {
+    if (!svg || !viewportRef.current) return;
+    // Wait for DOM update
     requestAnimationFrame(() => {
       if (!viewportRef.current) return;
-      const svgW = svgEl.getBoundingClientRect().width;
-      const svgH = svgEl.getBoundingClientRect().height;
-      const containerW = viewportRef.current.clientWidth;
-      const containerH = viewportRef.current.clientHeight;
-      if (svgW > 0 && containerW > 0) {
-        const fitScale = Math.min(containerW / svgW, containerH / svgH, 1);
-        setScale(Math.max(fitScale, 0.2));
+      const svgEl = viewportRef.current.querySelector("svg");
+      if (!svgEl) return;
+      const svgRect = svgEl.getBoundingClientRect();
+      const vpW = viewportRef.current.clientWidth;
+      const vpH = viewportRef.current.clientHeight;
+      if (svgRect.width > 0 && vpW > 0) {
+        const fitScale = Math.min(vpW / svgRect.width, vpH / svgRect.height, 1) * 0.95;
+        const newScale = Math.max(fitScale, 0.15);
+        const scaledW = svgRect.width * newScale;
+        const scaledH = svgRect.height * newScale;
+        setPan({
+          x: Math.max(0, (vpW - scaledW) / 2),
+          y: Math.max(0, (vpH - scaledH) / 2),
+        });
+        setScale(newScale);
       }
     });
+  }, [svg]);
+
+  const zoom = useCallback((delta: number) => {
+    setScale((s) => Math.min(Math.max(s + delta, 0.15), 2.5));
   }, []);
 
-  // Mouse drag to pan
+  // Mouse drag to pan (no scrollbars)
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (e.button !== 0) return;
-    const vp = viewportRef.current;
-    if (!vp) return;
-    setIsDragging(true);
-    setDragStart({ x: e.clientX, y: e.clientY });
-    setScrollStart({ x: vp.scrollLeft, y: vp.scrollTop });
-  }, []);
+    e.preventDefault();
+    dragRef.current = { startX: e.clientX, startY: e.clientY, panX: pan.x, panY: pan.y };
+  }, [pan]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!isDragging || !viewportRef.current) return;
-    const dx = e.clientX - dragStart.x;
-    const dy = e.clientY - dragStart.y;
-    viewportRef.current.scrollLeft = scrollStart.x - dx;
-    viewportRef.current.scrollTop = scrollStart.y - dy;
-  }, [isDragging, dragStart, scrollStart]);
-
-  const handleMouseUp = useCallback(() => {
-    setIsDragging(false);
+    if (!dragRef.current) return;
+    const dx = e.clientX - dragRef.current.startX;
+    const dy = e.clientY - dragRef.current.startY;
+    setPan({ x: dragRef.current.panX + dx, y: dragRef.current.panY + dy });
   }, []);
 
-  // Wheel zoom
+  const handleMouseUp = useCallback(() => {
+    dragRef.current = null;
+  }, []);
+
+  // Wheel: zoom (no modifier needed), or pan with shift
   const handleWheel = useCallback((e: React.WheelEvent) => {
+    e.preventDefault();
     if (e.ctrlKey || e.metaKey) {
-      e.preventDefault();
-      const delta = e.deltaY > 0 ? -0.1 : 0.1;
-      setScale((s) => Math.min(Math.max(s + delta, 0.2), 2));
+      // Pinch zoom
+      const delta = e.deltaY > 0 ? -0.08 : 0.08;
+      setScale((s) => Math.min(Math.max(s + delta, 0.15), 2.5));
+    } else {
+      // Pan
+      setPan((p) => ({ x: p.x - e.deltaX, y: p.y - e.deltaY }));
     }
   }, []);
 
   // Click handler for nodes
   const handleClick = useCallback((e: React.MouseEvent) => {
     if (!onNodeClick) return;
+    // Skip if was dragging
     const target = e.target as HTMLElement;
     let el: HTMLElement | null = target;
     while (el && el !== containerRef.current) {
@@ -151,7 +184,7 @@ export function MermaidFlowchart({ code, onNodeClick, className }: MermaidFlowch
     return (
       <div className={`p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 ${className || ""}`}>
         <p className="text-sm text-red-600 dark:text-red-400 font-medium">フローチャートの描画エラー</p>
-        <pre className="text-xs text-red-500 mt-2 overflow-auto">{error}</pre>
+        <pre className="text-xs text-red-500 mt-2 whitespace-pre-wrap">{error}</pre>
       </div>
     );
   }
@@ -166,34 +199,31 @@ export function MermaidFlowchart({ code, onNodeClick, className }: MermaidFlowch
 
   return (
     <div ref={containerRef} className={className || ""}>
-      {/* Zoom controls */}
-      <div className="flex items-center gap-1 mb-2">
-        <button
-          onClick={() => zoom(0.15)}
-          className="px-2 py-1 text-xs bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded transition-colors font-mono"
-          title="ズームイン"
-        >
-          +
-        </button>
-        <button
-          onClick={() => zoom(-0.15)}
-          className="px-2 py-1 text-xs bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded transition-colors font-mono"
-          title="ズームアウト"
-        >
-          -
-        </button>
-        <button
-          onClick={fitToView}
-          className="px-2 py-1 text-xs bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded transition-colors"
-          title="全体表示"
-        >
-          全体
-        </button>
-        <span className="text-xs text-slate-400 ml-1">{Math.round(scale * 100)}%</span>
-        <span className="text-xs text-slate-400 ml-auto">Ctrl+ホイールでズーム / ドラッグで移動</span>
+      {/* Header: label + controls */}
+      <div className="flex items-center gap-1 mb-1">
+        {label && (
+          <span className={`text-xs font-semibold mr-2 ${labelColor || "text-slate-600 dark:text-slate-300"}`}>
+            {label}
+          </span>
+        )}
+        {!compact && (
+          <>
+            <button onClick={() => zoom(0.15)} className="px-1.5 py-0.5 text-xs bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded font-mono" title="ズームイン">+</button>
+            <button onClick={() => zoom(-0.15)} className="px-1.5 py-0.5 text-xs bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded font-mono" title="ズームアウト">-</button>
+            <button onClick={fitToView} className="px-1.5 py-0.5 text-xs bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded" title="全体表示">全体</button>
+            <span className="text-xs text-slate-400 ml-1">{Math.round(scale * 100)}%</span>
+          </>
+        )}
+        {compact && (
+          <>
+            <button onClick={() => zoom(0.15)} className="px-1 py-0.5 text-[10px] bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded font-mono">+</button>
+            <button onClick={() => zoom(-0.15)} className="px-1 py-0.5 text-[10px] bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded font-mono">-</button>
+            <button onClick={fitToView} className="px-1 py-0.5 text-[10px] bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded">全体</button>
+          </>
+        )}
       </div>
 
-      {/* Scrollable viewport */}
+      {/* Canvas viewport — no scrollbars */}
       <div
         ref={viewportRef}
         onMouseDown={handleMouseDown}
@@ -202,19 +232,18 @@ export function MermaidFlowchart({ code, onNodeClick, className }: MermaidFlowch
         onMouseLeave={handleMouseUp}
         onWheel={handleWheel}
         onClick={handleClick}
-        className="overflow-auto border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900"
+        className="overflow-hidden border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 select-none"
         style={{
-          height: "500px",
-          cursor: isDragging ? "grabbing" : "grab",
+          height: `${height}px`,
+          cursor: dragRef.current ? "grabbing" : "grab",
         }}
       >
         <div
           style={{
-            transform: `scale(${scale})`,
+            transform: `translate(${pan.x}px, ${pan.y}px) scale(${scale})`,
             transformOrigin: "top left",
             display: "inline-block",
-            padding: "20px",
-            minWidth: "100%",
+            willChange: "transform",
           }}
           dangerouslySetInnerHTML={{ __html: svg }}
         />

@@ -69,7 +69,7 @@ export default function BottleneckWorkspacePage() {
   const [afterMermaidCode, setAfterMermaidCode] = useState<string | null>(null);
   const [afterChanges, setAfterChanges] = useState<AfterChange[]>([]);
   const [afterSummary, setAfterSummary] = useState<string | null>(null);
-  const [showAfter, setShowAfter] = useState(false);
+
 
   const fetchProject = useCallback(async () => {
     try {
@@ -273,7 +273,7 @@ export default function BottleneckWorkspacePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 text-slate-900 dark:text-white">
-      <div className="max-w-6xl mx-auto px-6 py-8">
+      <div className="max-w-[1600px] mx-auto px-6 py-8">
         {/* Header */}
         <div className="flex items-center gap-4 mb-6">
           <Link
@@ -370,147 +370,138 @@ export default function BottleneckWorkspacePage() {
             <div className="space-y-4">
               {flowData ? (
                 <>
-                  {/* Before/After toggle */}
-                  {afterMermaidCode && (
-                    <div className="flex items-center gap-2 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-3">
-                      <button
-                        onClick={() => setShowAfter(false)}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                          !showAfter
-                            ? "bg-orange-500 text-white shadow-md"
-                            : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700"
-                        }`}
-                      >
-                        Before（現状）
-                      </button>
-                      <button
-                        onClick={() => setShowAfter(true)}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                          showAfter
-                            ? "bg-green-500 text-white shadow-md"
-                            : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700"
-                        }`}
-                      >
-                        After（改善後）
-                      </button>
-                      {afterSummary && (
-                        <span className="ml-auto text-xs text-slate-500 dark:text-slate-400 max-w-md truncate">
-                          {afterSummary}
-                        </span>
-                      )}
+                  {/* Legend bar */}
+                  <div className="flex flex-wrap items-center gap-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-2 text-xs">
+                    <span className="font-semibold text-slate-600 dark:text-slate-300">凡例:</span>
+                    <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-red-500" /> 重大</span>
+                    <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-orange-500" /> 高リスク</span>
+                    <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-yellow-500" /> 中程度</span>
+                    <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-green-500" /> 自動化済み</span>
+                    {afterMermaidCode && (
+                      <>
+                        <span className="text-slate-300 dark:text-slate-600">|</span>
+                        <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-blue-500" /> 半自動</span>
+                      </>
+                    )}
+                    <span className="ml-auto text-slate-400">ドラッグで移動 / Ctrl+ホイールでズーム</span>
+                  </div>
+
+                  {/* Side-by-side flowcharts */}
+                  {afterMermaidCode ? (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                      {/* Before */}
+                      <div className="bg-white dark:bg-slate-800 rounded-xl border-2 border-orange-200 dark:border-orange-800 p-3">
+                        <MermaidFlowchart
+                          code={flowData.mermaidCode}
+                          onNodeClick={handleNodeClick}
+                          height={550}
+                          label="Before（現状）"
+                          labelColor="text-orange-600 dark:text-orange-400"
+                        />
+                      </div>
+                      {/* After */}
+                      <div className="bg-white dark:bg-slate-800 rounded-xl border-2 border-green-200 dark:border-green-800 p-3">
+                        <MermaidFlowchart
+                          code={afterMermaidCode}
+                          height={550}
+                          label="After（改善後）"
+                          labelColor="text-green-600 dark:text-green-400"
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    /* Before only (full width) */
+                    <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
+                      <MermaidFlowchart
+                        code={flowData.mermaidCode}
+                        onNodeClick={handleNodeClick}
+                        height={550}
+                      />
                     </div>
                   )}
 
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                    <div className="lg:col-span-2 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 overflow-auto">
-                      <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">
-                        {showAfter ? "改善後フロー" : "現状フロー"}
-                      </h3>
-                      <div className="flex flex-wrap gap-3 mb-4 text-xs">
-                        {showAfter ? (
-                          <>
-                            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-green-500" /> 自動化</span>
-                            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-blue-500" /> 半自動</span>
-                            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-orange-500" /> 手動（残存）</span>
-                          </>
-                        ) : (
-                          <>
-                            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-green-500" /> 自動化済み</span>
-                            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-yellow-500" /> 中程度</span>
-                            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-orange-500" /> 高リスク</span>
-                            <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-red-500" /> 重大</span>
-                          </>
-                        )}
-                      </div>
-                      <MermaidFlowchart
-                        code={showAfter && afterMermaidCode ? afterMermaidCode : flowData.mermaidCode}
-                        onNodeClick={showAfter ? undefined : handleNodeClick}
-                        className="min-h-[300px]"
-                      />
-                    </div>
-                    <div>
-                      {showAfter ? (
-                        /* After: changes list */
-                        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
-                          <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">
-                            改善内容 ({afterChanges.length}件)
-                          </h4>
-                          {afterSummary && (
-                            <p className="text-sm text-slate-600 dark:text-slate-400 mb-3 pb-3 border-b border-slate-200 dark:border-slate-700">
-                              {afterSummary}
-                            </p>
-                          )}
-                          <div className="space-y-2 max-h-[400px] overflow-y-auto">
-                            {afterChanges.map((c, i) => (
-                              <div key={i} className="px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-700/50 text-sm">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${
-                                    c.change === "automated" ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400" :
-                                    c.change === "eliminated" ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400" :
-                                    c.change === "simplified" ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400" :
-                                    c.change === "merged" ? "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400" :
-                                    "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400"
-                                  }`}>
-                                    {c.change === "automated" ? "自動化" :
-                                     c.change === "eliminated" ? "廃止" :
-                                     c.change === "simplified" ? "簡素化" :
-                                     c.change === "merged" ? "統合" : "追加"}
-                                  </span>
-                                  <span className="text-xs text-slate-400">{c.beforeNodeId}</span>
-                                </div>
-                                <p className="text-slate-600 dark:text-slate-300">{c.description}</p>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
+                  {/* Bottom panels: node detail + changes */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    {/* Left: Node detail + step list */}
+                    <div className="space-y-3">
+                      {selectedNode ? (
+                        <NodeDetailPanel
+                          node={selectedNode}
+                          onClose={() => setSelectedNode(null)}
+                        />
                       ) : (
-                        <>
-                          {selectedNode ? (
-                            <NodeDetailPanel
-                              node={selectedNode}
-                              onClose={() => setSelectedNode(null)}
-                            />
-                          ) : (
-                            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 text-center">
-                              <p className="text-sm text-slate-500 dark:text-slate-400">
-                                ノードをクリックすると詳細が表示されます
-                              </p>
-                            </div>
-                          )}
-
-                          {/* Node list */}
-                          <div className="mt-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
-                            <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                              ステップ一覧 ({nodes.length})
-                            </h4>
-                            <div className="space-y-1 max-h-[300px] overflow-y-auto">
-                              {nodes.map((n) => (
-                                <button
-                                  key={n.id}
-                                  onClick={() => setSelectedNode(n)}
-                                  className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                                    selectedNode?.id === n.id
-                                      ? "bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800"
-                                      : "hover:bg-slate-50 dark:hover:bg-slate-700/50"
-                                  }`}
-                                >
-                                  <div className="flex items-center gap-2">
-                                    <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                                      n.severity === "critical" ? "bg-red-500" :
-                                      n.severity === "high" ? "bg-orange-500" :
-                                      n.severity === "medium" ? "bg-yellow-500" :
-                                      n.severity === "low" ? "bg-green-400" :
-                                      "bg-slate-300"
-                                    }`} />
-                                    <span className="truncate text-slate-700 dark:text-slate-300">{n.label}</span>
-                                  </div>
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        </>
+                        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 text-center">
+                          <p className="text-sm text-slate-500 dark:text-slate-400">
+                            Beforeフローのノードをクリックすると詳細が表示されます
+                          </p>
+                        </div>
                       )}
+                      <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
+                        <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                          ステップ一覧 ({nodes.length})
+                        </h4>
+                        <div className="space-y-1 max-h-[250px] overflow-y-auto">
+                          {nodes.map((n) => (
+                            <button
+                              key={n.id}
+                              onClick={() => setSelectedNode(n)}
+                              className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                                selectedNode?.id === n.id
+                                  ? "bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800"
+                                  : "hover:bg-slate-50 dark:hover:bg-slate-700/50"
+                              }`}
+                            >
+                              <div className="flex items-center gap-2">
+                                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                                  n.severity === "critical" ? "bg-red-500" :
+                                  n.severity === "high" ? "bg-orange-500" :
+                                  n.severity === "medium" ? "bg-yellow-500" :
+                                  n.severity === "low" ? "bg-green-400" :
+                                  "bg-slate-300"
+                                }`} />
+                                <span className="truncate text-slate-700 dark:text-slate-300">{n.label}</span>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                     </div>
+
+                    {/* Right: After changes */}
+                    {afterChanges.length > 0 && (
+                      <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
+                        <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">
+                          改善内容 ({afterChanges.length}件)
+                        </h4>
+                        {afterSummary && (
+                          <p className="text-sm text-slate-600 dark:text-slate-400 mb-3 pb-3 border-b border-slate-200 dark:border-slate-700">
+                            {afterSummary}
+                          </p>
+                        )}
+                        <div className="space-y-2 max-h-[350px] overflow-y-auto">
+                          {afterChanges.map((c, i) => (
+                            <div key={i} className="px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-700/50 text-sm">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${
+                                  c.change === "automated" ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400" :
+                                  c.change === "eliminated" ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400" :
+                                  c.change === "simplified" ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400" :
+                                  c.change === "merged" ? "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400" :
+                                  "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400"
+                                }`}>
+                                  {c.change === "automated" ? "自動化" :
+                                   c.change === "eliminated" ? "廃止" :
+                                   c.change === "simplified" ? "簡素化" :
+                                   c.change === "merged" ? "統合" : "追加"}
+                                </span>
+                                <span className="text-xs text-slate-400">{c.beforeNodeId}</span>
+                              </div>
+                              <p className="text-slate-600 dark:text-slate-300">{c.description}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </>
               ) : (
