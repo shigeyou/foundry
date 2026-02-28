@@ -14,11 +14,28 @@ interface ToolsData {
 
 const appTypes = [
   {
-    key: "kachisuji" as const,
+    key: "avatar" as const,
+    icon: "🤖",
+    label: "AIアバターアシスタント",
+    description: "VRアバターとのAI会話",
+    gradient: "from-teal-500 via-cyan-500 to-sky-500",
+    lightBg: "bg-teal-100 dark:bg-teal-500/10",
+    cardBg: "bg-teal-50 dark:bg-slate-900/80",
+    border: "border-teal-200 dark:border-teal-500/30",
+    shadow: "shadow-teal-200/50 dark:shadow-teal-500/20",
+    textColor: "text-teal-700 dark:text-teal-300",
+    externalItems: [
+      {
+        label: "ライフ・ナビ",
+        description: "VRアバターとのAI会話",
+        gradient: "from-teal-500 via-cyan-500 to-sky-500",
+      },
+    ],
+  },
+  {
+    key: "finder" as const,
     icon: "🔍",
     label: "ファインダー型",
-    buttonLabel: "勝ち筋ファインダー",
-    buttonDescription: "企業の課題と勝ち筋をAIで探索",
     description: "データや情報を探索・発見",
     gradient: "from-blue-500 via-blue-600 to-indigo-600",
     lightBg: "bg-blue-100 dark:bg-blue-500/10",
@@ -26,7 +43,20 @@ const appTypes = [
     border: "border-blue-200 dark:border-blue-500/30",
     shadow: "shadow-blue-200/50 dark:shadow-blue-500/20",
     textColor: "text-blue-700 dark:text-blue-300",
-    directHref: "/meta-finder",
+    items: [
+      {
+        label: "勝ち筋ファインダー",
+        description: "企業の課題と勝ち筋をAIで探索",
+        href: "/meta-finder",
+        gradient: "from-blue-500 via-blue-600 to-indigo-600",
+      },
+      {
+        label: "ボトルネックファインダー",
+        description: "業務フローを分析し、自動化可能なボトルネックを発見",
+        href: "/bottleneck",
+        gradient: "from-blue-500 via-blue-600 to-indigo-600",
+      },
+    ],
   },
   {
     key: "drafter" as const,
@@ -196,9 +226,11 @@ export default function FoundryDashboard() {
           </div>
 
           {/* App Type Cards */}
-          <div className="grid md:grid-cols-3 gap-6 mb-16">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
             {appTypes.map((type, index) => {
-              const apps = "directHref" in type ? [] : getAppsForType(type.key as "drafter" | "simulator");
+              const hasItems = "items" in type && type.items;
+              const hasExternalItems = "externalItems" in type && type.externalItems;
+              const apps = (hasItems || hasExternalItems) ? [] : getAppsForType(type.key as "drafter" | "simulator");
               return (
                 <div
                   key={type.key}
@@ -212,21 +244,47 @@ export default function FoundryDashboard() {
                     </div>
 
                     <div className="relative space-y-3 min-h-[120px]">
-                      {"directHref" in type ? (
-                        <Link
-                          href={type.directHref!}
-                          className={`block px-4 py-4 bg-gradient-to-r ${type.gradient} rounded-xl shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 group/item`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <span className="text-base font-bold text-white">{"buttonLabel" in type ? (type as any).buttonLabel : type.label}</span>
-                            <svg className="w-5 h-5 text-white/70 group-hover/item:text-white group-hover/item:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                            </svg>
-                          </div>
-                          {"buttonDescription" in type && (type as any).buttonDescription && (
-                            <p className="text-xs text-white/70 mt-1">{(type as any).buttonDescription}</p>
-                          )}
-                        </Link>
+                      {hasExternalItems ? (
+                        type.externalItems!.map((item) => (
+                          kaedeUrl ? (
+                            <a
+                              key={item.label}
+                              href={kaedeUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={`block px-4 py-4 bg-gradient-to-r ${item.gradient} rounded-xl shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 group/item`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <span className="text-base font-bold text-white">{item.label}</span>
+                                <svg className="w-5 h-5 text-white/70 group-hover/item:text-white group-hover/item:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                </svg>
+                              </div>
+                              <p className="text-xs text-white/70 mt-1">{item.description}</p>
+                            </a>
+                          ) : (
+                            <div key={item.label} className="flex flex-col items-center justify-center py-8 text-center">
+                              <p className="text-sm text-slate-400 dark:text-slate-500">URL未設定</p>
+                              <p className="text-xs text-slate-300 dark:text-slate-600 mt-1">NEXT_PUBLIC_KAEDE_URL</p>
+                            </div>
+                          )
+                        ))
+                      ) : hasItems ? (
+                        type.items!.map((item) => (
+                          <Link
+                            key={item.href}
+                            href={item.href}
+                            className={`block px-4 py-4 bg-gradient-to-r ${item.gradient} rounded-xl shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 group/item`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="text-base font-bold text-white">{item.label}</span>
+                              <svg className="w-5 h-5 text-white/70 group-hover/item:text-white group-hover/item:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                              </svg>
+                            </div>
+                            <p className="text-xs text-white/70 mt-1">{item.description}</p>
+                          </Link>
+                        ))
                       ) : loading ? (
                         <div className="flex items-center justify-center py-8">
                           <div className="w-6 h-6 border-2 border-slate-300 dark:border-slate-600 border-t-slate-600 dark:border-t-slate-300 rounded-full animate-spin" />
@@ -268,40 +326,6 @@ export default function FoundryDashboard() {
             })}
           </div>
 
-          {/* 連携アプリ */}
-          <div className="mb-8">
-            <div className="grid md:grid-cols-3 gap-6">
-              <div className="relative bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 transition-all duration-500 hover:shadow-xl">
-                <div className="flex items-center gap-2 mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
-                  <span className="text-2xl">🤖</span>
-                  <span className="text-sm font-semibold text-teal-700 dark:text-teal-300 tracking-wide">AIアバターアシスタント</span>
-                </div>
-                <div className="space-y-3 min-h-[80px]">
-                  {kaedeUrl ? (
-                    <a
-                      href={kaedeUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block px-4 py-4 bg-gradient-to-r from-teal-500 via-cyan-500 to-sky-500 rounded-xl shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 group/item"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-base font-bold text-white">ライフ・ナビ</span>
-                        <svg className="w-5 h-5 text-white/70 group-hover/item:text-white group-hover/item:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                        </svg>
-                      </div>
-                      <p className="text-xs text-white/70 mt-1">VRアバターとのAI会話</p>
-                    </a>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center py-6 text-center">
-                      <p className="text-sm text-slate-400 dark:text-slate-500">URL未設定</p>
-                      <p className="text-xs text-slate-300 dark:text-slate-600 mt-1">NEXT_PUBLIC_KAEDE_URL</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
 
         </div>
       </header>

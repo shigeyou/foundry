@@ -36,6 +36,7 @@
     "jspdf": "^2.5.2",
     "jszip": "^3.10.1",
     "mammoth": "^1.9.0",
+    "mermaid": "^11.12.3",
     "microsoft-cognitiveservices-speech-sdk": "^1.47.0",
     "msgreader": "^1.0.1",
     "next": "16.1.4",

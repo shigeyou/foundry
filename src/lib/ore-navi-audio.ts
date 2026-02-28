@@ -117,12 +117,10 @@ class OreNaviAudioManager {
 
       // 現在再生中の音声を停止し、同じセクションから新速度で再開
       if (this.audio && !this.audio.paused) {
-        // 再生中: 現在のセクションを中断→再生成→再開
         this.audio.pause();
         this.audio.src = "";
         this.speedChangeRestart();
       } else {
-        // 一時停止中: バックグラウンドで再生成のみ（再開時に新速度音声が使われる）
         this.regenerateFromCurrentSection();
       }
     }
@@ -130,9 +128,7 @@ class OreNaviAudioManager {
 
   // 速度変更後の再開処理
   private async speedChangeRestart() {
-    // 現在のセクション以降を再生成
     await this.regenerateFromCurrentSection();
-    // 再生が停止されていなければ、現在のセクションから再開
     if (!this.stopRequested && this.sections.length > 0) {
       await this.streamingPlayback();
     }

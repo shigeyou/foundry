@@ -384,3 +384,80 @@ model MetaFinderChat {
 
   @@index([ideaId])
 }
+
+// ボトルネックファインダー プロジェクト
+model BottleneckProject {
+  id         String   @id
+  name       String
+  department String?
+  description String?
+  status     String   @default("draft") // draft, analyzing, completed
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  documents  BottleneckDocument[]
+  flows      BottleneckFlow[]
+  reports    BottleneckReport[]
+  chats      BottleneckChat[]
+
+  @@index([status])
+}
+
+// ボトルネックファインダー ドキュメント
+model BottleneckDocument {
+  id        String   @id
+  projectId String
+  filename  String
+  fileType  String
+  content   String
+  metadata  String?
+  createdAt DateTime @default(now())
+
+  project   BottleneckProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+// ボトルネックファインダー 業務フロー
+model BottleneckFlow {
+  id          String   @id
+  projectId   String
+  mermaidCode      String
+  nodesJson        String   // JSON: BottleneckNode[]
+  edgesJson        String   // JSON: BottleneckEdge[]
+  afterMermaidCode String?  // 改善後フローのMermaidコード
+  afterChangesJson String?  // JSON: 改善内容の差分一覧
+  afterSummary     String?  // 改善の全体像サマリー
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project     BottleneckProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+// ボトルネックファインダー 分析レポート
+model BottleneckReport {
+  id        String   @id
+  projectId String
+  sections  String   // JSON: BottleneckReportSections
+  status    String   @default("pending") // pending, generating, completed, failed
+  error     String?
+  createdAt DateTime @default(now())
+
+  project   BottleneckProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+// ボトルネックファインダー チャット
+model BottleneckChat {
+  id        String   @id @default(cuid())
+  projectId String
+  messages  String   // JSON: [{role, content}]
+  createdAt DateTime @default(now())
+
+  project   BottleneckProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
