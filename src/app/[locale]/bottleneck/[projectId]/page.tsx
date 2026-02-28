@@ -8,6 +8,7 @@ import { MermaidFlowchart } from "@/components/bottleneck/MermaidFlowchart";
 import { NodeDetailPanel } from "@/components/bottleneck/NodeDetailPanel";
 import { BottleneckReportView } from "@/components/bottleneck/BottleneckReportView";
 import type { BottleneckNode, BottleneckEdge, BottleneckReportSections } from "@/lib/bottleneck-types";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 type Tab = "upload" | "flow" | "report";
 
@@ -292,13 +293,16 @@ export default function BottleneckWorkspacePage() {
               )}
             </div>
           </div>
-          <button
-            onClick={startAnalysis}
-            disabled={analyzing || project._count.documents === 0}
-            className="px-5 py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 disabled:from-slate-300 disabled:to-slate-400 dark:disabled:from-slate-600 dark:disabled:to-slate-700 text-white rounded-lg font-medium shadow-md hover:shadow-lg transition-all disabled:cursor-not-allowed"
-          >
-            {analyzing ? "分析中..." : "AI分析を実行"}
-          </button>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <button
+              onClick={startAnalysis}
+              disabled={analyzing || project._count.documents === 0}
+              className="px-5 py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 disabled:from-slate-300 disabled:to-slate-400 dark:disabled:from-slate-600 dark:disabled:to-slate-700 text-white rounded-lg font-medium shadow-md hover:shadow-lg transition-all disabled:cursor-not-allowed"
+            >
+              {analyzing ? "分析中..." : "AI分析を実行"}
+            </button>
+          </div>
         </div>
 
         {/* Analysis progress bar */}

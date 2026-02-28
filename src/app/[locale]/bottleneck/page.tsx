@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Link } from "@/i18n/navigation";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 interface Project {
   id: string;
@@ -104,12 +105,15 @@ export default function BottleneckProjectsPage() {
               </p>
             </div>
           </div>
-          <button
-            onClick={() => setShowCreate(true)}
-            className="px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg font-medium shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all"
-          >
-            + 新規プロジェクト
-          </button>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <button
+              onClick={() => setShowCreate(true)}
+              className="px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg font-medium shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all"
+            >
+              + 新規プロジェクト
+            </button>
+          </div>
         </div>
 
         {/* Create form */}

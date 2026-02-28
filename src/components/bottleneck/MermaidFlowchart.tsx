@@ -33,6 +33,17 @@ export function MermaidFlowchart({
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const dragRef = useRef<{ startX: number; startY: number; panX: number; panY: number } | null>(null);
 
+  // Watch for dark mode changes to re-render mermaid
+  const [isDark, setIsDark] = useState(false);
+  useEffect(() => {
+    setIsDark(document.documentElement.classList.contains("dark"));
+    const observer = new MutationObserver(() => {
+      setIsDark(document.documentElement.classList.contains("dark"));
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, []);
+
   useEffect(() => {
     if (!code) return;
     let cancelled = false;
@@ -40,9 +51,10 @@ export function MermaidFlowchart({
     async function renderMermaid() {
       try {
         const mermaid = (await import("mermaid")).default;
+        const isDark = document.documentElement.classList.contains("dark");
         mermaid.initialize({
           startOnLoad: false,
-          theme: "default",
+          theme: isDark ? "dark" : "default",
           flowchart: {
             useMaxWidth: false,
             htmlLabels: true,
@@ -74,7 +86,7 @@ export function MermaidFlowchart({
 
     renderMermaid();
     return () => { cancelled = true; };
-  }, [code]);
+  }, [code, isDark]);
 
   // Auto-fit on render
   const fitToView = useCallback(() => {
