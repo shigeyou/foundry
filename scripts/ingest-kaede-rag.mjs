@@ -1,11 +1,11 @@
 /**
- * kaede_ver10/agent_docs/ingest_files の全ファイルを Foundry の RAG に登録するスクリプト
+ * kaede_ver10/agent_docs/raw_documents の全ファイルを Foundry の RAG に登録するスクリプト
  * Node.js 20+ の組み込み fetch/FormData/Blob を使用
  */
 import fs from "fs";
 import path from "path";
 
-const INGEST_DIR = "C:/Dev/kaede_ver10/agent_docs/ingest_files";
+const INGEST_DIR = "C:/Dev/kaede_ver10/agent_docs/raw_documents";
 const API_URL = "http://localhost:3006/api/rag";
 const SUPPORTED_EXTS = new Set(["pdf", "txt", "md", "docx", "csv", "pptx"]);
 // _ingest_manifest.jsonはJSONだが内容がマニフェストなのでスキップ

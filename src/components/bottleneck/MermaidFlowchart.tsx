@@ -32,6 +32,7 @@ export function MermaidFlowchart({
   const [scale, setScale] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const dragRef = useRef<{ startX: number; startY: number; panX: number; panY: number } | null>(null);
+  const [fullscreen, setFullscreen] = useState(false);
 
   // Watch for dark mode changes to re-render mermaid
   const [isDark, setIsDark] = useState(false);
@@ -143,6 +144,27 @@ export function MermaidFlowchart({
     setScale((s) => Math.min(Math.max(s + delta, 0.15), 2.5));
   }, []);
 
+  // Escape key to exit fullscreen
+  useEffect(() => {
+    if (!fullscreen) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setFullscreen(false);
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [fullscreen]);
+
+  // Re-fit when entering/exiting fullscreen
+  useEffect(() => {
+    if (!svg || !viewportRef.current) return;
+    // Wait for layout to update after fullscreen toggle
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        fitToView();
+      });
+    });
+  }, [fullscreen]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Mouse drag to pan (no scrollbars)
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (e.button !== 0) return;
@@ -209,57 +231,100 @@ export function MermaidFlowchart({
     );
   }
 
+  const fullscreenButton = (
+    <button
+      onClick={() => setFullscreen((f) => !f)}
+      className={`${compact ? "px-1 py-0.5 text-[10px]" : "px-1.5 py-0.5 text-xs"} bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded`}
+      title={fullscreen ? "全画面を終了 (Esc)" : "全画面表示"}
+    >
+      {fullscreen ? (
+        <svg className="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 9L4 4m0 0v4m0-4h4m6 6l5 5m0 0v-4m0 4h-4M9 15l-5 5m0 0h4m-4 0v-4m11-6l5-5m0 0h-4m4 0v4" />
+        </svg>
+      ) : (
+        <svg className="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5" />
+        </svg>
+      )}
+    </button>
+  );
+
+  const controlBar = (
+    <div className="flex items-center gap-1 mb-1">
+      {label && (
+        <span className={`text-xs font-semibold mr-2 ${labelColor || "text-slate-600 dark:text-slate-300"}`}>
+          {label}
+        </span>
+      )}
+      {!compact && (
+        <>
+          <button onClick={() => zoom(0.15)} className="px-1.5 py-0.5 text-xs bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded font-mono" title="ズームイン">+</button>
+          <button onClick={() => zoom(-0.15)} className="px-1.5 py-0.5 text-xs bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded font-mono" title="ズームアウト">-</button>
+          <button onClick={fitToView} className="px-1.5 py-0.5 text-xs bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded" title="全体表示">全体</button>
+          <span className="text-xs text-slate-400 ml-1">{Math.round(scale * 100)}%</span>
+        </>
+      )}
+      {compact && (
+        <>
+          <button onClick={() => zoom(0.15)} className="px-1 py-0.5 text-[10px] bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded font-mono">+</button>
+          <button onClick={() => zoom(-0.15)} className="px-1 py-0.5 text-[10px] bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded font-mono">-</button>
+          <button onClick={fitToView} className="px-1 py-0.5 text-[10px] bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded">全体</button>
+        </>
+      )}
+      {fullscreenButton}
+      {fullscreen && (
+        <span className="text-xs text-slate-400 ml-auto">Escで終了</span>
+      )}
+    </div>
+  );
+
+  const canvas = (
+    <div
+      ref={viewportRef}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseUp}
+      onWheel={handleWheel}
+      onClick={handleClick}
+      className="overflow-hidden border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 select-none"
+      style={{
+        height: fullscreen ? "calc(100vh - 48px)" : `${height}px`,
+        cursor: dragRef.current ? "grabbing" : "grab",
+      }}
+    >
+      <div
+        style={{
+          transform: `translate(${pan.x}px, ${pan.y}px) scale(${scale})`,
+          transformOrigin: "top left",
+          display: "inline-block",
+          willChange: "transform",
+        }}
+        dangerouslySetInnerHTML={{ __html: svg }}
+      />
+    </div>
+  );
+
+  if (fullscreen) {
+    return (
+      <>
+        {/* Placeholder to preserve layout */}
+        <div className={className || ""} style={{ height: `${height + 30}px` }} />
+        {/* Fullscreen overlay */}
+        <div className="fixed inset-0 z-50 bg-white dark:bg-slate-900 p-2">
+          <div ref={containerRef} className="h-full">
+            {controlBar}
+            {canvas}
+          </div>
+        </div>
+      </>
+    );
+  }
+
   return (
     <div ref={containerRef} className={className || ""}>
-      {/* Header: label + controls */}
-      <div className="flex items-center gap-1 mb-1">
-        {label && (
-          <span className={`text-xs font-semibold mr-2 ${labelColor || "text-slate-600 dark:text-slate-300"}`}>
-            {label}
-          </span>
-        )}
-        {!compact && (
-          <>
-            <button onClick={() => zoom(0.15)} className="px-1.5 py-0.5 text-xs bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded font-mono" title="ズームイン">+</button>
-            <button onClick={() => zoom(-0.15)} className="px-1.5 py-0.5 text-xs bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded font-mono" title="ズームアウト">-</button>
-            <button onClick={fitToView} className="px-1.5 py-0.5 text-xs bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded" title="全体表示">全体</button>
-            <span className="text-xs text-slate-400 ml-1">{Math.round(scale * 100)}%</span>
-          </>
-        )}
-        {compact && (
-          <>
-            <button onClick={() => zoom(0.15)} className="px-1 py-0.5 text-[10px] bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded font-mono">+</button>
-            <button onClick={() => zoom(-0.15)} className="px-1 py-0.5 text-[10px] bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded font-mono">-</button>
-            <button onClick={fitToView} className="px-1 py-0.5 text-[10px] bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded">全体</button>
-          </>
-        )}
-      </div>
-
-      {/* Canvas viewport — no scrollbars */}
-      <div
-        ref={viewportRef}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
-        onWheel={handleWheel}
-        onClick={handleClick}
-        className="overflow-hidden border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 select-none"
-        style={{
-          height: `${height}px`,
-          cursor: dragRef.current ? "grabbing" : "grab",
-        }}
-      >
-        <div
-          style={{
-            transform: `translate(${pan.x}px, ${pan.y}px) scale(${scale})`,
-            transformOrigin: "top left",
-            display: "inline-block",
-            willChange: "transform",
-          }}
-          dangerouslySetInnerHTML={{ __html: svg }}
-        />
-      </div>
+      {controlBar}
+      {canvas}
     </div>
   );
 }

@@ -7,11 +7,12 @@ import { useTranslations } from "next-intl";
 import { CompanyProfileTab } from "@/components/tabs/CompanyProfileTab";
 import { RagTab } from "@/components/tabs/RagTab";
 import { SwotTab } from "@/components/tabs/SwotTab";
+import { SharePointTab } from "@/components/tabs/SharePointTab";
 import { FoundryIntroTab } from "@/components/tabs/FoundryIntroTab";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { AppProvider } from "@/contexts/AppContext";
 
-type SettingsTabType = "intro" | "company" | "rag" | "swot";
+type SettingsTabType = "intro" | "company" | "rag" | "swot" | "sharepoint";
 
 function SettingsContent() {
   const t = useTranslations("settings");
@@ -23,9 +24,10 @@ function SettingsContent() {
     { id: "company", label: t("tabs.company"), icon: "🏢" },
     { id: "rag", label: t("tabs.rag"), icon: "📚" },
     { id: "swot", label: t("tabs.swot"), icon: "📊" },
+    { id: "sharepoint", label: t("tabs.sharepoint"), icon: "☁️" },
   ];
   const tabParam = searchParams.get("tab") as SettingsTabType | null;
-  const validTabs = ["intro", "company", "rag", "swot"];
+  const validTabs = ["intro", "company", "rag", "swot", "sharepoint"];
   const initialTab = tabParam && validTabs.includes(tabParam) ? tabParam : "intro";
   const [activeTab, setActiveTab] = useState<SettingsTabType>(initialTab);
 
@@ -46,6 +48,8 @@ function SettingsContent() {
         return <RagTab />;
       case "swot":
         return <SwotTab />;
+      case "sharepoint":
+        return <SharePointTab />;
       default:
         return null;
     }

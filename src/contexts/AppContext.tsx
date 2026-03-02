@@ -495,7 +495,11 @@ export function AppProvider({ children, initialFinderId = null }: AppProviderPro
     try {
       const res = await fetch("/api/rag");
       const data = await res.json();
-      setRagDocuments(data.documents || []);
+      const docs = (data.documents || []).sort(
+        (a: { updatedAt: string }, b: { updatedAt: string }) =>
+          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+      );
+      setRagDocuments(docs);
     } catch (error) {
       console.error("Error fetching RAG documents:", error);
     }

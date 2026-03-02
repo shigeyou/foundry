@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Link } from "@/i18n/navigation";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -20,6 +20,20 @@ const statusConfig: Record<string, { label: string; color: string }> = {
   completed: { label: "完了", color: "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400" },
 };
 
+// 部門タブ固定順序
+const DEPARTMENT_ORDER = [
+  "全て",
+  "全社",
+  "総合企画部",
+  "人事総務部",
+  "経理部",
+  "海洋技術事業部",
+  "海技訓練事業部",
+  "海事業務部",
+  "オンサイト事業部",
+  "新造船PM事業本部",
+];
+
 export default function BottleneckProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,6 +42,7 @@ export default function BottleneckProjectsPage() {
   const [newDept, setNewDept] = useState("");
   const [newDesc, setNewDesc] = useState("");
   const [creating, setCreating] = useState(false);
+  const [activeTab, setActiveTab] = useState("全て");
 
   const fetchProjects = useCallback(async () => {
     try {
@@ -44,6 +59,34 @@ export default function BottleneckProjectsPage() {
   }, []);
 
   useEffect(() => { fetchProjects(); }, [fetchProjects]);
+
+  // 部門タブ: データから動的に件数を計算、固定順序で表示
+  const departmentTabs = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const p of projects) {
+      const dept = p.department || "未分類";
+      counts[dept] = (counts[dept] || 0) + 1;
+    }
+    const tabs: { label: string; count: number }[] = [{ label: "全て", count: projects.length }];
+    for (const dept of DEPARTMENT_ORDER) {
+      if (dept === "全て") continue;
+      if (counts[dept]) {
+        tabs.push({ label: dept, count: counts[dept] });
+        delete counts[dept];
+      }
+    }
+    // 固定順序にない部門を末尾に追加
+    for (const [dept, count] of Object.entries(counts)) {
+      tabs.push({ label: dept, count });
+    }
+    return tabs;
+  }, [projects]);
+
+  // フィルタリングされたプロジェクト
+  const filteredProjects = useMemo(() => {
+    if (activeTab === "全て") return projects;
+    return projects.filter((p) => (p.department || "未分類") === activeTab);
+  }, [projects, activeTab]);
 
   const handleCreate = async () => {
     if (!newName.trim() || creating) return;
@@ -86,7 +129,7 @@ export default function BottleneckProjectsPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 text-slate-900 dark:text-white">
       <div className="max-w-5xl mx-auto px-6 py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
             <Link
               href="/"
@@ -107,6 +150,12 @@ export default function BottleneckProjectsPage() {
           </div>
           <div className="flex items-center gap-2">
             <ThemeToggle />
+            <Link
+              href="/bottleneck/report"
+              className="px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-lg font-medium shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all text-sm"
+            >
+              横断レポート
+            </Link>
             <button
               onClick={() => setShowCreate(true)}
               className="px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg font-medium shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all"
@@ -116,9 +165,31 @@ export default function BottleneckProjectsPage() {
           </div>
         </div>
 
+        {/* Department tabs */}
+        <div className="bg-white dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-20 rounded-t-xl mb-0">
+          <div className="flex overflow-x-auto gap-1 py-2 px-3 scrollbar-thin">
+            {departmentTabs.map((tab) => (
+              <button
+                key={tab.label}
+                onClick={() => setActiveTab(tab.label)}
+                className={`whitespace-nowrap px-3 py-1.5 text-xs rounded-lg transition-colors flex items-center gap-1 ${
+                  activeTab === tab.label
+                    ? "bg-orange-500 text-white"
+                    : "bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600"
+                }`}
+              >
+                {tab.label}
+                <span className={`text-xs ${activeTab === tab.label ? "text-orange-100" : "text-slate-400 dark:text-slate-500"}`}>
+                  ({tab.count})
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Create form */}
         {showCreate && (
-          <div className="mb-6 p-5 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+          <div className="mb-6 mt-4 p-5 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
             <h3 className="text-lg font-bold mb-4">新規プロジェクト</h3>
             <div className="space-y-3">
               <div>
@@ -173,17 +244,21 @@ export default function BottleneckProjectsPage() {
           <div className="flex items-center justify-center py-16">
             <div className="w-8 h-8 border-2 border-slate-300 dark:border-slate-600 border-t-orange-500 rounded-full animate-spin" />
           </div>
-        ) : projects.length === 0 ? (
+        ) : filteredProjects.length === 0 ? (
           <div className="text-center py-16">
             <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-3xl">🔧</span>
             </div>
-            <p className="text-slate-500 dark:text-slate-400 mb-2">プロジェクトがありません</p>
-            <p className="text-sm text-slate-400 dark:text-slate-500">「新規プロジェクト」からプロジェクトを作成してください</p>
+            <p className="text-slate-500 dark:text-slate-400 mb-2">
+              {activeTab === "全て" ? "プロジェクトがありません" : `${activeTab}のプロジェクトはありません`}
+            </p>
+            {activeTab === "全て" && (
+              <p className="text-sm text-slate-400 dark:text-slate-500">「新規プロジェクト」からプロジェクトを作成してください</p>
+            )}
           </div>
         ) : (
-          <div className="grid gap-4">
-            {projects.map((p) => {
+          <div className="grid gap-4 mt-4">
+            {filteredProjects.map((p) => {
               const sc = statusConfig[p.status] || statusConfig.draft;
               return (
                 <Link

@@ -3,12 +3,15 @@
 import type { BottleneckNode, BottleneckEdge } from "./bottleneck-types";
 
 // ステージ1: ドキュメントから業務フローを抽出
-export function buildFlowExtractionPrompt(documentContents: string): string {
+export function buildFlowExtractionPrompt(documentContents: string, ragContext?: string): string {
+  const ragSection = ragContext ? `\n\n## 社内環境情報（参考）\n以下は当社のシステム構成・組織情報です。フロー抽出時に、実際に使用されているシステム名やツール名を正確に反映してください。\n\n${ragContext}` : "";
+
   return `あなたは業務プロセス分析（BPM/BPMN）の専門家です。
 
 ## タスク
 以下のドキュメントから業務フロー（ワークフロー）を抽出し、**現実の業務を忠実に反映した2次元フローチャート**を生成してください。
 単純な一直線のフローではなく、実際の業務で発生する分岐・差し戻し・並行処理・部門間の連携を可視化することが最重要です。
+${ragSection}
 
 ## ドキュメント内容
 ${documentContents}
@@ -154,7 +157,8 @@ ${JSON.stringify(edges, null, 2)}
 // ステージ3: レポート生成
 export function buildReportPrompt(
   nodes: BottleneckNode[],
-  edges: BottleneckEdge[]
+  edges: BottleneckEdge[],
+  ragContext?: string,
 ): string {
   const manualNodes = nodes.filter(n => n.type === "manual");
   const automatedNodes = nodes.filter(n => n.type === "automated");
@@ -217,7 +221,8 @@ ${JSON.stringify(edges, null, 2)}
    - strategic: impact高 & effort高（計画的に実施）
    - fill-in: impact低 & effort低（余裕があれば）
    - thankless: impact低 & effort高（避けるべき）
-4. 実行可能で具体的な提案のみ行うこと`;
+4. 実行可能で具体的な提案のみ行うこと
+5. 社内環境情報がある場合、既に導入済みのシステムやツールを活用した現実的な改善案を優先すること${ragContext ? `\n\n## 社内環境情報（参考）\n以下は当社のシステム構成・導入済みツール・DX推進状況です。改善提案は、これらの既存資産を最大限活用する方向で検討してください。\n\n${ragContext}` : ""}`;
 }
 
 // ステージ4: After（改善後）フロー生成
@@ -225,7 +230,8 @@ export function buildAfterFlowPrompt(
   nodes: BottleneckNode[],
   edges: BottleneckEdge[],
   mermaidCodeBefore: string,
-  solutions: { title: string; targetNodeIds: string[]; toolCategory: string }[]
+  solutions: { title: string; targetNodeIds: string[]; toolCategory: string }[],
+  ragContext?: string,
 ): string {
   return `あなたは業務プロセス改善（BPR）の専門家です。
 
@@ -266,7 +272,7 @@ ${solutions.map((s, i) => `${i + 1}. ${s.title} [${s.toolCategory}] → 対象: 
 6. **差し戻しループの削減**: バリデーション自動化で差し戻し発生を減らす（ループ自体は残すが、ラベルで「発生率低下」等を示す）
 7. 自動化ノードには style で fill:#22c55e,stroke:#16a34a,color:#fff を適用
 8. 半自動ノードには style で fill:#3b82f6,stroke:#2563eb,color:#fff を適用
-9. 手動のまま残るノードには style で fill:#f97316,stroke:#ea580c,color:#fff を適用`;
+9. 手動のまま残るノードには style で fill:#f97316,stroke:#ea580c,color:#fff を適用${ragContext ? `\n\n## 社内環境情報（参考）\n改善後フローでは、以下の社内システム・ツールを活用した現実的な改善を反映してください。\n\n${ragContext}` : ""}`;
 }
 
 // Mermaidコードを色分け付きで更新

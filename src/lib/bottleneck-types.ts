@@ -88,3 +88,53 @@ export interface AnalysisStatus {
   progress?: number;
   error?: string;
 }
+
+// 横断レポート用型定義
+export interface AggregateBottleneck {
+  projectId: string;
+  projectName: string;
+  department: string;
+  nodeId: string;
+  nodeLabel: string;
+  severity: SeverityLevel;
+  automationPotential: number;
+  issue: string;
+  impact: string;
+}
+
+export interface AggregateSolution {
+  projectId: string;
+  projectName: string;
+  department: string;
+  id: string;
+  title: string;
+  description: string;
+  toolCategory: "RPA" | "API" | "SaaS" | "AI" | "workflow" | "other";
+  implementationEffort: "low" | "medium" | "high";
+  expectedImpact: "low" | "medium" | "high";
+  priority: number;
+}
+
+export interface AggregateQuickWin {
+  projectId: string;
+  projectName: string;
+  department: string;
+  solutionId: string;
+  title: string;
+  impact: number;
+  effort: number;
+  quadrant: "quick-win" | "strategic" | "fill-in" | "thankless";
+}
+
+export interface DepartmentAggregate {
+  department: string;
+  projectCount: number;
+  totalNodes: number;
+  manualNodes: number;
+  automatedNodes: number;
+  semiAutomatedNodes: number;
+  automationRate: number;
+  allBottlenecks: AggregateBottleneck[];
+  allSolutions: AggregateSolution[];
+  allQuickWins: AggregateQuickWin[];
+}

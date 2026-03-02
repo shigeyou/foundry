@@ -23,8 +23,11 @@ async function lazyProcessDocument(documentId: string): Promise<void> {
 
 // 設定
 const SUPPORTED_TYPES = ["pdf", "txt", "md", "json", "doc", "docx", "csv", "pptx", "msg", "eml", "urls"];
-const INGEST_SOURCE_DIR = process.env.INGEST_SOURCE_DIR || "C:\\Dev\\kaede_ver10\\agent_docs\\ingest_files";
+const INGEST_SOURCE_DIR = process.env.INGEST_SOURCE_DIR || "C:\\Dev\\kaede_ver10\\agent_docs\\raw_documents";
+const RAG_READY_DIR = process.env.RAG_READY_DIR || "C:\\Dev\\kaede_ver10\\agent_docs\\rag-ready";
 const MANIFEST_FILENAME = "_ingest_manifest.json";
+const REFINE_MANIFEST = "_refine_manifest.json";
+const INTEGRITY_LOG = "_integrity.log";
 const DEBOUNCE_MS = parseInt(process.env.INGEST_DEBOUNCE_MS || "5000", 10);
 const POLL_INTERVAL_MS = parseInt(process.env.INGEST_POLL_INTERVAL_MS || "300000", 10); // 5分
 
@@ -38,7 +41,7 @@ let syncing = false; // 排他制御
 type Manifest = Record<string, string>; // { filename: "sha256:xxx" }
 
 function getManifestPath(): string {
-  return path.join(INGEST_SOURCE_DIR, MANIFEST_FILENAME);
+  return path.join(RAG_READY_DIR, MANIFEST_FILENAME);
 }
 
 function loadManifest(): Manifest {
@@ -95,18 +98,21 @@ export async function syncWithManifest(): Promise<SyncResult> {
   };
 
   try {
-    if (!fs.existsSync(INGEST_SOURCE_DIR)) {
-      console.log("[Auto-Ingest] ディレクトリが見つかりません:", INGEST_SOURCE_DIR);
+    // rag-ready/ から読み取り（AI構造化済みファイル）
+    const readDir = fs.existsSync(RAG_READY_DIR) ? RAG_READY_DIR : INGEST_SOURCE_DIR;
+    if (!fs.existsSync(readDir)) {
+      console.log("[Auto-Ingest] ディレクトリが見つかりません:", readDir);
       return result;
     }
 
     const manifest = loadManifest();
     const newManifest: Manifest = {};
 
-    // ディレクトリ内のファイルを列挙
-    const files = fs.readdirSync(INGEST_SOURCE_DIR).filter((f) => {
-      if (f === MANIFEST_FILENAME) return false;
-      const fp = path.join(INGEST_SOURCE_DIR, f);
+    // ディレクトリ内のファイルを列挙（マニフェスト・ログ除外）
+    const excludeFiles = new Set([MANIFEST_FILENAME, REFINE_MANIFEST, INTEGRITY_LOG]);
+    const files = fs.readdirSync(readDir).filter((f) => {
+      if (excludeFiles.has(f)) return false;
+      const fp = path.join(readDir, f);
       return fs.statSync(fp).isFile();
     });
 
@@ -118,7 +124,7 @@ export async function syncWithManifest(): Promise<SyncResult> {
         continue;
       }
 
-      const filePath = path.join(INGEST_SOURCE_DIR, filename);
+      const filePath = path.join(readDir, filename);
       const currentHash = computeFileHash(filePath);
       newManifest[filename] = currentHash;
 
@@ -226,12 +232,19 @@ export async function syncWithManifest(): Promise<SyncResult> {
 
 // ─── 検知エンジン（2層構造）───
 
-/** デバウンス付きで同期を実行 */
+/** デバウンス付きで同期を実行（refine → sync） */
 function triggerSync(reason: string): void {
   if (debounceTimer) clearTimeout(debounceTimer);
   debounceTimer = setTimeout(async () => {
     try {
       console.log(`[Auto-Ingest] 同期トリガー: ${reason}`);
+      // AI構造化変換を先に実行
+      try {
+        const { refineAllFiles } = await import("./rag-refiner");
+        await refineAllFiles();
+      } catch (refineErr) {
+        console.error("[Auto-Ingest] AI変換エラー（同期は続行）:", refineErr);
+      }
       await syncWithManifest();
     } catch (err) {
       console.error("[Auto-Ingest] 同期エラー:", err);
@@ -257,7 +270,7 @@ export function startIngestWatcher(): void {
   // 第1層: fs.watch
   try {
     fs.watch(INGEST_SOURCE_DIR, (eventType, filename) => {
-      if (!filename || filename === MANIFEST_FILENAME) return;
+      if (!filename || filename === MANIFEST_FILENAME || filename.startsWith("_")) return;
       const ext = filename.split(".").pop()?.toLowerCase() || "";
       if (!SUPPORTED_TYPES.includes(ext)) return;
       triggerSync(`fs.watch: ${filename} (${eventType})`);

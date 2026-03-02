@@ -143,7 +143,7 @@ export async function GET(request: NextRequest) {
 
     // 一覧を取得
     const documents = await prisma.rAGDocument.findMany({
-      orderBy: { createdAt: "desc" },
+      orderBy: { updatedAt: "desc" },
       select: {
         id: true,
         filename: true,

@@ -45,6 +45,24 @@ export function RagTab() {
 
   // 外部ディレクトリからの手動読み込み
   const [ingestLoading, setIngestLoading] = useState(false);
+  const [ingestProgress, setIngestProgress] = useState<{
+    phase: string;
+    total: number;
+    processed: number;
+    currentFile: string;
+    converted: number;
+    copied: number;
+    skipped: number;
+    failed: number;
+  } | null>(null);
+
+  // 整合性チェック
+  const [integrityWarnings, setIntegrityWarnings] = useState<
+    Array<{ level: string; filename: string; message: string }>
+  >([]);
+  const [integrityOpen, setIntegrityOpen] = useState(false);
+  const [integrityLoading, setIntegrityLoading] = useState(false);
+  const [reconvertLoading, setReconvertLoading] = useState<string | null>(null);
 
   // ネット情報の取得
   const fetchWebSources = async () => {
@@ -59,8 +77,48 @@ export function RagTab() {
     }
   };
 
+  // 整合性チェック取得
+  const fetchIntegrity = async () => {
+    setIntegrityLoading(true);
+    try {
+      const res = await fetch("/api/rag/integrity");
+      const data = await res.json();
+      setIntegrityWarnings(data.warnings || []);
+    } catch (error) {
+      console.error("Failed to fetch integrity:", error);
+    } finally {
+      setIntegrityLoading(false);
+    }
+  };
+
+  // 再変換
+  const handleReconvert = async (filename: string) => {
+    setReconvertLoading(filename);
+    try {
+      const res = await fetch("/api/rag/integrity", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ filename }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setRagMessage(`${filename} を再変換しました`);
+        fetchIntegrity();
+        fetchRAGDocuments();
+      } else {
+        setRagMessage("再変換エラー: " + (data.error || "不明"));
+      }
+    } catch (error) {
+      console.error("Reconvert error:", error);
+      setRagMessage("再変換に失敗しました");
+    } finally {
+      setReconvertLoading(null);
+    }
+  };
+
   useEffect(() => {
     fetchWebSources();
+    fetchIntegrity();
   }, []);
 
   // ネット情報の追加
@@ -187,36 +245,74 @@ export function RagTab() {
     }
   };
 
-  // 外部ディレクトリからの手動読み込み
+  // 外部ディレクトリからの手動読み込み（バックグラウンド + ポーリング）
   const handleManualIngest = async () => {
     setIngestLoading(true);
     setRagMessage("");
+    setIngestProgress(null);
+
     try {
+      // バックグラウンド処理を開始
       const res = await fetch("/api/ingest", { method: "POST" });
       const data = await res.json();
-      if (data.success) {
-        const createdCount = data.created?.length || 0;
-        const updatedCount = data.updated?.length || 0;
-        const deletedCount = data.deleted?.length || 0;
-        const skippedCount = data.skipped?.length || 0;
-        const changedCount = createdCount + updatedCount + deletedCount;
-        if (changedCount > 0) {
-          const parts = [];
-          if (createdCount > 0) parts.push(`新規${createdCount}件`);
-          if (updatedCount > 0) parts.push(`更新${updatedCount}件`);
-          if (deletedCount > 0) parts.push(`削除${deletedCount}件`);
-          setRagMessage(`同期完了: ${parts.join("、")}（${skippedCount}件は変更なし）`);
-          fetchRAGDocuments();
-        } else {
-          setRagMessage(`変更なし（${skippedCount}件すべて最新）`);
-        }
-      } else {
+      if (!data.success) {
         setRagMessage("エラー: " + (data.error || "不明なエラー"));
+        setIngestLoading(false);
+        return;
       }
+
+      // ポーリングで進捗を監視
+      const pollInterval = setInterval(async () => {
+        try {
+          const progressRes = await fetch("/api/ingest");
+          const progressData = await progressRes.json();
+          const p = progressData.progress;
+
+          if (p) {
+            setIngestProgress({
+              phase: p.phase,
+              total: p.total,
+              processed: p.processed,
+              currentFile: p.currentFile,
+              converted: p.converted,
+              copied: p.copied,
+              skipped: p.skipped,
+              failed: p.failed,
+            });
+
+            // 完了チェック
+            if (!p.running && p.phase === "done") {
+              clearInterval(pollInterval);
+              const parts = [];
+              if (p.converted > 0) parts.push(`AI変換${p.converted}件`);
+              if (p.copied > 0) parts.push(`コピー${p.copied}件`);
+              if (p.skipped > 0) parts.push(`スキップ${p.skipped}件`);
+              if (p.failed > 0) parts.push(`失敗${p.failed}件`);
+              setRagMessage(
+                parts.length > 0
+                  ? `変換・同期完了: ${parts.join("、")}`
+                  : "変更なし（すべて最新）"
+              );
+              setIngestProgress(null);
+              setIngestLoading(false);
+              fetchRAGDocuments();
+              fetchIntegrity();
+            }
+          }
+        } catch {
+          // ポーリングエラーは無視
+        }
+      }, 2000);
+
+      // 安全弁: 30分で強制停止
+      setTimeout(() => {
+        clearInterval(pollInterval);
+        setIngestLoading(false);
+        setIngestProgress(null);
+      }, 30 * 60 * 1000);
     } catch (error) {
       console.error("Manual ingest error:", error);
-      setRagMessage("読み込みに失敗しました");
-    } finally {
+      setRagMessage("読み込みの開始に失敗しました");
       setIngestLoading(false);
     }
   };
@@ -254,6 +350,37 @@ export function RagTab() {
           )}
         </button>
       </div>
+
+      {/* 進捗バー */}
+      {ingestProgress && ingestProgress.total > 0 && (
+        <div className="mb-4 p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-emerald-800 dark:text-emerald-200">
+              AI構造化変換中... ({ingestProgress.processed}/{ingestProgress.total})
+            </span>
+            <span className="text-xs text-emerald-600 dark:text-emerald-400">
+              {Math.round((ingestProgress.processed / ingestProgress.total) * 100)}%
+            </span>
+          </div>
+          <div className="w-full bg-emerald-200 dark:bg-emerald-800 rounded-full h-2.5 mb-2">
+            <div
+              className="bg-emerald-600 dark:bg-emerald-400 h-2.5 rounded-full transition-all duration-500"
+              style={{ width: `${(ingestProgress.processed / ingestProgress.total) * 100}%` }}
+            ></div>
+          </div>
+          {ingestProgress.currentFile && (
+            <p className="text-xs text-emerald-600 dark:text-emerald-400 truncate">
+              {ingestProgress.currentFile}
+            </p>
+          )}
+          <div className="flex gap-3 mt-2 text-xs text-emerald-700 dark:text-emerald-300">
+            {ingestProgress.converted > 0 && <span>AI変換: {ingestProgress.converted}</span>}
+            {ingestProgress.copied > 0 && <span>コピー: {ingestProgress.copied}</span>}
+            {ingestProgress.skipped > 0 && <span>スキップ: {ingestProgress.skipped}</span>}
+            {ingestProgress.failed > 0 && <span className="text-red-600 dark:text-red-400">失敗: {ingestProgress.failed}</span>}
+          </div>
+        </div>
+      )}
 
       {/* 案内メッセージ */}
       <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">
@@ -334,6 +461,15 @@ export function RagTab() {
             <span className="px-2.5 py-0.5 text-sm font-medium bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-200 rounded-full">
               {ragDocuments.length}件
             </span>
+            {integrityWarnings.length > 0 && (
+              <button
+                onClick={() => setIntegrityOpen(!integrityOpen)}
+                className="px-2.5 py-0.5 text-sm font-medium bg-amber-200 dark:bg-amber-800 text-amber-800 dark:text-amber-200 rounded-full hover:bg-amber-300 dark:hover:bg-amber-700 transition-colors"
+                title="整合性の警告があります"
+              >
+                {integrityWarnings.length}件の警告
+              </button>
+            )}
           </div>
         </div>
 
@@ -346,6 +482,58 @@ export function RagTab() {
             >
               ×
             </button>
+          </div>
+        )}
+
+        {/* 整合性警告パネル */}
+        {integrityOpen && integrityWarnings.length > 0 && (
+          <div className="mb-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-amber-800 dark:text-amber-200">
+                整合性チェック警告
+              </h3>
+              <button
+                onClick={() => setIntegrityOpen(false)}
+                className="text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-200 text-sm"
+              >
+                閉じる
+              </button>
+            </div>
+            <ul className="space-y-2">
+              {integrityWarnings.map((w, i) => (
+                <li
+                  key={i}
+                  className="flex items-center justify-between text-sm bg-white dark:bg-slate-800 p-3 rounded border border-amber-100 dark:border-amber-900"
+                >
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <span className={`px-1.5 py-0.5 text-xs rounded font-mono ${
+                      w.level === "source"
+                        ? "bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300"
+                        : w.level === "refined"
+                          ? "bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300"
+                          : "bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300"
+                    }`}>
+                      {w.level}
+                    </span>
+                    <span className="font-medium text-slate-800 dark:text-slate-200 truncate">
+                      {w.filename}
+                    </span>
+                    <span className="text-slate-500 dark:text-slate-400 truncate">
+                      {w.message}
+                    </span>
+                  </div>
+                  {w.level === "source" && (
+                    <button
+                      onClick={() => handleReconvert(w.filename)}
+                      disabled={reconvertLoading === w.filename}
+                      className="ml-2 px-3 py-1 text-xs rounded bg-amber-600 text-white hover:bg-amber-700 disabled:bg-amber-400 disabled:cursor-not-allowed flex-shrink-0"
+                    >
+                      {reconvertLoading === w.filename ? "変換中..." : "再変換"}
+                    </button>
+                  )}
+                </li>
+              ))}
+            </ul>
           </div>
         )}
 

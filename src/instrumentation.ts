@@ -340,9 +340,34 @@ export async function register() {
       // ingestディレクトリからの自動インジェスト
       // シードの成否に関わらず必ず起動する
       void import("@/lib/auto-ingest").then(async ({ syncWithManifest, startIngestWatcher, ingestOreNaviDocuments }) => {
+        // AI構造化変換を先に実行
+        try {
+          const { refineAllFiles } = await import("@/lib/rag-refiner");
+          await refineAllFiles();
+        } catch (refineErr) {
+          console.error("[RAG Refiner] 初回変換エラー（同期は続行）:", refineErr);
+        }
+
         await syncWithManifest().catch((err) => console.error("[Auto-Ingest] 初回同期エラー:", err));
         await ingestOreNaviDocuments().catch((err) => console.error("[OreNavi-Ingest] 初回インジェストエラー:", err));
         startIngestWatcher();
+
+        // 整合性チェック: 60秒後に初回実行、以降30分間隔
+        setTimeout(async () => {
+          try {
+            const { runIntegrityCheck } = await import("@/lib/rag-integrity");
+            await runIntegrityCheck();
+            setInterval(async () => {
+              try {
+                await runIntegrityCheck();
+              } catch (err) {
+                console.error("[RAG Integrity] 定期チェックエラー:", err);
+              }
+            }, 30 * 60 * 1000);
+          } catch (err) {
+            console.error("[RAG Integrity] 初回チェックエラー:", err);
+          }
+        }, 60 * 1000);
 
         // チャンクがなければ全ドキュメントを一括チャンク処理
         try {

@@ -10,6 +10,7 @@ import {
   addSeverityColoring,
   sanitizeMermaidCode,
 } from "@/lib/bottleneck-prompts";
+import { retrieveRelevantChunks, formatChunksForPrompt } from "@/lib/rag-retrieval";
 import type { BottleneckNode, BottleneckEdge, BottleneckReportSections } from "@/lib/bottleneck-types";
 
 // In-memory analysis status tracking
@@ -119,6 +120,24 @@ async function runAnalysis(
   documents: { id: string; content: string; filename: string }[]
 ) {
   try {
+    // RAGから社内システム・組織情報を取得
+    let ragContext = "";
+    try {
+      const docSummary = documents.map(d => d.filename).join(", ");
+      const ragChunks = await retrieveRelevantChunks({
+        query: `業務プロセス システム構成 ICT環境 組織 ${docSummary}`,
+        scope: ["shared"],
+        topK: 10,
+        maxChars: 8000,
+      });
+      if (ragChunks.length > 0) {
+        ragContext = formatChunksForPrompt(ragChunks, "社内参考情報（システム構成・組織情報）");
+        console.log(`[Bottleneck Analyze] RAG context: ${ragChunks.length} chunks, ${ragContext.length} chars`);
+      }
+    } catch (err) {
+      console.warn("[Bottleneck Analyze] RAG retrieval failed, continuing without context:", err);
+    }
+
     // ステージ1: フロー抽出
     analysisStatus.set(projectId, { status: "extracting-flow", progress: 10 });
 
@@ -127,11 +146,12 @@ async function runAnalysis(
       .join("\n\n---\n\n");
 
     // テキスト長制限（AIのコンテキスト制限を考慮）
-    const truncatedContent = allContent.length > 80000
-      ? allContent.slice(0, 80000) + "\n\n[...以降省略...]"
+    const maxDocChars = ragContext ? 70000 : 80000;
+    const truncatedContent = allContent.length > maxDocChars
+      ? allContent.slice(0, maxDocChars) + "\n\n[...以降省略...]"
       : allContent;
 
-    const flowPrompt = buildFlowExtractionPrompt(truncatedContent);
+    const flowPrompt = buildFlowExtractionPrompt(truncatedContent, ragContext);
     const flowResponse = await generateWithClaude(flowPrompt, {
       temperature: 0.3,
       maxTokens: 16000,
@@ -189,8 +209,8 @@ async function runAnalysis(
 
     analysisStatus.set(projectId, { status: "generating-report", progress: 70 });
 
-    // ステージ3: レポート生成
-    const reportPrompt = buildReportPrompt(nodes, edges);
+    // ステージ3: レポート生成（RAGコンテキスト付き）
+    const reportPrompt = buildReportPrompt(nodes, edges, ragContext);
     const reportResponse = await generateWithClaude(reportPrompt, {
       temperature: 0.4,
       maxTokens: 16000,
@@ -248,7 +268,7 @@ async function runAnalysis(
       toolCategory: s.toolCategory || "other",
     }));
 
-    const afterPrompt = buildAfterFlowPrompt(nodes, edges, mermaidCode, solutions);
+    const afterPrompt = buildAfterFlowPrompt(nodes, edges, mermaidCode, solutions, ragContext);
     const afterResponse = await generateWithClaude(afterPrompt, {
       temperature: 0.3,
       maxTokens: 16000,
