@@ -174,16 +174,15 @@ jobs:
         run: |
           ZIP_SIZE=$(du -h deploy.zip | cut -f1)
           echo "Deploying ZIP ($ZIP_SIZE) to Azure App Service..."
-          # Note: az webapp deploy --async true polls until site starts (up to ~1010s timeout).
-          # We add '|| true' so a CLI polling timeout doesn't fail the step - the actual
-          # deployment continues on Azure and the next step verifies site health.
+          # Synchronous deploy: waits for upload to complete before returning.
+          # --timeout 600: allow up to 10 min for large ZIP uploads.
           az webapp deploy \
             --resource-group rg-ocreader-japaneast \
             --name ${{ env.AZURE_WEBAPP_NAME }} \
             --src-path deploy.zip \
             --type zip \
-            --async true || true
-          echo "Deployment submitted (site may still be starting)"
+            --timeout 600
+          echo "Deployment complete"
 
       - name: Wait for site to be ready
         run: |
