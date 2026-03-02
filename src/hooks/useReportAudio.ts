@@ -24,7 +24,7 @@ interface UseReportAudioReturn {
 }
 
 export function useReportAudio(): UseReportAudioReturn {
-  const [speechSpeed, setSpeechSpeed] = useState(140);
+  const [speechSpeed, setSpeechSpeed] = useState(120);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [currentSection, setCurrentSection] = useState<string | null>(null);
