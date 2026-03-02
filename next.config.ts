@@ -17,12 +17,12 @@ const nextConfig: NextConfig = {
   },
 
   // サーバー外部パッケージ（turbopackでバンドルせずnode_modulesから直接ロード）
+  // Note: openaiはTurbopack productionビルドでハッシュ名になり解決不能になるため除外
   serverExternalPackages: [
     "xlsx",
     "@libsql/client",
     "@libsql/core",
     "@prisma/adapter-libsql",
-    "openai",
   ],
 
   async redirects() {
