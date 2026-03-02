@@ -11,10 +11,19 @@ export default function middleware(request: NextRequest) {
   const allowedUsers = process.env.ALLOWED_USERS;
   if (allowedUsers) {
     const principalName = request.headers.get("x-ms-client-principal-name") || "";
-    const allowedList = allowedUsers.split(",").map(u => u.trim().toLowerCase());
     const currentUser = principalName.toLowerCase();
-    if (!currentUser || !allowedList.some(allowed => currentUser === allowed || currentUser.startsWith(allowed + "@"))) {
-      return new NextResponse("アクセス権限がありません (403 Forbidden)", { status: 403 });
+
+    // 未認証ユーザーはAzure AD loginにリダイレクト
+    if (!currentUser) {
+      const loginUrl = new URL("/.auth/login/aad", request.url);
+      loginUrl.searchParams.set("post_login_redirect_uri", pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+
+    // 認証済みだがリストにないユーザーは403
+    const allowedList = allowedUsers.split(",").map(u => u.trim().toLowerCase());
+    if (!allowedList.some(allowed => currentUser === allowed || currentUser.startsWith(allowed + "@"))) {
+      return new NextResponse("アクセス権限がありません (403 Forbidden)\nUser: " + principalName, { status: 403 });
     }
   }
 
@@ -41,5 +50,5 @@ export default function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: "/((?!api|trpc|_next|_vercel|.*\\..*).*)",
+  matcher: "/((?!api|trpc|_next|_vercel|\\.auth|.*\\..*).*)",
 };
