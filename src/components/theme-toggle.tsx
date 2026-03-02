@@ -11,7 +11,7 @@ export function ThemeToggle() {
     setMounted(true);
     const savedTheme = localStorage.getItem("theme");
     const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const initialDark = savedTheme === "dark" || (!savedTheme && prefersDark);
+    const initialDark = savedTheme === "dark" || (!savedTheme);
     setIsDark(initialDark);
     if (initialDark) {
       document.documentElement.classList.add("dark");
