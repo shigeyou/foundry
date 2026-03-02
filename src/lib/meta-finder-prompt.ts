@@ -5,6 +5,7 @@ export interface DiscoveredNeed {
   name: string;
   description: string;
   actions?: string[];
+  sourceEvidence?: string[];
   reason: string;
   financial: number;
   customer: number;
@@ -496,7 +497,7 @@ export const SINGLE_PROMPT = `${BASE_PROMPT}
       "description": "現状課題＋施策概要＋期待成果を具体的に記述",
       "actions": ["具体的アクション1", "具体的アクション2", "具体的アクション3"],
       "reason": "ドキュメント根拠に基づく必要性の説明",
-      "sourceDocuments": ["参照した情報源（あれば）"],
+      "sourceEvidence": ["根拠となる原文引用1", "原文引用2"],
       "financial": 1-5,
       "customer": 1-5,
       "process": 1-5,
@@ -506,6 +507,8 @@ export const SINGLE_PROMPT = `${BASE_PROMPT}
   "thinkingProcess": "どのような思考プロセスで発見したか",
   "summary": "分析のまとめ（2-3文）"
 }
+
+- **sourceEvidence**: RAGドキュメントから根拠となる記述を原文のまま引用。1-3件
 
 10〜20件を目安に出力してください。`;
 
@@ -542,6 +545,7 @@ export const BATCH_PROMPT = `あなたは「メタファインダー」です。
 - **description**: 現状課題・施策概要・期待成果を記述
 - **actions**: 具体的アクション3〜4つ。対象・手法を明記
 - **reason**: なぜ今この部門にこの施策が必要か、ドキュメント根拠を含めて説明
+- **sourceEvidence**: RAGドキュメントから根拠となる記述を原文のまま引用。1-3件
 - **BSCスコア**: financial/customer/process/growth 各1〜5の整数（5点満点厳守、6以上禁止）
   ※4視点のバランスを意識し、すべて高評価にならないよう現実的に評価
 
@@ -553,6 +557,7 @@ export const BATCH_PROMPT = `あなたは「メタファインダー」です。
       "name": "施策名",
       "description": "説明",
       "actions": ["アクション1", "アクション2", "アクション3"],
+      "sourceEvidence": ["根拠となる原文引用1", "原文引用2"],
       "reason": "根拠",
       "financial": 3,
       "customer": 4,
@@ -575,4 +580,4 @@ export const BATCH_PROMPT = `あなたは「メタファインダー」です。
 BSCのfinancialスコアは、この予算データとの整合性を必ず確認してください。
 赤字予算部門で財務改善に直結しない施策は financial=1-2 としてください。
 
-5〜8件を出力してください。`;
+0〜8件を出力してください。このテーマと部門の組み合わせに有意な発見がない場合は空配列 {"needs": []} を返してください。数合わせの水増しは厳禁。`;
