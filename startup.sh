@@ -21,19 +21,19 @@ fi
 # ===== Database setup =====
 mkdir -p /home/data
 
-if [ ! -f /home/data/foundry.db ]; then
+if [ ! -f /home/data/kachisuji.db ]; then
     if [ -f data/dev.db ]; then
-        cp data/dev.db /home/data/foundry.db
+        cp data/dev.db /home/data/kachisuji.db
         echo "Copied initial database"
     else
         echo "WARNING: No seed database found"
     fi
 fi
 
-export DATABASE_URL="file:/home/data/foundry.db"
+export DATABASE_URL="file:/home/data/kachisuji.db"
 
 # Clear stale SQLite locks from previous crash
-rm -f /home/data/foundry.db-journal /home/data/foundry.db-wal /home/data/foundry.db-shm 2>/dev/null
+rm -f /home/data/kachisuji.db-journal /home/data/kachisuji.db-wal /home/data/kachisuji.db-shm 2>/dev/null
 echo "SQLite locks cleared"
 
 # NOTE: prisma db push removed - it hangs when creating new tables on Azure.
