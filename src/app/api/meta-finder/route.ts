@@ -31,6 +31,11 @@ export async function GET() {
 
 // POST: 新しい分析を実行
 export async function POST(req: NextRequest) {
+  // レポート専用モード: シングル分析を禁止
+  if (process.env.REPORT_ONLY_MODE === "true") {
+    return NextResponse.json({ error: "レポート専用モードでは分析を実行できません" }, { status: 403 });
+  }
+
   try {
     const body = await req.json().catch(() => ({}));
     const additionalContext = body.additionalContext || "";

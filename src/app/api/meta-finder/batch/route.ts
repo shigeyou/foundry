@@ -328,6 +328,11 @@ export async function resumeRunningBatches() {
 
 // POST: バッチ処理を開始
 export async function POST() {
+  // レポート専用モード: バッチ開始を禁止
+  if (process.env.REPORT_ONLY_MODE === "true") {
+    return NextResponse.json({ error: "レポート専用モードでは探索を実行できません" }, { status: 403 });
+  }
+
   try {
     // 既に実行中のバッチがあるか確認
     const running = await prisma.metaFinderBatch.findFirst({
@@ -421,6 +426,11 @@ export async function GET(req: NextRequest) {
 
 // DELETE: バッチ処理をキャンセル or 全履歴削除
 export async function DELETE(req: NextRequest) {
+  // レポート専用モード: バッチ削除を禁止
+  if (process.env.REPORT_ONLY_MODE === "true") {
+    return NextResponse.json({ error: "レポート専用モードでは削除できません" }, { status: 403 });
+  }
+
   try {
     const { searchParams } = new URL(req.url);
     const batchId = searchParams.get("id");

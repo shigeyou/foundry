@@ -38,6 +38,8 @@ interface BatchInfo {
   completedAt?: string;
 }
 
+const isReportOnlyMode = process.env.NEXT_PUBLIC_REPORT_ONLY_MODE === "true";
+
 const severityConfig = {
   high: { labelKey: "high", bg: "bg-red-100 dark:bg-red-900/40", text: "text-red-700 dark:text-red-300", border: "border-red-400" },
   medium: { labelKey: "medium", bg: "bg-yellow-100 dark:bg-yellow-900/40", text: "text-yellow-700 dark:text-yellow-300", border: "border-yellow-400" },
@@ -472,18 +474,20 @@ export default function ReportPage() {
         <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
           <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <HomeButton />
+              {!isReportOnlyMode && <HomeButton />}
               <h1 className="text-lg font-bold text-gray-900 dark:text-white">
                 {t("title")}
               </h1>
             </div>
             <div className="flex items-center gap-2">
-              <a
-                href="/meta-finder"
-                className="px-3 py-1.5 text-xs bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg transition-colors"
-              >
-                {t("back")}
-              </a>
+              {!isReportOnlyMode && (
+                <a
+                  href="/meta-finder"
+                  className="px-3 py-1.5 text-xs bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg transition-colors"
+                >
+                  {t("back")}
+                </a>
+              )}
               <ThemeToggle />
             </div>
           </div>
@@ -508,14 +512,16 @@ export default function ReportPage() {
           ) : allBatches.length === 0 ? (
             <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
               <p className="text-gray-500 dark:text-gray-400 mb-4">
-                {t("noBatches")}
+                {isReportOnlyMode ? "レポートデータがまだありません" : t("noBatches")}
               </p>
-              <a
-                href="/meta-finder"
-                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm"
-              >
-                {t("runFullExplore")}
-              </a>
+              {!isReportOnlyMode && (
+                <a
+                  href="/meta-finder"
+                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm"
+                >
+                  {t("runFullExplore")}
+                </a>
+              )}
             </div>
           ) : (
             <div className="space-y-3">
@@ -600,12 +606,14 @@ export default function ReportPage() {
       <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <a
-              href="/meta-finder"
-              className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors text-sm font-medium"
-            >
-              ← {tc("backToMetaFinder")}
-            </a>
+            {!isReportOnlyMode && (
+              <a
+                href="/meta-finder"
+                className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors text-sm font-medium"
+              >
+                ← {tc("backToMetaFinder")}
+              </a>
+            )}
             <div>
               <h1 className="text-lg font-bold text-gray-900 dark:text-white">
                 {t("title")}
@@ -722,12 +730,14 @@ export default function ReportPage() {
                 </div>
               )}
             </div>
-            <a
-              href="/meta-finder"
-              className="px-3 py-1.5 text-xs bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg transition-colors"
-            >
-              {t("back")}
-            </a>
+            {!isReportOnlyMode && (
+              <a
+                href="/meta-finder"
+                className="px-3 py-1.5 text-xs bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg transition-colors"
+              >
+                {t("back")}
+              </a>
+            )}
             <ThemeToggle />
           </div>
         </div>

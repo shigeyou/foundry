@@ -53,7 +53,8 @@ jobs:
               SCM_DO_BUILD_DURING_DEPLOYMENT="false" \
               ENABLE_ORYX_BUILD="false" \
               AZURE_SPEECH_KEY="${{ secrets.AZURE_SPEECH_KEY }}" \
-              AZURE_SPEECH_REGION="japaneast"
+              AZURE_SPEECH_REGION="japaneast" \
+              REPORT_ONLY_MODE="true"
           echo "App Service configured with WEBSITE_RUN_FROM_PACKAGE=1 (fast startup mode)."
 
       - name: Install dependencies
@@ -86,6 +87,7 @@ jobs:
           AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
           AZURE_OPENAI_DEPLOYMENT: ${{ secrets.AZURE_OPENAI_DEPLOYMENT }}
           NEXT_PUBLIC_KAEDE_URL: https://kaede-frontend.azurewebsites.net
+          REPORT_ONLY_MODE: "true"
 
       - name: Prepare standalone deployment
         run: |

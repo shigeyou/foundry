@@ -6,6 +6,11 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 const nextConfig: NextConfig = {
   output: "standalone",
 
+  // 環境変数をクライアントに公開
+  env: {
+    NEXT_PUBLIC_REPORT_ONLY_MODE: process.env.REPORT_ONLY_MODE || "",
+  },
+
   // TypeScriptビルドエラーを無視（既存コードの型不整合を許容）
   typescript: {
     ignoreBuildErrors: true,
