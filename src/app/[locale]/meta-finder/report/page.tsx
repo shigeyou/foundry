@@ -113,7 +113,7 @@ export default function ReportPage() {
 
   const [batch, setBatch] = useState<BatchInfo | null>(null);
   const [reports, setReports] = useState<ReportRecord[]>([]);
-  const [activeScope, setActiveScope] = useState("all");
+  const [activeScope, setActiveScope] = useState("__profit_chart__");
   const [generating, setGenerating] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
