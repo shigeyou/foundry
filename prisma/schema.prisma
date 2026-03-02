@@ -329,6 +329,7 @@ model MetaFinderIdea {
   name        String   // アイデア名
   description String   // 説明
   actions     String?  // 具体的アクション（JSON配列）
+  sourceEvidence String?  // 原文引用（JSON配列）
   reason      String   // 理由・根拠
   // BSC 4視点スコア（各1-5）
   financial   Int      // 財務視点: 収益・コスト改善への貢献

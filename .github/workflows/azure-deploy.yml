@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 env:
-  AZURE_WEBAPP_NAME: kachisuji-finder
+  AZURE_WEBAPP_NAME: molmat-foundry
   NODE_VERSION: '20.x'
 
 jobs:
@@ -49,12 +49,13 @@ jobs:
             --name ${{ env.AZURE_WEBAPP_NAME }} \
             --settings \
               WEBSITE_RUN_FROM_PACKAGE="1" \
-              DATABASE_URL="file:/home/data/kachisuji.db" \
+              DATABASE_URL="file:/home/data/foundry.db" \
               SCM_DO_BUILD_DURING_DEPLOYMENT="false" \
               ENABLE_ORYX_BUILD="false" \
               AZURE_SPEECH_KEY="${{ secrets.AZURE_SPEECH_KEY }}" \
               AZURE_SPEECH_REGION="japaneast" \
-              REPORT_ONLY_MODE="true"
+              REPORT_ONLY_MODE="true" \
+              ALLOWED_USERS="${{ secrets.ALLOWED_USERS }}"
           echo "App Service configured with WEBSITE_RUN_FROM_PACKAGE=1 (fast startup mode)."
 
       - name: Install dependencies
@@ -189,8 +190,8 @@ jobs:
           echo "Waiting for site to start..."
           sleep 30
           for i in {1..15}; do
-            STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 60 https://kachisuji-finder.azurewebsites.net/ || echo "000")
-            if [ "$STATUS" = "200" ] || [ "$STATUS" = "401" ] || [ "$STATUS" = "302" ] || [ "$STATUS" = "307" ]; then
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 60 https://molmat-foundry.azurewebsites.net/ || echo "000")
+            if [ "$STATUS" = "200" ] || [ "$STATUS" = "401" ] || [ "$STATUS" = "302" ] || [ "$STATUS" = "307" ] || [ "$STATUS" = "403" ]; then
               echo "Site is up! Status: $STATUS"
               exit 0
             fi
