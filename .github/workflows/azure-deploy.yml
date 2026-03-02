@@ -190,7 +190,7 @@ jobs:
           sleep 30
           for i in {1..15}; do
             STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 60 https://kachisuji-finder.azurewebsites.net/ || echo "000")
-            if [ "$STATUS" = "200" ] || [ "$STATUS" = "401" ] || [ "$STATUS" = "302" ] || [ "$STATUS" = "307" ] || [ "$STATUS" = "403" ]; then
+            if [ "$STATUS" = "200" ] || [ "$STATUS" = "401" ] || [ "$STATUS" = "302" ] || [ "$STATUS" = "307" ]; then
               echo "Site is up! Status: $STATUS"
               exit 0
             fi

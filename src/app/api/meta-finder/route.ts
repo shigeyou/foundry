@@ -5,7 +5,7 @@ import { SINGLE_PROMPT, normalizeScore, type DiscoveredNeed } from "@/lib/meta-f
 import { retrieveRelevantChunks, formatChunksForPrompt } from "@/lib/rag-retrieval";
 
 interface SingleDiscoveredNeed extends DiscoveredNeed {
-  sourceEvidence?: string[];
+  sourceDocuments: string[];
 }
 
 interface MetaFinderResult {
@@ -153,7 +153,6 @@ ${additionalContext ? `## 追加の指示\n${additionalContext}` : "## 指示\n�
           name: need.name,
           description: need.description,
           actions: need.actions ? JSON.stringify(need.actions) : null,
-          sourceEvidence: need.sourceEvidence ? JSON.stringify(need.sourceEvidence) : null,
           reason: need.reason,
           financial: need.financial,
           customer: need.customer,

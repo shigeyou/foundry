@@ -7,17 +7,6 @@ const intlMiddleware = createMiddleware(routing);
 export default function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
-  // ユーザーアクセス制限: ALLOWED_USERS が設定されている場合のみ適用
-  const allowedUsers = process.env.ALLOWED_USERS;
-  if (allowedUsers) {
-    const principalName = request.headers.get("x-ms-client-principal-name") || "";
-    const allowedList = allowedUsers.split(",").map(u => u.trim().toLowerCase());
-    const currentUser = principalName.toLowerCase();
-    if (!currentUser || !allowedList.some(allowed => currentUser === allowed || currentUser.startsWith(allowed + "@"))) {
-      return new NextResponse("アクセス権限がありません (403 Forbidden)", { status: 403 });
-    }
-  }
-
   // レポート専用モード: /meta-finder/report 以外はすべてリダイレクト
   if (process.env.REPORT_ONLY_MODE === "true") {
     // 許可パス: /meta-finder/report（locale prefix付きも含む）

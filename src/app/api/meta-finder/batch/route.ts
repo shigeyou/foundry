@@ -173,7 +173,7 @@ ${swot.summary ? `\n### SWOT総括\n${swot.summary}` : ""}
     const ideasBuffer: {
       id: string; batchId: string; themeId: string; themeName: string;
       deptId: string; deptName: string; name: string; description: string;
-      actions: string | null; sourceEvidence: string | null; reason: string;
+      actions: string | null; reason: string;
       financial: number; customer: number; process: number; growth: number; score: number;
     }[] = [];
 
@@ -221,7 +221,6 @@ ${swot.summary ? `\n### SWOT総括\n${swot.summary}` : ""}
               name: need.name,
               description: need.description,
               actions: need.actions ? JSON.stringify(need.actions) : null,
-              sourceEvidence: need.sourceEvidence ? JSON.stringify(need.sourceEvidence) : null,
               reason: need.reason,
               financial: need.financial,
               customer: need.customer,

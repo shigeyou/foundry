@@ -225,14 +225,12 @@ async function generateScopeReport(
         return `【${idx + 1}】${idea.name}（${idea.score.toFixed(1)}）${idea.themeName}／${idea.deptName}: ${idea.description.slice(0, 120)}`;
       }
       const actions = idea.actions ? JSON.parse(idea.actions) : [];
-      const evidence = idea.sourceEvidence ? JSON.parse(idea.sourceEvidence) : [];
       return `【${idx + 1}】${idea.name}（スコア: ${idea.score.toFixed(1)}）
 テーマ: ${idea.themeName} ／ 部門: ${idea.deptName}
 概要: ${idea.description}
 理由: ${idea.reason}
 BSC: 財務${idea.financial}/5 顧客${idea.customer}/5 業務${idea.process}/5 成長${idea.growth}/5
-${actions.length > 0 ? `アクション: ${actions.join(" / ")}` : ""}
-${evidence.length > 0 ? `根拠引用: ${evidence.map((e: string) => `「${e}」`).join("")}` : ""}`;
+${actions.length > 0 ? `アクション: ${actions.join(" / ")}` : ""}`;
     }).join("\n\n");
 
     // 部門特徴を取得
