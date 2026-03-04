@@ -455,10 +455,7 @@ export default function ReportPage() {
         } catch { /* skip */ }
       }
       if (allSpeechSections.length > 0) {
-        audio.playSections(allSpeechSections).then(() => {
-          // 再生開始後にジャンプ
-          setTimeout(() => audio.playFromSection(section), 300);
-        });
+        audio.playSections(allSpeechSections, section);
       }
     }
   }, [audio, reports, buildFullSpeechSections]);

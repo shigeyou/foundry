@@ -17,7 +17,7 @@ interface UseReportAudioReturn {
   currentSection: string | null;
   queueStatus: QueueStatus;
   audioError: string | null;
-  playSections: (sections: { section: string; text: string }[]) => Promise<void>;
+  playSections: (sections: { section: string; text: string }[], startSection?: string) => Promise<void>;
   togglePlayPause: () => void;
   stopSpeech: () => void;
   playFromSection: (section: string) => void;
@@ -58,7 +58,7 @@ export function useReportAudio(): UseReportAudioReturn {
   }, [speechSpeed]);
 
   // セクションデータで再生開始
-  const playSections = useCallback(async (sections: { section: string; text: string }[]) => {
+  const playSections = useCallback(async (sections: { section: string; text: string }[], startSection?: string) => {
     const audioManager = getOreNaviAudio();
     if (!audioManager) return;
 
@@ -72,7 +72,7 @@ export function useReportAudio(): UseReportAudioReturn {
 
     lastSectionsRef.current = sections;
     const filtered = sections.filter(s => s.text.trim());
-    await audioManager.generateAndPlay(filtered);
+    await audioManager.generateAndPlay(filtered, startSection);
   }, [isPlaying]);
 
   const togglePlayPause = useCallback(() => {
