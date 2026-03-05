@@ -60,7 +60,7 @@ export function getFinancialSummaryForPrompt(): string {
     const statusStr = d.profitStatus === "profit" ? "黒字見込" : d.profitStatus === "loss" ? "赤字見込" : "—";
     text += `| ${d.budgetDeptName} | ${formatProfitLoss(d.fy26OperatingProfit)} | ${formatProfitLoss(d.fy25OperatingProfit)} | ${yoyStr} | ${statusStr} | ${d.keyNote} |\n`;
   }
-  text += "\n**FY26赤字予算部門**: 海洋技術事業部、シミュレータ技術部、洋上風力部、オンサイト事業部\n";
+  text += "\n**FY26赤字予算部門**: 海洋技術事業部、シミュレータ技術部、オンサイト事業部（※洋上風力部はFY25末廃止済み）\n";
   text += "**FY26増益予算部門**: 全社、海洋事業部、海事業務部、新造船PM事業本部\n";
   text += "**FY26減益予算部門**: 海技訓練事業部、ケーブル船事業部、オフショア船訓練事業部\n\n";
   return text;
